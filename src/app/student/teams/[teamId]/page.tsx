@@ -50,7 +50,7 @@ export default async function TeamDetailPage({ params }: Props) {
      This avoids RLS join issues
   ========================= */
 
-const { data: membership, error } = await supabase
+ const { data: membership, error } = await supabase
   .from("team_members")
   .select("*")
   .eq("team_id", teamId)
@@ -58,6 +58,12 @@ const { data: membership, error } = await supabase
 
 console.log("MEMBERSHIP RESULT:", membership);
 console.log("MEMBERSHIP ERROR:", error);
+
+if (error || !membership || membership.length === 0) {
+  return <div className="p-6">Team not found</div>;
+}
+
+const isLeader = membership[0].role === "LEADER";
 
   /* =========================
      FETCH TEAM (SEPARATE QUERY)
