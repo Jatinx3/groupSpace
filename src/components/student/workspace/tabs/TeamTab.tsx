@@ -8,21 +8,57 @@ type Member = {
   role: string;
 };
 
+type Task = {
+  id: string;
+  status: string;
+};
+
 interface Props {
   teamName: string;
   members: Member[];
+  tasks: Task[];
 }
 
-export default function TeamTab({ teamName, members }: Props) {
+export default function TeamTab({
+  teamName,
+  members,
+  tasks,
+}: Props) {
+
+  const totalTasks = tasks.length;
+  const completed = tasks.filter(t => t.status === "completed").length;
+  const inProgress = tasks.filter(t => t.status === "in_progress").length;
+  const pending = tasks.filter(t => t.status === "pending").length;
+
+  const completionRate =
+    totalTasks === 0
+      ? 0
+      : Math.round((completed / totalTasks) * 100);
+
+  const health =
+    completionRate > 75
+      ? "Excellent"
+      : completionRate > 40
+      ? "On Track"
+      : "Needs Attention";
+
+  const healthColor =
+    completionRate > 75
+      ? "text-green-600"
+      : completionRate > 40
+      ? "text-blue-600"
+      : "text-red-600";
+
   return (
-    <>
+    <div className="space-y-10">
+
       {/* Header */}
       <div>
         <h1 className="text-2xl font-semibold text-gray-900">
-          Team
+          Team Overview
         </h1>
         <p className="text-gray-500 mt-1">
-          Manage your project team and view member details
+          Insights into your team's performance
         </p>
       </div>
 
@@ -48,17 +84,19 @@ export default function TeamTab({ teamName, members }: Props) {
                       {member.first_name} {member.last_name}
                     </h3>
 
-                    <span className="text-xs px-3 py-1 bg-gray-100 rounded-full">
+                    <span
+                      className={`text-xs px-3 py-1 rounded-full ${
+                        member.role === "LEADER"
+                          ? "bg-black text-white"
+                          : "bg-gray-100 text-gray-600"
+                      }`}
+                    >
                       {member.role}
                     </span>
                   </div>
 
                   <p className="text-sm text-gray-500 mt-2">
                     {member.email}
-                  </p>
-
-                  <p className="text-sm text-gray-400 mt-1">
-                    Joined Jan 2026
                   </p>
                 </div>
               </div>
@@ -67,37 +105,65 @@ export default function TeamTab({ teamName, members }: Props) {
         })}
       </div>
 
-      {/* Stats */}
-      <div className="bg-white border border-gray-200 rounded-xl p-8">
-        <h2 className="font-semibold text-gray-900 mb-6">
-          Team Statistics
-        </h2>
+      {/* Stats Section */}
+      <div className="grid md:grid-cols-3 gap-6">
 
-        <div className="grid grid-cols-3 text-center">
-          <div>
-            <p className="text-2xl font-semibold">
-              {members.length}
-            </p>
-            <p className="text-gray-500 text-sm mt-1">
-              Total Members
-            </p>
-          </div>
+        {/* Task Distribution */}
+        <div className="bg-white border border-gray-200 rounded-xl p-6">
+          <h2 className="font-medium text-gray-900 mb-4">
+            Task Distribution
+          </h2>
 
-          <div>
-            <p className="text-2xl font-semibold">2</p>
-            <p className="text-gray-500 text-sm mt-1">
-              Online Now
-            </p>
-          </div>
-
-          <div>
-            <p className="text-2xl font-semibold">12</p>
-            <p className="text-gray-500 text-sm mt-1">
-              Active Tasks
-            </p>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span>Pending</span>
+              <span>{pending}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>In Progress</span>
+              <span>{inProgress}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Completed</span>
+              <span>{completed}</span>
+            </div>
           </div>
         </div>
+
+        {/* Completion Rate */}
+        <div className="bg-white border border-gray-200 rounded-xl p-6">
+          <h2 className="font-medium text-gray-900 mb-4">
+            Completion
+          </h2>
+
+          <div className="text-3xl font-semibold">
+            {completionRate}%
+          </div>
+
+          <div className="w-full bg-gray-100 rounded-full h-2 mt-4">
+            <div
+              className="bg-black h-2 rounded-full transition-all"
+              style={{ width: `${completionRate}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Team Health */}
+        <div className="bg-white border border-gray-200 rounded-xl p-6">
+          <h2 className="font-medium text-gray-900 mb-4">
+            Team Health
+          </h2>
+
+          <div className={`text-2xl font-semibold ${healthColor}`}>
+            {health}
+          </div>
+
+          <p className="text-sm text-gray-500 mt-2">
+            Based on task completion rate.
+          </p>
+        </div>
+
       </div>
-    </>
+    </div>
   );
 }

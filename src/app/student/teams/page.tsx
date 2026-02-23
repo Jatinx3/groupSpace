@@ -1,5 +1,6 @@
 import { createServerSupabase } from "../../../lib/supabase-server";
 import TeamsDashboard from "../../../components/student/workspace/TeamsDashboard";
+
 export default async function StudentTeamsPage() {
   const supabase = await createServerSupabase();
 
@@ -9,7 +10,9 @@ export default async function StudentTeamsPage() {
 
   if (!user) return <div>Not authenticated</div>;
 
-  // Fetch teams
+  /* =========================
+     Fetch Teams
+  ========================= */
   const { data: memberships } = await supabase
     .from("team_members")
     .select(`
@@ -28,9 +31,26 @@ export default async function StudentTeamsPage() {
   const teams =
     memberships?.map((m) => m.team).filter(Boolean) ?? [];
 
-  return <TeamsDashboard teams={teams} />
-  
-  ;
-  
-  
+  /* =========================
+     Fetch Enrolled Courses
+  ========================= */
+  const { data: courseMemberships } = await supabase
+    .from("course_members")
+    .select(`
+      courses (
+        id,
+        name
+      )
+    `)
+    .eq("user_id", user.id);
+
+  const courses =
+    courseMemberships?.map((c) => c.courses).filter(Boolean) ?? [];
+
+  return (
+    <TeamsDashboard
+      teams={teams}
+      courses={courses}
+    />
+  );
 }

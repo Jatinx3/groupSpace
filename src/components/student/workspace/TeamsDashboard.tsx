@@ -6,14 +6,15 @@ import TeamCard from "./TeamCard";
 
 interface Props {
   teams: any[];
+  courses: any[];
 }
 
-export default function TeamsDashboard({ teams }: Props) {
+export default function TeamsDashboard({ teams, courses }: Props) {
   const [open, setOpen] = useState(false);
 
   const activeTeams = teams.length;
-  const totalMembers = teams.length * 3; // temp placeholder
-  const upcomingDeadlines = 4; // temp placeholder
+  const totalMembers = teams.length * 3; // placeholder logic
+  const upcomingDeadlines = 4; // placeholder logic
 
   return (
     <div className="space-y-10">
@@ -44,12 +45,18 @@ export default function TeamsDashboard({ teams }: Props) {
 
       {/* Teams Grid */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {teams.map((team: any, index) => (
+        {teams.map((team: any, index: number) => (
           <TeamCard key={team.id} team={team} index={index} />
         ))}
       </div>
 
-      {open && <CreateJoinTeamModal onClose={() => setOpen(false)} />}
+      {/* Modal */}
+      {open && (
+        <CreateJoinTeamModal
+          onClose={() => setOpen(false)}
+          courses={courses}
+        />
+      )}
     </div>
   );
 }

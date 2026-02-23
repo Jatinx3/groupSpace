@@ -16,15 +16,6 @@ type Member = {
   role: string;
 };
 
-type Task = {
-  id: string;
-  team_id: string;
-  title: string;
-  description: string | null;
-  status: string;
-  created_at: string;
-};
-
 type Message = {
   id: string;
   content: string;
@@ -49,7 +40,10 @@ export default async function TeamDetailPage(props: Props) {
     return <div className="p-6">Not authenticated</div>;
   }
 
-  // 🔹 Verify membership
+  /* =========================
+     VERIFY MEMBERSHIP
+  ========================= */
+
   const { data: membership } = await supabase
     .from("team_members")
     .select(`
@@ -82,7 +76,10 @@ export default async function TeamDetailPage(props: Props) {
   const team = membership.team;
   const course = team.courses?.[0];
 
-  // 🔹 Fetch members
+  /* =========================
+     FETCH MEMBERS
+  ========================= */
+
   const { data: members } = await supabase
     .from("team_members")
     .select(`
@@ -97,7 +94,7 @@ export default async function TeamDetailPage(props: Props) {
     .eq("team_id", teamId);
 
   const memberList: Member[] =
-    members?.map((m) => ({
+    members?.map((m: any) => ({
       id: m.user.id,
       first_name: m.user.first_name,
       last_name: m.user.last_name,
@@ -105,48 +102,120 @@ export default async function TeamDetailPage(props: Props) {
       role: m.role,
     })) ?? [];
 
-  // 🔹 Fetch tasks
+  /* =========================
+     FETCH TASKS WITH ASSIGNEES
+  ========================= */
+
   const { data: tasks } = await supabase
     .from("tasks")
-    .select("*")
+    .select(`
+      id,
+      team_id,
+      title,
+      description,
+      status,
+      priority,
+      due_date,
+      created_at,
+      task_assignees (
+        user:profiles (
+          id,
+          first_name,
+          last_name,
+          email
+        )
+      )
+    `)
     .eq("team_id", teamId)
     .order("created_at", { ascending: false });
 
-  // 🔹 Fetch raw messages
-const { data: rawMessages } = await supabase
-  .from("messages")
-  .select("*")
-  .eq("team_id", teamId)
-  .order("created_at", { ascending: true });
+  const formattedTasks =
+    tasks?.map((task: any) => ({
+      ...task,
+      assignees:
+        task.task_assignees?.map((a: any) => a.user) ?? [],
+    })) ?? [];
 
-let messages: Message[] = [];
+  /* =========================
+     FETCH FILES (FIXED JOIN)
+  ========================= */
 
-if (rawMessages && rawMessages.length > 0) {
-  const userIds = rawMessages.map((m) => m.user_id);
+  const { data: rawFiles } = await supabase
+    .from("project_files")
+    .select(`
+      id,
+      file_name,
+      file_size,
+      created_at,
+      profiles!project_files_uploaded_by_fkey (
+        first_name,
+        last_name
+      )
+    `)
+    .eq("team_id", teamId)
+    .order("created_at", { ascending: false });
 
-  const { data: profiles } = await supabase
-    .from("profiles")
-    .select("id, full_name")
-    .in("id", userIds);
+  const files =
+    rawFiles?.map((file: any) => ({
+      id: file.id,
+      file_name: file.file_name,
+      file_size: file.file_size,
+      created_at: file.created_at,
+      uploaded_by: file.profiles ?? null,
+    })) ?? [];
 
-  messages = rawMessages.map((msg) => ({
-    id: msg.id,
-    content: msg.content,
-    created_at: msg.created_at,
-    user_id: msg.user_id,
-    profiles:
-      profiles?.find((p) => p.id === msg.user_id) ?? null,
-  }));
-}
+  /* =========================
+     FETCH MESSAGES
+  ========================= */
+
+  const { data: rawMessages } = await supabase
+    .from("messages")
+    .select("*")
+    .eq("team_id", teamId)
+    .order("created_at", { ascending: true });
+
+  let messages: Message[] = [];
+
+  if (rawMessages && rawMessages.length > 0) {
+    const userIds = rawMessages.map((m) => m.user_id);
+
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, first_name, last_name")
+      .in("id", userIds);
+
+    messages = rawMessages.map((msg: any) => {
+      const profile = profiles?.find((p) => p.id === msg.user_id);
+
+      return {
+        id: msg.id,
+        content: msg.content,
+        created_at: msg.created_at,
+        user_id: msg.user_id,
+        profiles: profile
+          ? {
+              id: profile.id,
+              full_name: profile.first_name,
+            }
+          : null,
+      };
+    });
+  }
+
+  /* =========================
+     RETURN
+  ========================= */
+
   return (
     <TeamWorkspace
       teamId={teamId}
       teamName={team.name}
       courseName={course?.name}
       members={memberList}
-      tasks={(tasks ?? []) as Task[]}
+      tasks={formattedTasks}
+      files={files}
       isLeader={isLeader}
-      messages={(messages ?? []) as Message[]}
+      messages={messages}
       currentUserId={user.id}
       onDelete={
         isLeader

@@ -1,33 +1,45 @@
 import StatsCard from "./StatsCard";
 import { BookOpen, ClipboardList, Users, Clock } from "lucide-react";
 
-export default function StatsGrid() {
+interface Props {
+  totalCourses: number;
+  totalTasks: number;
+  totalTeams: number;
+  pendingTasks: number;
+}
+
+export default function StatsGrid({
+  totalCourses,
+  totalTasks,
+  totalTeams,
+  pendingTasks,
+}: Props) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
       <StatsCard
         title="Courses"
-        value={4}
+        value={totalCourses}
         icon={BookOpen}
         color="indigo"
       />
 
       <StatsCard
-        title="Assignments"
-        value={3}
+        title="Tasks"
+        value={totalTasks}
         icon={ClipboardList}
         color="orange"
       />
 
       <StatsCard
         title="Teams"
-        value={2}
+        value={totalTeams}
         icon={Users}
         color="emerald"
       />
 
       <StatsCard
-        title="Deadlines"
-        value={1}
+        title="Pending"
+        value={pendingTasks}
         icon={Clock}
         color="rose"
       />

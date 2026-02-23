@@ -14,6 +14,7 @@ import ProgressTab from "./tabs/ProgressTab";
 import StructureTab from "./tabs/StructureTab";
 import ChatTab from "./tabs/ChatTab";
 import TasksTab from "./tabs/TasksTab";
+import FilesTab from "./tabs/FilesTab";
 
 /* ============================= */
 /* Types */
@@ -34,6 +35,11 @@ type Task = {
   status: string;
   priority: string;
   due_date: string | null;
+  assignees: {
+    id: string;
+    first_name: string;
+    last_name: string;
+  }[];
 };
 
 type Message = {
@@ -47,15 +53,31 @@ type Message = {
   } | null;
 };
 
+type FileItem = {
+  id: string;
+  file_name: string;
+  file_size: number | null;
+  created_at: string;
+  uploaded_by: {
+    first_name: string;
+    last_name: string;
+  } | null;
+};
+
+/* ============================= */
+/* Props */
+/* ============================= */
+
 interface Props {
   teamId: string;
   teamName: string;
   courseName?: string;
   members: Member[];
   tasks: Task[];
+  files: FileItem[];
   isLeader: boolean;
-  messages: Message[];          // ✅ NEW
-  currentUserId: string;        // ✅ NEW
+  messages: Message[];
+  currentUserId: string;
   onDelete?: () => void;
 }
 
@@ -69,9 +91,10 @@ export default function TeamWorkspace({
   courseName,
   members,
   tasks,
+  files,
   isLeader,
-  messages,            // ✅ NEW
-  currentUserId,       // ✅ NEW
+  messages,
+  currentUserId,
   onDelete,
 }: Props) {
   const [activeTab, setActiveTab] = useState("team");
@@ -82,6 +105,7 @@ export default function TeamWorkspace({
     { key: "progress", label: "Progress", icon: Activity },
     { key: "structure", label: "Structure", icon: Folder },
     { key: "chat", label: "Chat", icon: MessageSquare },
+    { key: "files", label: "Files", icon: Folder }, // ✅ NEW TAB
   ];
 
   function renderTab() {
@@ -90,10 +114,8 @@ export default function TeamWorkspace({
         return (
           <TeamTab
             teamName={teamName}
-            courseName={courseName}
             members={members}
-            isLeader={isLeader}
-            onDelete={onDelete}
+            tasks={tasks}
           />
         );
 
@@ -103,6 +125,7 @@ export default function TeamWorkspace({
             tasks={tasks}
             teamId={teamId}
             isLeader={isLeader}
+            members={members}
           />
         );
 
@@ -116,8 +139,17 @@ export default function TeamWorkspace({
         return (
           <ChatTab
             teamId={teamId}
-            initialMessages={messages}       // ✅ PASS INITIAL MESSAGES
-            currentUserId={currentUserId}    // ✅ PASS USER ID
+            initialMessages={messages}
+            currentUserId={currentUserId}
+          />
+        );
+
+      case "files":
+        return (
+          <FilesTab
+            teamId={teamId}
+            files={files}
+            isLeader={isLeader}
           />
         );
 
@@ -129,7 +161,7 @@ export default function TeamWorkspace({
   return (
     <div className="py-10">
       <div className="max-w-6xl mx-auto space-y-10">
-        {/* Top Tabs */}
+        {/* Tabs Navigation */}
         <div className="flex gap-6 border-b border-gray-200 pb-3">
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -152,7 +184,7 @@ export default function TeamWorkspace({
           })}
         </div>
 
-        {/* Dynamic Tab Content */}
+        {/* Dynamic Content */}
         {renderTab()}
       </div>
     </div>

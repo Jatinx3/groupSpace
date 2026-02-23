@@ -34,6 +34,24 @@ export default function SignupPage() {
     document.body.appendChild(script);
   }, []);
 
+  useEffect(() => {
+  const script = document.createElement("script");
+  script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+  script.async = true;
+  document.body.appendChild(script);
+
+  script.onload = () => {
+    if (window.turnstile) {
+      window.turnstile.render("#turnstile-container", {
+        sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
+        callback: (token: string) => {
+          setCaptchaToken(token);
+        },
+      });
+    }
+  };
+}, []);
+
   const handleSignup = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -110,101 +128,159 @@ export default function SignupPage() {
       return;
     }
 
-    router.push("/student/dashboard");
+    router.push("/student/");
     router.refresh();
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-sm border">
-        <h1 className="text-2xl font-semibold mb-6 text-center">
-          Student Signup
-        </h1>
+  <div className="min-h-screen bg-slate-100 flex items-center justify-center px-4">
+    <div className="w-full max-w-md bg-white rounded-2xl shadow-lg border border-slate-200 p-8">
 
-        <form onSubmit={handleSignup} className="space-y-4">
+      {/* Icon */}
+      <div className="flex justify-center mb-6">
+        <div className="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center text-white text-xl">
+          🎓
+        </div>
+      </div>
 
-          <input
-            type="text"
-            placeholder="First Name"
-            className="w-full p-3 border rounded-lg"
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-          />
+      {/* Heading */}
+      <h1 className="text-2xl font-semibold text-center text-slate-900">
+        Create your student account
+      </h1>
+      <p className="text-sm text-slate-500 text-center mt-2 mb-8">
+        Sign up to access your university portal
+      </p>
 
-          <input
-            type="text"
-            placeholder="Last Name"
-            className="w-full p-3 border rounded-lg"
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-          />
+      <form onSubmit={handleSignup} className="space-y-5">
 
-          {/* Phone */}
-          <div className="flex gap-2">
+        {/* Name Row */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="text-sm font-medium text-slate-700">
+              First Name *
+            </label>
+            <input
+              type="text"
+              className="mt-1 w-full p-3 border rounded-lg focus:ring-2 focus:ring-slate-900 outline-none"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-slate-700">
+              Last Name *
+            </label>
+            <input
+              type="text"
+              className="mt-1 w-full p-3 border rounded-lg focus:ring-2 focus:ring-slate-900 outline-none"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+            />
+          </div>
+        </div>
+
+        {/* Phone */}
+        <div>
+          <label className="text-sm font-medium text-slate-700">
+            Phone Number *
+          </label>
+          <div className="flex gap-3 mt-1">
             <select
-              className="p-3 border rounded-lg"
+              className="p-3 border rounded-lg focus:ring-2 focus:ring-slate-900 outline-none"
               value={countryCode}
               onChange={(e) => setCountryCode(e.target.value)}
             >
-              <option value="+353">🇮🇪 +353</option>
-              <option value="+44">🇬🇧 +44</option>
-              <option value="+91">🇮🇳 +91</option>
-              <option value="+1">🇺🇸 +1</option>
+              <option value="+353">+353</option>
+              <option value="+44">+44</option>
+              <option value="+91">+91</option>
+              <option value="+1">+1</option>
             </select>
 
             <input
               type="tel"
-              placeholder="Phone Number"
-              className="flex-1 p-3 border rounded-lg"
+              className="flex-1 p-3 border rounded-lg focus:ring-2 focus:ring-slate-900 outline-none"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
             />
           </div>
+        </div>
 
+        {/* Email */}
+        <div>
+          <label className="text-sm font-medium text-slate-700">
+            University Email *
+          </label>
           <input
             type="email"
-            placeholder="University Email"
-            className="w-full p-3 border rounded-lg"
+            className="mt-1 w-full p-3 border rounded-lg focus:ring-2 focus:ring-slate-900 outline-none"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
+        </div>
 
+        {/* Password */}
+        <div>
+          <label className="text-sm font-medium text-slate-700">
+            Password *
+          </label>
           <input
             type="password"
-            placeholder="Password"
-            className="w-full p-3 border rounded-lg"
+            className="mt-1 w-full p-3 border rounded-lg focus:ring-2 focus:ring-slate-900 outline-none"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
+        </div>
 
+        {/* Confirm Password */}
+        <div>
+          <label className="text-sm font-medium text-slate-700">
+            Retype Password *
+          </label>
           <input
             type="password"
-            placeholder="Retype Password"
-            className="w-full p-3 border rounded-lg"
+            className="mt-1 w-full p-3 border rounded-lg focus:ring-2 focus:ring-slate-900 outline-none"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
           />
+        </div>
 
-          {/* CAPTCHA */}
-          <div
-            className="cf-turnstile"
-            data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
-            data-callback={(token: string) => setCaptchaToken(token)}
-          ></div>
+        {/* Divider */}
+        <div className="border-t pt-4">
+          <div className="border-t pt-4">
+  <div id="turnstile-container"></div>
+</div>
+        </div>
 
-          {error && (
-            <p className="text-sm text-red-500">{error}</p>
-          )}
+        {/* Error */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-600 text-sm p-3 rounded-lg">
+            {error}
+          </div>
+        )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-black text-white p-3 rounded-lg hover:opacity-90 transition"
+        {/* Submit */}
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-slate-900 text-white p-3 rounded-lg hover:bg-slate-800 transition font-medium"
+        >
+          {loading ? "Creating account..." : "Create Account"}
+        </button>
+
+        {/* Footer */}
+        <p className="text-sm text-center text-slate-500 mt-4">
+          Already have an account?{" "}
+          <a
+            href="/login"
+            className="text-slate-900 font-medium hover:underline"
           >
-            {loading ? "Creating account..." : "Sign Up"}
-          </button>
-        </form>
-      </div>
+            Log in
+          </a>
+        </p>
+
+      </form>
     </div>
-  );
+  </div>
+);
 }

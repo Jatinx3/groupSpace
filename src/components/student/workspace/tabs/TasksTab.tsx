@@ -12,23 +12,31 @@ type Task = {
   status: string;
   priority: string;
   due_date: string | null;
+  assignees: {
+    id: string;
+    first_name: string;
+    last_name: string;
+  }[];
 };
 
 interface Props {
   tasks: Task[];
   teamId: string;
   isLeader: boolean;
+  members: Member[];
+
 }
 
-export default function TasksTab({ tasks, teamId, isLeader }: Props) {
+export default function TasksTab({ tasks, teamId, isLeader, members }: Props) {
   const [openAdd, setOpenAdd] = useState(false);
   const [editTask, setEditTask] = useState<Task | null>(null);
 
-  const total = tasks.length;
-  const completed = tasks.filter((t) => t.status === "completed").length;
-  const inProgress = tasks.filter((t) => t.status === "in_progress").length;
-  const pending = tasks.filter((t) => t.status === "pending").length;
+const safeTasks = tasks ?? [];
 
+const totalTasks = safeTasks.length;
+const completed = safeTasks.filter(t => t.status === "completed").length;
+const inProgress = safeTasks.filter(t => t.status === "in_progress").length;
+const pending = safeTasks.filter(t => t.status === "pending").length;
   return (
     <div className="space-y-8">
 
@@ -41,20 +49,19 @@ export default function TasksTab({ tasks, teamId, isLeader }: Props) {
           </p>
         </div>
 
-        {isLeader && (
-          <button
-            onClick={() => setOpenAdd(true)}
-            className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-lg"
-          >
-            <Plus size={16} />
-            Add Task
-          </button>
-        )}
+        <button
+  onClick={() => setOpenAdd(true)}
+  className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-lg"
+>
+  <Plus size={16} />
+  Add Task
+</button>
+        
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-4 gap-6">
-        <StatCard label="Total Tasks" value={total} />
+        <StatCard label="Total Tasks" value={totalTasks} />
         <StatCard label="Completed" value={completed} color="text-green-600" />
         <StatCard label="In Progress" value={inProgress} color="text-blue-600" />
         <StatCard label="Pending" value={pending} color="text-gray-600" />
@@ -88,24 +95,47 @@ export default function TasksTab({ tasks, teamId, isLeader }: Props) {
                   </p>
                 )}
 
-                <div className="flex gap-4 text-xs text-gray-500 mt-2">
-                  {task.due_date && (
-                    <span>
-                      Due: {new Date(task.due_date).toLocaleDateString()}
-                    </span>
-                  )}
-                  <PriorityBadge priority={task.priority} />
-                </div>
+                <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500 mt-2">
+
+  {task.due_date && (
+    <span>
+      Due: {new Date(task.due_date).toLocaleDateString()}
+    </span>
+  )}
+
+  <PriorityBadge priority={task.priority} />
+
+  {/* Assignee Avatars */}
+  {task.assignees?.length > 0 && (
+    <div className="flex -space-x-2 ml-2">
+      {task.assignees.map((user) => {
+        const initials =
+          user.first_name[0] + user.last_name[0];
+
+        return (
+          <div
+            key={user.id}
+            className="w-7 h-7 rounded-full bg-black text-white text-xs flex items-center justify-center border-2 border-white"
+            title={`${user.first_name} ${user.last_name}`}
+          >
+            {initials}
+          </div>
+        );
+      })}
+    </div>
+  )}
+
+</div>
               </div>
 
-              {isLeader && (
+              
                 <button
                   onClick={() => setEditTask(task)}
                   className="text-sm text-gray-500 hover:text-black"
                 >
                   Edit
                 </button>
-              )}
+              
             </div>
           </div>
         ))}
@@ -113,12 +143,12 @@ export default function TasksTab({ tasks, teamId, isLeader }: Props) {
 
       {/* Modals */}
       {openAdd && (
-        <AddTaskModal
-          teamId={teamId}
-          onClose={() => setOpenAdd(false)}
-        />
+      <AddTaskModal
+  teamId={teamId}
+  members={members}
+  onClose={() => setOpenAdd(false)}
+/>
       )}
-
       {editTask && (
         <EditTaskModal
           task={editTask}
