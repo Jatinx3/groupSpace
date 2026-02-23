@@ -1,14 +1,6 @@
 "use client";
 
-type Task = {
-  id: string;
-  title: string;
-  description: string;
-  status: "completed" | "in_progress" | "pending" | "blocked";
-  dueDate: string;
-  assignee: string;
-  progress?: number; // optional for in-progress tasks
-};
+import type { Task } from "../../../../types/task";
 
 interface Props {
   tasks: Task[];

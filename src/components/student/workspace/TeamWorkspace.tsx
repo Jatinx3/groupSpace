@@ -15,7 +15,7 @@ import StructureTab from "./tabs/StructureTab";
 import ChatTab from "./tabs/ChatTab";
 import TasksTab from "./tabs/TasksTab";
 import FilesTab from "./tabs/FilesTab";
-
+import type { Task } from "../../../types/task";
 /* ============================= */
 /* Types */
 /* ============================= */
@@ -28,19 +28,7 @@ type Member = {
   role: string;
 };
 
-type Task = {
-  id: string;
-  title: string;
-  description: string | null;
-  status: string;
-  priority: string;
-  due_date: string | null;
-  assignees: {
-    id: string;
-    first_name: string;
-    last_name: string;
-  }[];
-};
+
 
 type Message = {
   id: string;
