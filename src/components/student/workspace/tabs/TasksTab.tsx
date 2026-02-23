@@ -5,19 +5,8 @@ import { Plus } from "lucide-react";
 import AddTaskModal from "./AddTaskModal";
 import EditTaskModal from "./EditTaskModal";
 
-type Task = {
-  id: string;
-  title: string;
-  description: string | null;
-  status: string;
-  priority: string;
-  due_date: string | null;
-  assignees: {
-    id: string;
-    first_name: string;
-    last_name: string;
-  }[];
-};
+import type { Task } from "../../../../types/task";
+
 
 interface Props {
   tasks: Task[];
