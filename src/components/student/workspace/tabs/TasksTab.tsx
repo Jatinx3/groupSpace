@@ -92,27 +92,33 @@ const pending = safeTasks.filter(t => t.status === "pending").length;
     </span>
   )}
 
-  <PriorityBadge priority={task.priority} />
-
+<PriorityBadge priority={task.priority ?? "low"} />
   {/* Assignee Avatars */}
-  {task.assignees?.length > 0 && (
+{(() => {
+  const assignees = task.assignees ?? [];
+
+  if (assignees.length === 0) return null;
+
+  return (
     <div className="flex -space-x-2 ml-2">
-      {task.assignees.map((user) => {
-        const initials =
-          user.first_name[0] + user.last_name[0];
+      {assignees.map((user) => {
+        const firstInitial = user.first_name?.[0] ?? "";
+        const lastInitial = user.last_name?.[0] ?? "";
+        const initials = firstInitial + lastInitial;
 
         return (
           <div
             key={user.id}
             className="w-7 h-7 rounded-full bg-black text-white text-xs flex items-center justify-center border-2 border-white"
-            title={`${user.first_name} ${user.last_name}`}
+            title={`${user.first_name ?? ""} ${user.last_name ?? ""}`}
           >
             {initials}
           </div>
         );
       })}
     </div>
-  )}
+  );
+})()}
 
 </div>
               </div>
@@ -182,18 +188,19 @@ function StatusBadge({ status }: { status: string }) {
     </span>
   );
 }
+function PriorityBadge({ priority }: { priority?: string | null }) {
+  const value = priority ?? "low"; // fallback if null/undefined
 
-function PriorityBadge({ priority }: { priority: string }) {
   const styles =
-    priority === "high"
+    value === "high"
       ? "text-red-600"
-      : priority === "medium"
+      : value === "medium"
       ? "text-yellow-600"
       : "text-green-600";
 
   return (
     <span className={styles}>
-      {priority.charAt(0).toUpperCase() + priority.slice(1)}
+      {value.charAt(0).toUpperCase() + value.slice(1)}
     </span>
   );
 }
