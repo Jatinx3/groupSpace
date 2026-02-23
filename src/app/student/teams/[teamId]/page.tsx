@@ -3,9 +3,9 @@ import { deleteTeam } from "../actions";
 import TeamWorkspace from "../../../../components/student/workspace/TeamWorkspace";
 
 interface Props {
-  params: Promise<{
+  params: {
     teamId: string;
-  }>;
+  };
 }
 
 type Member = {
@@ -27,10 +27,14 @@ type Message = {
   } | null;
 };
 
-export default async function TeamDetailPage(props: Props) {
-  const { teamId } = await props.params;
+export default async function TeamDetailPage({ params }: Props) {
+  const { teamId } = params;
 
   const supabase = await createServerSupabase();
+
+  /* =========================
+     AUTH CHECK
+  ========================= */
 
   const {
     data: { user },
@@ -40,54 +44,59 @@ export default async function TeamDetailPage(props: Props) {
     return <div className="p-6">Not authenticated</div>;
   }
 
+  /* =========================
+     VERIFY MEMBERSHIP (NO JOIN)
+     This avoids RLS join issues
+  ========================= */
+
+  const { data: membership, error: membershipError } = await supabase
+    .from("team_members")
+    .select("role")
+    .eq("team_id", teamId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (membershipError || !membership) {
+    return <div className="p-6">Team not found</div>;
+  }
+
+  const isLeader = membership.role === "LEADER";
 
   /* =========================
-   VERIFY MEMBERSHIP
-========================= */
+     FETCH TEAM (SEPARATE QUERY)
+  ========================= */
 
-const { data: membership } = await supabase
-  .from("team_members")
-  .select(`
-    role,
-    team:teams (
-      id,
-      name,
-      courses (
-        id,
-        name
-      )
-    )
-  `)
-  .eq("team_id", teamId)
-  .eq("user_id", user.id)
-  .single();
+  const { data: team } = await supabase
+    .from("teams")
+    .select("id, name, course_id")
+    .eq("id", teamId)
+    .single();
 
-if (!membership) {
-  return (
-    <div className="p-6">
-      Team not found
-    </div>
-  );
-}
+  if (!team) {
+    return <div className="p-6">Team not found</div>;
+  }
 
-/* Supabase always returns relations as arrays */
-const team = membership.team?.[0];
+  /* =========================
+     FETCH COURSE (OPTIONAL)
+  ========================= */
 
-if (!team) {
-  return (
-    <div className="p-6">
-      Team not found
-    </div>
-  );
-}
+  let courseName: string | undefined;
 
-const course = team.courses?.[0];
-const isLeader = membership.role === "LEADER";
+  if (team.course_id) {
+    const { data: course } = await supabase
+      .from("courses")
+      .select("name")
+      .eq("id", team.course_id)
+      .single();
+
+    courseName = course?.name;
+  }
+
   /* =========================
      FETCH MEMBERS
   ========================= */
 
-  const { data: members } = await supabase
+  const { data: membersRaw } = await supabase
     .from("team_members")
     .select(`
       role,
@@ -101,7 +110,7 @@ const isLeader = membership.role === "LEADER";
     .eq("team_id", teamId);
 
   const memberList: Member[] =
-    members?.map((m: any) => ({
+    membersRaw?.map((m: any) => ({
       id: m.user.id,
       first_name: m.user.first_name,
       last_name: m.user.last_name,
@@ -110,10 +119,10 @@ const isLeader = membership.role === "LEADER";
     })) ?? [];
 
   /* =========================
-     FETCH TASKS WITH ASSIGNEES
+     FETCH TASKS
   ========================= */
 
-  const { data: tasks } = await supabase
+  const { data: tasksRaw } = await supabase
     .from("tasks")
     .select(`
       id,
@@ -137,14 +146,14 @@ const isLeader = membership.role === "LEADER";
     .order("created_at", { ascending: false });
 
   const formattedTasks =
-    tasks?.map((task: any) => ({
+    tasksRaw?.map((task: any) => ({
       ...task,
       assignees:
         task.task_assignees?.map((a: any) => a.user) ?? [],
     })) ?? [];
 
   /* =========================
-     FETCH FILES (FIXED JOIN)
+     FETCH FILES
   ========================= */
 
   const { data: rawFiles } = await supabase
@@ -215,23 +224,23 @@ const isLeader = membership.role === "LEADER";
 
   return (
     <TeamWorkspace
-  teamId={teamId}
-  teamName={team.name}
-  courseName={course?.name}
-  members={memberList}
-  tasks={formattedTasks}
-  files={files}
-  isLeader={isLeader}
-  messages={messages}
-  currentUserId={user.id}
-  onDelete={
-    isLeader
-      ? async () => {
-          "use server";
-          await deleteTeam(teamId);
-        }
-      : undefined
-  }
-/>
+      teamId={teamId}
+      teamName={team.name}
+      courseName={courseName}
+      members={memberList}
+      tasks={formattedTasks}
+      files={files}
+      isLeader={isLeader}
+      messages={messages}
+      currentUserId={user.id}
+      onDelete={
+        isLeader
+          ? async () => {
+              "use server";
+              await deleteTeam(teamId);
+            }
+          : undefined
+      }
+    />
   );
 }
