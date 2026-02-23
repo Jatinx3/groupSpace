@@ -39,6 +39,7 @@ export default async function TeamDetailPage({ params }: Props) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  console.log("SERVER USER:", user);
 
   if (!user) {
     return <div className="p-6">Not authenticated</div>;
@@ -49,18 +50,14 @@ export default async function TeamDetailPage({ params }: Props) {
      This avoids RLS join issues
   ========================= */
 
-  const { data: membership, error: membershipError } = await supabase
-    .from("team_members")
-    .select("role")
-    .eq("team_id", teamId)
-    .eq("user_id", user.id)
-    .single();
+const { data: membership, error } = await supabase
+  .from("team_members")
+  .select("*")
+  .eq("team_id", teamId)
+  .eq("user_id", user?.id);
 
-  if (membershipError || !membership) {
-    return <div className="p-6">Team not found</div>;
-  }
-
-  const isLeader = membership.role === "LEADER";
+console.log("MEMBERSHIP RESULT:", membership);
+console.log("MEMBERSHIP ERROR:", error);
 
   /* =========================
      FETCH TEAM (SEPARATE QUERY)
