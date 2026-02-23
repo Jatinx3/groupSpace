@@ -24,9 +24,10 @@ type Message = {
 export default async function TeamDetailPage({
   params,
 }: {
-  params: { teamId: string };
+  params: Promise<{ teamId: string }>;
 }) {
-  const teamId = params?.teamId;
+  // ✅ IMPORTANT: await params in Next 15/16
+  const { teamId } = await params;
 
   if (!teamId) {
     return <div className="p-6">Invalid team</div>;
