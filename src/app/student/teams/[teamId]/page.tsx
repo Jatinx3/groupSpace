@@ -28,8 +28,8 @@ type Message = {
 };
 
 export default async function TeamDetailPage({ params }: Props) {
-  const { teamId } = params;
-
+  const teamId = params.teamId;
+console.log("TEAM ID:", teamId);
   const supabase = await createServerSupabase();
 
   /* =========================
