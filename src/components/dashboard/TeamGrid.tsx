@@ -1,16 +1,6 @@
 import { Users } from "lucide-react";
 import TeamCard from "./TeamCard";
-
- interface Team {
-  id: string;
-  name: string;
-  course_id: string;
-  courses?: {
-    id: string;
-    name: string;
-  }[];
-}
-
+import type { Team } from "../../types/team";
 export default function TeamGrid({ teams }: { teams: Team[] }) {
   return (
     <section>

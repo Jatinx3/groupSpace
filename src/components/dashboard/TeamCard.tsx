@@ -1,15 +1,7 @@
 import Card from "../ui/Card";
 import { Users } from "lucide-react";
+import type { Team } from "../../types/team";
 
-interface Team {
-  id: string;
-  name: string;
-  course_id: string;
-  courses?: {
-    id: string;
-    name: string;
-  };
-}
 
 export default function TeamCard({ team }: { team: Team }) {
   return (
