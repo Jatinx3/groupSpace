@@ -16,8 +16,7 @@ export default function TeamCard({ team }: { team: Team }) {
       </div>
 
       <p className="text-sm text-slate-500">
-        Course: {team.courses?.name ?? "Unknown"}
-      </p>
+Course: {team.courses?.[0]?.name ?? "Unknown"}      </p>
     </Card>
   );
 }
