@@ -40,42 +40,49 @@ export default async function TeamDetailPage(props: Props) {
     return <div className="p-6">Not authenticated</div>;
   }
 
+
   /* =========================
-     VERIFY MEMBERSHIP
-  ========================= */
+   VERIFY MEMBERSHIP
+========================= */
 
-  const { data: membership } = await supabase
-    .from("team_members")
-    .select(`
-      role,
-      team:teams (
+const { data: membership } = await supabase
+  .from("team_members")
+  .select(`
+    role,
+    team:teams (
+      id,
+      name,
+      courses (
         id,
-        name,
-        courses (
-          id,
-          name
-        )
+        name
       )
-    `)
-    .eq("team_id", teamId)
-    .eq("user_id", user.id)
-    .single();
+    )
+  `)
+  .eq("team_id", teamId)
+  .eq("user_id", user.id)
+  .single();
 
-  if (!membership) {
-    return (
-      <div className="p-6">
-        Team not found
-        <pre>
-          {JSON.stringify({ teamId, userId: user.id }, null, 2)}
-        </pre>
-      </div>
-    );
-  }
+if (!membership) {
+  return (
+    <div className="p-6">
+      Team not found
+    </div>
+  );
+}
 
-  const isLeader = membership.role === "LEADER";
-  const team = membership.team?.[0];
-const course = team?.courses?.[0];
+/* Supabase always returns relations as arrays */
+const team = membership.team?.[0];
 
+if (!team) {
+  return (
+    <div className="p-6">
+      Team not found
+    </div>
+  );
+}
+
+const course = team.courses?.[0];
+const isLeader = membership.role === "LEADER";
   /* =========================
      FETCH MEMBERS
   ========================= */
@@ -208,23 +215,23 @@ const course = team?.courses?.[0];
 
   return (
     <TeamWorkspace
-      teamId={teamId}
-      teamName={team.name}
-      courseName={course?.name}
-      members={memberList}
-      tasks={formattedTasks}
-      files={files}
-      isLeader={isLeader}
-      messages={messages}
-      currentUserId={user.id}
-      onDelete={
-        isLeader
-          ? async () => {
-              "use server";
-              await deleteTeam(teamId);
-            }
-          : undefined
-      }
-    />
+  teamId={teamId}
+  teamName={team.name}
+  courseName={course?.name}
+  members={memberList}
+  tasks={formattedTasks}
+  files={files}
+  isLeader={isLeader}
+  messages={messages}
+  currentUserId={user.id}
+  onDelete={
+    isLeader
+      ? async () => {
+          "use server";
+          await deleteTeam(teamId);
+        }
+      : undefined
+  }
+/>
   );
 }
