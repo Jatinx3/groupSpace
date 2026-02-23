@@ -73,8 +73,8 @@ export default async function TeamDetailPage(props: Props) {
   }
 
   const isLeader = membership.role === "LEADER";
-  const team = membership.team;
-  const course = team.courses?.[0];
+  const team = membership.team?.[0];
+const course = team?.courses?.[0];
 
   /* =========================
      FETCH MEMBERS
