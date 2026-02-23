@@ -2,12 +2,6 @@ import { createServerSupabase } from "../../../../lib/supabase-server";
 import { deleteTeam } from "../actions";
 import TeamWorkspace from "../../../../components/student/workspace/TeamWorkspace";
 
-interface Props {
-  params: {
-    teamId: string;
-  };
-}
-
 type Member = {
   id: string;
   first_name: string;
@@ -27,9 +21,17 @@ type Message = {
   } | null;
 };
 
-export default async function TeamDetailPage({ params }: Props) {
-  const teamId = params.teamId;
-console.log("TEAM ID:", teamId);
+export default async function TeamDetailPage({
+  params,
+}: {
+  params: { teamId: string };
+}) {
+  const teamId = params?.teamId;
+
+  if (!teamId) {
+    return <div className="p-6">Invalid team</div>;
+  }
+
   const supabase = await createServerSupabase();
 
   /* =========================
@@ -39,34 +41,29 @@ console.log("TEAM ID:", teamId);
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  console.log("SERVER USER:", user);
 
   if (!user) {
     return <div className="p-6">Not authenticated</div>;
   }
 
   /* =========================
-     VERIFY MEMBERSHIP (NO JOIN)
-     This avoids RLS join issues
+     VERIFY MEMBERSHIP
   ========================= */
 
- const { data: membership, error } = await supabase
-  .from("team_members")
-  .select("*")
-  .eq("team_id", teamId)
-  .eq("user_id", user?.id);
+  const { data: membership, error: membershipError } = await supabase
+    .from("team_members")
+    .select("role")
+    .eq("team_id", teamId)
+    .eq("user_id", user.id);
 
-console.log("MEMBERSHIP RESULT:", membership);
-console.log("MEMBERSHIP ERROR:", error);
+  if (membershipError || !membership || membership.length === 0) {
+    return <div className="p-6">Team not found</div>;
+  }
 
-if (error || !membership || membership.length === 0) {
-  return <div className="p-6">Team not found</div>;
-}
-
-const isLeader = membership[0].role === "LEADER";
+  const isLeader = membership[0].role === "LEADER";
 
   /* =========================
-     FETCH TEAM (SEPARATE QUERY)
+     FETCH TEAM
   ========================= */
 
   const { data: team } = await supabase
@@ -80,7 +77,7 @@ const isLeader = membership[0].role === "LEADER";
   }
 
   /* =========================
-     FETCH COURSE (OPTIONAL)
+     FETCH COURSE
   ========================= */
 
   let courseName: string | undefined;
