@@ -3,11 +3,7 @@
 import { useState } from "react";
 import { createTask } from "../../../../app/student/teams/actions";
 
-interface Member {
-  id: string;
-  first_name: string;
-  last_name: string;
-}
+import type { Member } from "../../../../types/member";
 
 interface Props {
   teamId: string;

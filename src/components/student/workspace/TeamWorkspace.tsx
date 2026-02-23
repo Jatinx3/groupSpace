@@ -16,17 +16,13 @@ import ChatTab from "./tabs/ChatTab";
 import TasksTab from "./tabs/TasksTab";
 import FilesTab from "./tabs/FilesTab";
 import type { Task } from "../../../types/task";
+import type { Member } from "../../../types/member";
+
 /* ============================= */
 /* Types */
 /* ============================= */
 
-type Member = {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  role: string;
-};
+
 
 
 

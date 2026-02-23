@@ -1,12 +1,7 @@
 "use client";
 
-type Member = {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  role: string;
-};
+import type { Member } from "../../../../types/member";
+
 
 type Task = {
   id: string;

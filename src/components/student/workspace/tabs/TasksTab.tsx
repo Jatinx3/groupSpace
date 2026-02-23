@@ -6,7 +6,7 @@ import AddTaskModal from "./AddTaskModal";
 import EditTaskModal from "./EditTaskModal";
 
 import type { Task } from "../../../../types/task";
-
+import type { Member } from "../../../../types/member";
 
 interface Props {
   tasks: Task[];
