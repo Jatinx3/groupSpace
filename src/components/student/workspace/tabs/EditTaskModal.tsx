@@ -1,6 +1,7 @@
 "use client";
 
-import { useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { useTransition, useState } from "react";
 import { deleteTask, updateTask } from "../../../../app/student/teams/actions";
 
 interface Props {
@@ -14,150 +15,112 @@ export default function EditTaskModal({
   teamId,
   onClose,
 }: Props) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  function handleUpdate(formData: FormData) {
+    startTransition(async () => {
+      await updateTask(formData);
+      router.refresh();
+      onClose();
+    });
+  }
 
   function handleDelete() {
-    const confirmed = confirm("Are you sure you want to delete this task?");
-    if (!confirmed) return;
-
     startTransition(async () => {
       const formData = new FormData();
       formData.append("taskId", task.id);
       formData.append("teamId", teamId);
       await deleteTask(formData);
-      onClose(); // 🔥 close modal after delete
+      router.refresh();
+      onClose();
     });
   }
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl p-8 relative">
+      <div className="bg-white w-full max-w-xl rounded-2xl shadow-2xl p-6 relative">
 
-        {/* Close */}
         <button
           onClick={onClose}
-          className="absolute top-6 right-6 text-gray-400 hover:text-black"
+          className="absolute top-4 right-4 text-gray-400 hover:text-black"
         >
           ✕
         </button>
 
-        {/* Header */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-900">
-            Edit Task
-          </h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Update task details
-          </p>
-        </div>
+        <h2 className="text-lg font-semibold mb-6">Edit Task</h2>
 
-        <form action={updateTask} className="space-y-6">
+        <form action={handleUpdate} className="space-y-5">
           <input type="hidden" name="taskId" value={task.id} />
           <input type="hidden" name="teamId" value={teamId} />
 
-          {/* Title */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Title
-            </label>
-            <input
-              name="title"
-              defaultValue={task.title}
-              className="w-full bg-gray-50 rounded-xl px-4 py-3 text-sm border border-gray-200 focus:bg-white focus:border-black focus:outline-none transition"
-            />
-          </div>
+          <input
+            name="title"
+            defaultValue={task.title}
+            className="w-full bg-gray-50 rounded-xl px-4 py-2 text-sm border border-gray-200"
+          />
 
-          {/* Description */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description
-            </label>
-            <textarea
-              name="description"
-              defaultValue={task.description ?? ""}
-              rows={3}
-              className="w-full bg-gray-50 rounded-xl px-4 py-3 text-sm border border-gray-200 focus:bg-white focus:border-black focus:outline-none transition"
-            />
-          </div>
+          <textarea
+            name="description"
+            defaultValue={task.description ?? ""}
+            rows={3}
+            className="w-full bg-gray-50 rounded-xl px-4 py-2 text-sm border border-gray-200"
+          />
 
-          {/* Row: Status + Priority + Due */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="flex justify-between items-center pt-4 border-t">
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Status
-              </label>
-              <select
-                name="status"
-                defaultValue={task.status}
-                className="w-full bg-gray-50 rounded-xl px-3 py-2 text-sm border border-gray-200 focus:bg-white focus:border-black"
+            {!showDeleteConfirm ? (
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(true)}
+                className="text-sm text-red-500 hover:text-red-600"
               >
-                <option value="pending">Pending</option>
-                <option value="in_progress">In Progress</option>
-                <option value="completed">Completed</option>
-              </select>
-            </div>
+                Delete Task
+              </button>
+            ) : (
+              <div className="flex items-center gap-3 text-sm">
+                <span className="text-red-500 font-medium">
+                  Confirm delete?
+                </span>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Priority
-              </label>
-              <select
-                name="priority"
-                defaultValue={task.priority}
-                className="w-full bg-gray-50 rounded-xl px-3 py-2 text-sm border border-gray-200 focus:bg-white focus:border-black"
-              >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-              </select>
-            </div>
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  className="px-3 py-1 rounded bg-red-500 text-white text-xs"
+                >
+                  Yes
+                </button>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Due Date
-              </label>
-              <input
-                type="date"
-                name="due_date"
-                defaultValue={task.due_date?.split("T")[0]}
-                className="w-full bg-gray-50 rounded-xl px-3 py-2 text-sm border border-gray-200 focus:bg-white focus:border-black"
-              />
-            </div>
-
-          </div>
-
-          {/* Footer */}
-          <div className="flex justify-between items-center pt-6 border-t border-gray-100">
-
-            <button
-              type="button"
-              onClick={handleDelete}
-              disabled={isPending}
-              className="text-sm text-red-500 hover:text-red-600 transition"
-            >
-              Delete Task
-            </button>
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="px-3 py-1 rounded border text-xs"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
 
             <div className="flex gap-3">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-5 py-2 text-sm rounded-xl border border-gray-200 hover:bg-gray-50 transition"
+                className="px-4 py-2 text-sm border rounded-xl"
               >
                 Cancel
               </button>
 
               <button
                 type="submit"
-                className="px-5 py-2 text-sm rounded-xl bg-black text-white hover:opacity-90 transition"
+                disabled={isPending}
+                className="px-4 py-2 text-sm bg-black text-white rounded-xl"
               >
-                Save Changes
+                Save
               </button>
             </div>
 
           </div>
-
         </form>
       </div>
     </div>

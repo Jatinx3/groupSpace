@@ -285,58 +285,7 @@ export async function deleteTask(formData: FormData) {
   revalidatePath(`/student/teams/${teamId}`);
 }
 
-export async function uploadFile(formData: FormData) {
-  const supabase = await createServerSupabase();
 
-  const file = formData.get("file") as File | null;
-  const teamId = formData.get("teamId") as string | null;
-
-  if (!file || !teamId) {
-    throw new Error("Missing file or team ID");
-  }
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) throw new Error("Not authenticated");
-
-  // ✅ Convert file properly
-  const arrayBuffer = await file.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
-
-  const filePath = `${teamId}/${crypto.randomUUID()}-${file.name}`;
-
-  // ✅ Upload to storage
-  const { error: uploadError } = await supabase.storage
-    .from("team-files")
-    .upload(filePath, buffer, {
-      contentType: file.type,
-    });
-
-  if (uploadError) {
-    console.error("Storage upload error:", uploadError);
-    throw uploadError;
-  }
-
-  // ✅ Insert metadata into DB
-  const { error: dbError } = await supabase
-    .from("project_files")
-    .insert({
-      team_id: teamId,
-      file_name: file.name,
-      file_path: filePath,
-      file_size: file.size,
-      uploaded_by: user.id,
-    });
-
-  if (dbError) {
-    console.error("DB insert error:", dbError);
-    throw dbError;
-  }
-
-  revalidatePath(`/student/teams/${teamId}`);
-}
 
 export async function deleteFile(formData: FormData) {
   const supabase = await createServerSupabase();
@@ -361,4 +310,247 @@ export async function deleteFile(formData: FormData) {
     .eq("id", fileId);
 
   revalidatePath(`/student/teams/${file.team_id}`);
+}
+
+
+
+
+
+/* ============================= */
+/* CREATE FOLDER */
+/* ============================= */
+
+export async function createFolder(formData: FormData) {
+  const supabase = await createServerSupabase();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("Unauthorized");
+
+  const teamId = formData.get("teamId") as string;
+  const name = formData.get("name") as string;
+  const parentId = formData.get("parentId") as string | null;
+
+  if (!teamId || !name) {
+    throw new Error("Missing teamId or folder name");
+  }
+
+  const { error } = await supabase.from("folders").insert({
+    team_id: teamId,
+    name,
+    parent_id: parentId || null,
+  });
+
+  if (error) {
+    console.error("Create folder error:", error);
+    throw error;
+  }
+}
+
+/* ============================= */
+/* DELETE FOLDER */
+/* ============================= */
+
+export async function deleteFolder(formData: FormData) {
+  const supabase = await createServerSupabase();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("Unauthorized");
+
+  const folderId = formData.get("folderId") as string;
+
+  if (!folderId) {
+    throw new Error("Missing folderId");
+  }
+
+  // Check for child folders
+  const { data: childFolders } = await supabase
+    .from("folders")
+    .select("id")
+    .eq("parent_id", folderId);
+
+  if (childFolders && childFolders.length > 0) {
+    throw new Error("Folder contains subfolders");
+  }
+
+  // Check for files inside folder
+  const { data: childFiles } = await supabase
+    .from("project_files")
+    .select("id")
+    .eq("folder_id", folderId);
+
+  if (childFiles && childFiles.length > 0) {
+    throw new Error("Folder contains files");
+  }
+
+  const { error } = await supabase
+    .from("folders")
+    .delete()
+    .eq("id", folderId);
+
+  if (error) {
+    console.error("Delete folder error:", error);
+    throw error;
+  }
+}
+
+
+/* ============================= */
+/* UPLOAD FILE (UNIVERSAL) */
+/* ============================= */
+
+export async function uploadFile(formData: FormData) {
+  const supabase = await createServerSupabase();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("Unauthorized");
+
+  const teamId = formData.get("teamId") as string;
+  const file = formData.get("file") as File;
+  const folderId = formData.get("folderId") as string | null;
+
+  if (!teamId || !file) {
+    throw new Error("Missing teamId or file");
+  }
+
+  // If no folderId, upload to root
+  const folderSegment = folderId ?? "root";
+
+  const filePath = `${teamId}/${folderSegment}/${Date.now()}-${file.name}`;
+
+  // Upload to Storage
+  const { error: uploadError } = await supabase.storage
+    .from("team-files")
+    .upload(filePath, file);
+
+  if (uploadError) {
+    console.error("Storage upload error:", uploadError);
+    throw uploadError;
+  }
+
+  // Insert DB record
+  const { error: dbError } = await supabase
+    .from("project_files")
+    .insert({
+      team_id: teamId,
+      file_name: file.name,
+      file_size: file.size,
+      uploaded_by: user.id,
+      storage_path: filePath,
+      folder_id: folderId || null,
+    });
+
+  if (dbError) {
+    console.error("DB insert error:", dbError);
+    throw dbError;
+  }
+}
+
+/* =============================
+   CREATE EMPTY FILE
+============================= */
+
+export async function createEmptyFile(formData: FormData) {
+  const supabase = await createServerSupabase();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("Unauthorized");
+
+  const teamId = formData.get("teamId") as string;
+  const fileName = formData.get("fileName") as string;
+  const folderId = formData.get("folderId") as string | null;
+
+  if (!teamId || !fileName) {
+    throw new Error("Missing teamId or fileName");
+  }
+
+  const folderSegment = folderId ?? "root";
+
+  const filePath = `${teamId}/${folderSegment}/${Date.now()}-${fileName}`;
+
+  // Create empty file blob
+  const emptyFile = new File([""], fileName);
+
+  const { error: uploadError } = await supabase.storage
+    .from("team-files")
+    .upload(filePath, emptyFile);
+
+  if (uploadError) throw uploadError;
+
+  const { error: dbError } = await supabase
+    .from("project_files")
+    .insert({
+      team_id: teamId,
+      file_name: fileName,
+      file_size: 0,
+      uploaded_by: user.id,
+      storage_path: filePath,
+      folder_id: folderId || null,
+    });
+
+  if (dbError) throw dbError;
+}
+
+
+
+
+export async function joinCourseByCode(formData: FormData) {
+  const supabase = await createServerSupabase();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error("Not authenticated");
+  }
+
+  const code = formData.get("code")?.toString().trim();
+
+  if (!code) {
+    throw new Error("Invite code is required");
+  }
+
+  /* ======================
+     Find Course By Code
+  ====================== */
+
+  const { data: course, error: courseError } = await supabase
+    .from("courses")
+    .select("id")
+    .eq("invite_code", code)
+    .single();
+
+  if (courseError || !course) {
+    throw new Error("Invalid invite code");
+  }
+
+  /* ======================
+     Insert Membership
+  ====================== */
+
+  const { error: insertError } = await supabase
+    .from("course_members")
+    .insert({
+      user_id: user.id,
+      course_id: course.id,
+    });
+
+  // Ignore duplicate errors safely
+  if (insertError && insertError.code !== "23505") {
+    throw insertError;
+  }
+
+  revalidatePath("/student/courses");
 }

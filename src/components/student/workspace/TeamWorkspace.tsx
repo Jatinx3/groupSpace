@@ -1,13 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import {
   Users,
   CheckSquare,
   Activity,
-  Folder,
+  FolderTree,
   MessageSquare,
+  Folder,
 } from "lucide-react";
+
+import { addMemberByEmail } from "../../../app/student/teams/invite-actions";
 
 import TeamTab from "./tabs/TeamTab";
 import ProgressTab from "./tabs/ProgressTab";
@@ -15,16 +19,9 @@ import StructureTab from "./tabs/StructureTab";
 import ChatTab from "./tabs/ChatTab";
 import TasksTab from "./tabs/TasksTab";
 import FilesTab from "./tabs/FilesTab";
+
 import type { Task } from "../../../types/task";
 import type { Member } from "../../../types/member";
-
-/* ============================= */
-/* Types */
-/* ============================= */
-
-
-
-
 
 type Message = {
   id: string;
@@ -37,49 +34,33 @@ type Message = {
   } | null;
 };
 
-type FileItem = {
-  id: string;
-  file_name: string;
-  file_size: number | null;
-  created_at: string;
-  uploaded_by: {
-    first_name: string;
-    last_name: string;
-  } | null;
-};
-
-/* ============================= */
-/* Props */
-/* ============================= */
-
 interface Props {
   teamId: string;
   teamName: string;
   courseName?: string;
+  inviteCode: string;
   members: Member[];
   tasks: Task[];
-  files: FileItem[];
+  files: any[];
+  folders: any[];
   isLeader: boolean;
   messages: Message[];
   currentUserId: string;
   onDelete?: () => void;
 }
 
-/* ============================= */
-/* Component */
-/* ============================= */
-
 export default function TeamWorkspace({
   teamId,
   teamName,
   courseName,
+  inviteCode,
   members,
   tasks,
   files,
+  folders,
   isLeader,
   messages,
   currentUserId,
-  onDelete,
 }: Props) {
   const [activeTab, setActiveTab] = useState("team");
 
@@ -87,10 +68,28 @@ export default function TeamWorkspace({
     { key: "team", label: "Team", icon: Users },
     { key: "tasks", label: "Tasks", icon: CheckSquare },
     { key: "progress", label: "Progress", icon: Activity },
-    { key: "structure", label: "Structure", icon: Folder },
+    { key: "structure", label: "Structure", icon: FolderTree },
     { key: "chat", label: "Chat", icon: MessageSquare },
-    { key: "files", label: "Files", icon: Folder }, // ✅ NEW TAB
+    { key: "files", label: "Files", icon: Folder },
   ];
+
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [isPending, startTransition] = useTransition();
+
+  const handleAdd = () => {
+    if (!email) return;
+
+    startTransition(async () => {
+      await addMemberByEmail(teamId, email);
+      setEmail("");
+      router.refresh();
+    });
+  };
+
+  const copyCode = async () => {
+    await navigator.clipboard.writeText(inviteCode);
+  };
 
   function renderTab() {
     switch (activeTab) {
@@ -102,7 +101,6 @@ export default function TeamWorkspace({
             tasks={tasks}
           />
         );
-
       case "tasks":
         return (
           <TasksTab
@@ -112,13 +110,17 @@ export default function TeamWorkspace({
             members={members}
           />
         );
-
       case "progress":
         return <ProgressTab tasks={tasks} />;
-
       case "structure":
-        return <StructureTab />;
-
+        return (
+          <StructureTab
+            teamId={teamId}
+            folders={folders}
+            files={files}
+            isLeader={isLeader}
+          />
+        );
       case "chat":
         return (
           <ChatTab
@@ -127,7 +129,6 @@ export default function TeamWorkspace({
             currentUserId={currentUserId}
           />
         );
-
       case "files":
         return (
           <FilesTab
@@ -136,7 +137,6 @@ export default function TeamWorkspace({
             isLeader={isLeader}
           />
         );
-
       default:
         return null;
     }
@@ -145,7 +145,57 @@ export default function TeamWorkspace({
   return (
     <div className="py-10">
       <div className="max-w-6xl mx-auto space-y-10">
-        {/* Tabs Navigation */}
+
+        {/* HEADER */}
+        <div className="flex items-center justify-between">
+
+          <div>
+            <h1 className="text-3xl font-semibold tracking-tight">
+              {teamName}
+            </h1>
+            {courseName && (
+              <p className="text-sm text-gray-500 mt-1">
+                {courseName}
+              </p>
+            )}
+          </div>
+
+          {isLeader && (
+            <div className="flex items-center gap-4 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
+
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500">Code:</span>
+                <span className="font-mono text-sm bg-white px-2 py-1 rounded border">
+                  {inviteCode.slice(0, 8)}
+                </span>
+                <button
+                  onClick={copyCode}
+                  className="text-xs text-gray-600 hover:text-black"
+                >
+                  Copy
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Add by email"
+                  className="bg-white border rounded-lg px-3 py-1 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-black/10"
+                />
+                <button
+                  onClick={handleAdd}
+                  disabled={isPending}
+                  className="bg-black text-white text-xs px-3 py-1.5 rounded-lg disabled:opacity-50"
+                >
+                  {isPending ? "..." : "Add"}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* TABS */}
         <div className="flex gap-6 border-b border-gray-200 pb-3">
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -168,7 +218,6 @@ export default function TeamWorkspace({
           })}
         </div>
 
-        {/* Dynamic Content */}
         {renderTab()}
       </div>
     </div>

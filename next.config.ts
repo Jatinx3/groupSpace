@@ -1,7 +1,10 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  /* config options here */
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "10mb", // or "20mb" if you want
+    },
+  },
 };
 
-export default nextConfig;
+module.exports = nextConfig;

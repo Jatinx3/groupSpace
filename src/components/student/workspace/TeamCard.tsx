@@ -1,30 +1,34 @@
+"use client";
+
 import Link from "next/link";
 
-const colors = [
-  "border-blue-500",
-  "border-pink-500",
-  "border-green-500",
-  "border-orange-500",
-];
-
-export default function TeamCard({ team, index }: any) {
+export default function TeamCard({ team }: any) {
   return (
     <Link href={`/student/teams/${team.id}`}>
-      <div className={`bg-white rounded-xl shadow-sm border-t-4 ${colors[index % colors.length]} p-6 hover:shadow-md transition cursor-pointer`}>
-        
-        <h3 className="font-semibold text-lg">{team.name}</h3>
-        <p className="text-gray-500 text-sm mt-1">
-          {team.courses?.name}
-        </p>
+      <div className="group bg-white rounded-2xl border border-gray-200 p-5 transition-all duration-200 hover:shadow-lg hover:-translate-y-1 cursor-pointer">
 
-        <div className="mt-6 text-sm text-gray-500">
-          Active 2 hours ago
+        {/* Course Badge */}
+        <div className="mb-3">
+          <span className="text-[11px] uppercase tracking-wide text-gray-400">
+            {team.courses?.name}
+          </span>
         </div>
 
-        <div className="mt-4 inline-block bg-gray-100 text-xs px-3 py-1 rounded-full">
-          Project Due: Feb 25
-        </div>
+        {/* Team Name */}
+        <h3 className="text-base font-semibold text-gray-900 group-hover:text-black transition">
+          {team.name}
+        </h3>
 
+        {/* Subtle Divider */}
+        <div className="mt-4 h-px bg-gray-100" />
+
+        {/* Footer */}
+        <div className="mt-4 flex items-center justify-between text-xs text-gray-400">
+          <span>Open Workspace</span>
+          <span className="group-hover:translate-x-1 transition-transform">
+            →
+          </span>
+        </div>
       </div>
     </Link>
   );

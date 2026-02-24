@@ -26,7 +26,6 @@ export default async function TeamDetailPage({
 }: {
   params: Promise<{ teamId: string }>;
 }) {
-  // ✅ IMPORTANT: await params in Next 15/16
   const { teamId } = await params;
 
   if (!teamId) {
@@ -35,45 +34,45 @@ export default async function TeamDetailPage({
 
   const supabase = await createServerSupabase();
 
-  /* =========================
-     AUTH CHECK
-  ========================= */
-
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    return <div className="p-6">Not authenticated</div>;
-  }
+  if (!user) return <div className="p-6">Not authenticated</div>;
 
   /* =========================
      VERIFY MEMBERSHIP
   ========================= */
 
-  const { data: membership, error: membershipError } = await supabase
+  const { data: membershipRows, error: membershipError } = await supabase
     .from("team_members")
     .select("role")
     .eq("team_id", teamId)
     .eq("user_id", user.id);
 
-  if (membershipError || !membership || membership.length === 0) {
+  if (membershipError) {
+    console.error("Membership error:", membershipError);
+    return <div className="p-6">Error loading team</div>;
+  }
+
+  if (!membershipRows || membershipRows.length === 0) {
     return <div className="p-6">Team not found</div>;
   }
 
-  const isLeader = membership[0].role === "LEADER";
+  const isLeader = membershipRows[0].role === "LEADER";
 
   /* =========================
      FETCH TEAM
   ========================= */
 
-  const { data: team } = await supabase
+  const { data: team, error: teamError } = await supabase
     .from("teams")
-    .select("id, name, course_id")
+    .select("id, name, course_id, join_code")
     .eq("id", teamId)
     .single();
 
-  if (!team) {
+  if (teamError || !team) {
+    console.error("Team fetch error:", teamError);
     return <div className="p-6">Team not found</div>;
   }
 
@@ -94,30 +93,43 @@ export default async function TeamDetailPage({
   }
 
   /* =========================
-     FETCH MEMBERS
+     FETCH MEMBERS (SAFE VERSION)
   ========================= */
 
-  const { data: membersRaw } = await supabase
+  const { data: teamMembers, error: teamMembersError } = await supabase
     .from("team_members")
-    .select(`
-      role,
-      user:profiles (
-        id,
-        first_name,
-        last_name,
-        email
-      )
-    `)
+    .select("user_id, role")
     .eq("team_id", teamId);
 
+  if (teamMembersError) {
+    console.error("Team members error:", teamMembersError);
+  }
+
+  const userIds = teamMembers?.map((m) => m.user_id) ?? [];
+
+  const { data: profiles, error: profilesError } = await supabase
+    .from("profiles")
+    .select("id, first_name, last_name, email")
+    .in("id", userIds);
+
+  if (profilesError) {
+    console.error("Profiles fetch error:", profilesError);
+  }
+
   const memberList: Member[] =
-    membersRaw?.map((m: any) => ({
-      id: m.user.id,
-      first_name: m.user.first_name,
-      last_name: m.user.last_name,
-      email: m.user.email,
-      role: m.role,
-    })) ?? [];
+    profiles?.map((profile: any) => {
+      const role = teamMembers?.find(
+        (m) => m.user_id === profile.id
+      )?.role;
+
+      return {
+        id: profile.id,
+        first_name: profile.first_name,
+        last_name: profile.last_name,
+        email: profile.email,
+        role: role || "MEMBER",
+      };
+    }) ?? [];
 
   /* =========================
      FETCH TASKS
@@ -154,34 +166,6 @@ export default async function TeamDetailPage({
     })) ?? [];
 
   /* =========================
-     FETCH FILES
-  ========================= */
-
-  const { data: rawFiles } = await supabase
-    .from("project_files")
-    .select(`
-      id,
-      file_name,
-      file_size,
-      created_at,
-      profiles!project_files_uploaded_by_fkey (
-        first_name,
-        last_name
-      )
-    `)
-    .eq("team_id", teamId)
-    .order("created_at", { ascending: false });
-
-  const files =
-    rawFiles?.map((file: any) => ({
-      id: file.id,
-      file_name: file.file_name,
-      file_size: file.file_size,
-      created_at: file.created_at,
-      uploaded_by: file.profiles ?? null,
-    })) ?? [];
-
-  /* =========================
      FETCH MESSAGES
   ========================= */
 
@@ -194,15 +178,17 @@ export default async function TeamDetailPage({
   let messages: Message[] = [];
 
   if (rawMessages && rawMessages.length > 0) {
-    const userIds = rawMessages.map((m) => m.user_id);
+    const messageUserIds = rawMessages.map((m) => m.user_id);
 
-    const { data: profiles } = await supabase
+    const { data: messageProfiles } = await supabase
       .from("profiles")
       .select("id, first_name, last_name")
-      .in("id", userIds);
+      .in("id", messageUserIds);
 
     messages = rawMessages.map((msg: any) => {
-      const profile = profiles?.find((p) => p.id === msg.user_id);
+      const profile = messageProfiles?.find(
+        (p) => p.id === msg.user_id
+      );
 
       return {
         id: msg.id,
@@ -212,7 +198,7 @@ export default async function TeamDetailPage({
         profiles: profile
           ? {
               id: profile.id,
-              full_name: profile.first_name,
+              full_name: `${profile.first_name} ${profile.last_name}`,
             }
           : null,
       };
@@ -228,9 +214,11 @@ export default async function TeamDetailPage({
       teamId={teamId}
       teamName={team.name}
       courseName={courseName}
+      inviteCode={team.join_code}
       members={memberList}
       tasks={formattedTasks}
-      files={files}
+      files={[]}
+      folders={[]}
       isLeader={isLeader}
       messages={messages}
       currentUserId={user.id}

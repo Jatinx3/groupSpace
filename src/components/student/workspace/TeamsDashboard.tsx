@@ -12,45 +12,80 @@ interface Props {
 export default function TeamsDashboard({ teams, courses }: Props) {
   const [open, setOpen] = useState(false);
 
-  const activeTeams = teams.length;
-  const totalMembers = teams.length * 3; // placeholder logic
-  const upcomingDeadlines = 4; // placeholder logic
+  const grouped = teams.reduce((acc: any, team: any) => {
+    const courseName = team.courses?.name || "Uncategorized";
+    if (!acc[courseName]) acc[courseName] = [];
+    acc[courseName].push(team);
+    return acc;
+  }, {});
+
+  const personalCourses = [
+    "Hackathons",
+    "Solo Projects",
+    "Team Projects",
+  ];
+
+  const personalTeams = Object.entries(grouped)
+    .filter(([courseName]) => personalCourses.includes(courseName))
+    .flatMap(([, teams]) => teams);
+
+  const academicTeams = Object.entries(grouped)
+    .filter(([courseName]) => !personalCourses.includes(courseName));
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-12">
 
       {/* Header */}
-      <div className="flex justify-between items-start">
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-semibold">My Teams</h1>
-          <p className="text-gray-500 mt-1">
-            Manage your group projects and collaborations
+          <h1 className="text-3xl font-semibold tracking-tight">
+            My Teams
+          </h1>
+          <p className="text-gray-500 mt-1 text-sm">
+            Organize your collaborations and projects
           </p>
         </div>
 
         <button
           onClick={() => setOpen(true)}
-          className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-5 py-2 rounded-lg shadow-md hover:opacity-90 transition"
+          className="bg-black text-white px-5 py-2.5 rounded-xl hover:opacity-90 transition text-sm"
         >
-          + New Team
+          + Create Team
         </button>
       </div>
 
-      {/* Stats */}
-      <div className="grid md:grid-cols-3 gap-6">
-        <StatCard label="Active Teams" value={activeTeams} />
-        <StatCard label="Total Members" value={totalMembers} />
-        <StatCard label="Upcoming Deadlines" value={upcomingDeadlines} />
-      </div>
+      {/* Personal Workspace */}
+      <section className="space-y-6">
+        <h2 className="text-lg font-semibold">
+          🚀 Personal Workspace
+        </h2>
 
-      {/* Teams Grid */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {teams.map((team: any, index: number) => (
-          <TeamCard key={team.id} team={team} index={index} />
-        ))}
-      </div>
+        {personalTeams.length === 0 ? (
+          <EmptyState text="No personal teams yet." />
+        ) : (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {personalTeams.map((team: any) => (
+              <TeamCard key={team.id} team={team} />
+            ))}
+          </div>
+        )}
+      </section>
 
-      {/* Modal */}
+      {/* Academic Courses */}
+      {academicTeams.map(([courseName, teams]: any) => (
+        <section key={courseName} className="space-y-6">
+          <h2 className="text-lg font-semibold">
+            📚 {courseName}
+          </h2>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {teams.map((team: any) => (
+              <TeamCard key={team.id} team={team} />
+            ))}
+          </div>
+        </section>
+      ))}
+
       {open && (
         <CreateJoinTeamModal
           onClose={() => setOpen(false)}
@@ -61,11 +96,10 @@ export default function TeamsDashboard({ teams, courses }: Props) {
   );
 }
 
-function StatCard({ label, value }: any) {
+function EmptyState({ text }: { text: string }) {
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-      <p className="text-gray-500 text-sm">{label}</p>
-      <p className="text-2xl font-semibold mt-2">{value}</p>
+    <div className="border border-dashed border-gray-300 rounded-2xl p-8 text-center text-gray-400 text-sm bg-gray-50">
+      {text}
     </div>
   );
 }

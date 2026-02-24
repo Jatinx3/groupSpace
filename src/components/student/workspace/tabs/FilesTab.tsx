@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Upload,
   Download,
@@ -36,68 +37,99 @@ export default function FilesTab({
   isLeader,
 }: Props) {
   const safeFiles = files ?? [];
+  const router = useRouter();
+
   const [previewFile, setPreviewFile] = useState<FileItem | null>(null);
+  const [uploadingFile, setUploadingFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<FileItem | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   const totalSize = safeFiles.reduce(
     (acc, file) => acc + (file.file_size ?? 0),
     0
   );
 
-  return (
-    <div className="space-y-8">
+  /* =========================
+     UPLOAD HANDLER
+  ========================== */
+  async function handleUpload(file: File) {
+    setUploadingFile(file);
+    setIsUploading(true);
 
-      {/* =========================
-         HEADER STATS
-      ========================== */}
+    const formData = new FormData();
+    formData.append("teamId", teamId);
+    formData.append("file", file);
+
+    await uploadFile(formData);
+
+    setIsUploading(false);
+    setUploadingFile(null);
+    router.refresh();
+  }
+
+  /* =========================
+     DELETE HANDLER
+  ========================== */
+  async function handleDelete(fileId: string) {
+    setIsDeleting(true);
+
+    const formData = new FormData();
+    formData.append("fileId", fileId);
+
+    await deleteFile(formData);
+
+    setIsDeleting(false);
+    setDeleteTarget(null);
+    router.refresh();
+  }
+
+  return (
+    <div className="space-y-6">
+
+      {/* HEADER */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-xl font-semibold">Project Files</h1>
-          <p className="text-sm text-gray-500">
-            {safeFiles.length} files • {formatFileSize(totalSize)} total
+          <h1 className="text-lg font-semibold">Project Files</h1>
+          <p className="text-xs text-gray-500">
+            {safeFiles.length} files • {formatFileSize(totalSize)}
           </p>
         </div>
       </div>
 
-      {/* =========================
-         UPLOAD SECTION
-      ========================== */}
-      <form
-        action={uploadFile}
-        className="bg-white border border-gray-200 rounded-xl p-6 space-y-4"
-      >
-        <input type="hidden" name="teamId" value={teamId} />
+      {/* UPLOAD CARD */}
+      <div className="flex justify-between items-center bg-white border border-gray-200 rounded-lg px-4 py-3">
+  <label className="flex items-center gap-2 cursor-pointer text-sm font-medium">
+    <Upload size={16} />
+    Upload file
+    <input
+      type="file"
+      className="hidden"
+      onChange={(e) => {
+        const file = e.target.files?.[0];
+        if (file) handleUpload(file);
+      }}
+    />
+  </label>
+<span className="text-xs text-gray-400">
+    Max 20MB
+  </span>
+        {isUploading && uploadingFile && (
+          <div className="mt-3 flex items-center gap-2 text-xs text-gray-500">
+            <span className="animate-spin h-3 w-3 border-2 border-gray-400 border-t-transparent rounded-full" />
+            Uploading {uploadingFile.name} (
+            {formatFileSize(uploadingFile.size)})
+          </div>
+        )}
+      </div>
 
-        <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center">
-          <Upload className="mx-auto mb-3 text-gray-400" size={20} />
-          <p className="text-sm text-gray-500">
-            Drag & drop or browse files
-          </p>
-
-          <input
-            type="file"
-            name="file"
-            required
-            className="mt-4 text-sm"
-          />
-        </div>
-
-        <button
-          type="submit"
-          className="px-4 py-2 bg-black text-white rounded-lg text-sm"
-        >
-          Upload File
-        </button>
-      </form>
-
-      {/* =========================
-         FILE LIST
-      ========================== */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
-
+      {/* FILE LIST */}
+<div className="bg-white rounded-xl shadow-sm">
         {safeFiles.length === 0 && (
-          <p className="text-sm text-gray-500">
+          <div className="p-4 text-sm text-gray-500">
             No files uploaded yet.
-          </p>
+          </div>
         )}
 
         {safeFiles.map((file) => {
@@ -108,27 +140,27 @@ export default function FilesTab({
           return (
             <div
               key={file.id}
-              className="flex justify-between items-center border rounded-xl px-5 py-4 hover:bg-gray-50 transition"
+              className="flex justify-between items-center px-5 py-4 hover:bg-gray-50/60 transition border-b last:border-none"
             >
               <div
-                className="flex items-center gap-4 cursor-pointer"
+                className="flex items-center gap-3 cursor-pointer"
                 onClick={() => setPreviewFile(file)}
               >
-                <Icon size={20} className="text-gray-500" />
+                <Icon size={18} className="text-gray-500" />
 
-                <div className="space-y-1">
-                  <div className="flex items-center gap-3">
-                    <p className="font-medium text-sm">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium">
                       {file.file_name}
                     </p>
                     <span
-                      className={`text-xs px-2 py-1 rounded-full ${badgeColor}`}
+                      className={`text-[10px] px-2 py-0.5 rounded-full ${badgeColor}`}
                     >
                       {ext.toUpperCase()}
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-3 text-xs text-gray-500">
+                  <div className="text-xs text-gray-500 flex gap-2">
                     <span>{formatFileSize(file.file_size ?? 0)}</span>
                     <span>•</span>
                     <span>{getRelativeTime(file.created_at)}</span>
@@ -145,27 +177,31 @@ export default function FilesTab({
               </div>
 
               <div className="flex items-center gap-4">
+
+                {/* DOWNLOAD */}
                 <a
                   href={`/api/files/${file.id}`}
-                  className="text-gray-600 hover:text-black"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => {
+                    setDownloadingId(file.id);
+                    setTimeout(() => setDownloadingId(null), 1500);
+                  }}
+                  className="text-gray-600 hover:text-black text-sm"
                 >
-                  <Download size={16} />
+                  {downloadingId === file.id
+                    ? "Downloading..."
+                    : <Download size={16} />}
                 </a>
 
+                {/* DELETE */}
                 {isLeader && (
-                  <form action={deleteFile}>
-                    <input
-                      type="hidden"
-                      name="fileId"
-                      value={file.id}
-                    />
-                    <button
-                      type="submit"
-                      className="text-gray-600 hover:text-red-600"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </form>
+                  <button
+                    onClick={() => setDeleteTarget(file)}
+                    className="text-gray-600 hover:text-red-600"
+                  >
+                    <Trash2 size={16} />
+                  </button>
                 )}
               </div>
             </div>
@@ -173,12 +209,10 @@ export default function FilesTab({
         })}
       </div>
 
-      {/* =========================
-         PREVIEW MODAL
-      ========================== */}
+      {/* PREVIEW MODAL */}
       {previewFile && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-white w-full max-w-3xl rounded-xl p-6 relative">
+          <div className="bg-white w-full max-w-3xl rounded-lg p-6 relative">
 
             <button
               onClick={() => setPreviewFile(null)}
@@ -206,6 +240,33 @@ export default function FilesTab({
                 Preview not available.
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* DELETE CONFIRM MODAL */}
+      {deleteTarget && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-5 w-[320px]">
+            <p className="text-sm mb-4">
+              Delete "{deleteTarget.file_name}"?
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                className="text-sm text-gray-500"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={() => handleDelete(deleteTarget.id)}
+                className="text-sm text-red-600"
+              >
+                {isDeleting ? "Deleting..." : "Delete"}
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -22,7 +22,7 @@ type Props = {
   currentUserId: string;
 };
 
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
 export default function ChatTab({
   teamId,
@@ -37,60 +37,63 @@ export default function ChatTab({
   const [showEmoji, setShowEmoji] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  const bottomRef = useRef<HTMLDivElement>(null);
-  const hasMountedRef = useRef(false);
+  const messageContainerRef = useRef<HTMLDivElement>(null);
+  const isInitialLoadRef = useRef(true);
 
-  /* ========================= */
-  /* Auto Scroll (No Jump On Mount) */
-  /* ========================= */
+  /* ================= FIXED AUTO SCROLL ================= */
 
   useEffect(() => {
-    if (!hasMountedRef.current) {
-      hasMountedRef.current = true;
-      return;
+    const container = messageContainerRef.current;
+    if (!container) return;
+
+    if (isInitialLoadRef.current) {
+      // instant scroll on first load
+      container.scrollTop = container.scrollHeight;
+      isInitialLoadRef.current = false;
+    } else {
+      // smooth scroll for new messages only
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: "smooth",
+      });
     }
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  /* ========================= */
-  /* Fetch Messages */
-  /* ========================= */
+  /* ================= FETCH ================= */
 
   const fetchMessages = async () => {
-  const { data: rawMessages } = await supabase
-    .from("messages")
-    .select("*")
-    .eq("team_id", teamId)
-    .order("created_at", { ascending: true });
+    const { data: raw } = await supabase
+      .from("messages")
+      .select("*")
+      .eq("team_id", teamId)
+      .order("created_at", { ascending: true });
 
-  if (!rawMessages) return;
+    if (!raw) return;
 
-  const userIds = rawMessages.map((m) => m.user_id);
+    const userIds = raw.map((m) => m.user_id);
 
-  const { data: profiles } = await supabase
-    .from("profiles")
-    .select("id, first_name, last_name")
-    .in("id", userIds);
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, first_name, last_name")
+      .in("id", userIds);
 
-  const merged = rawMessages.map((msg) => {
-    const profile = profiles?.find((p) => p.id === msg.user_id);
+    const merged = raw.map((msg) => {
+      const profile = profiles?.find((p) => p.id === msg.user_id);
+      return {
+        ...msg,
+        profiles: profile
+          ? {
+              id: profile.id,
+              full_name: `${profile.first_name} ${profile.last_name}`,
+            }
+          : null,
+      };
+    });
 
-    return {
-      ...msg,
-      profiles: profile
-        ? {
-            id: profile.id,
-            full_name: `${profile.first_name} ${profile.last_name}`,
-          }
-        : null,
-    };
-  });
+    setMessages(merged);
+  };
 
-  setMessages(merged);
-};
-  /* ========================= */
-  /* File Upload */
-  /* ========================= */
+  /* ================= FILE UPLOAD ================= */
 
   const handleFileChange = (file: File) => {
     if (file.size > MAX_FILE_SIZE) {
@@ -101,34 +104,31 @@ export default function ChatTab({
   };
 
   const uploadFile = async (): Promise<string | null> => {
-  if (!selectedFile) return null;
+    if (!selectedFile) return null;
 
-  const filePath = `${teamId}/${Date.now()}-${selectedFile.name}`;
+    const filePath = `${teamId}/${Date.now()}-${selectedFile.name}`;
 
-  console.log("Uploading:", selectedFile.name);
-  console.log("Path:", filePath);
+    const { error } = await supabase.storage
+      .from("chat-media")
+      .upload(filePath, selectedFile);
 
-  const { error } = await supabase.storage
-    .from("chat-media")
-    .upload(filePath, selectedFile);
+    if (error) {
+      console.error(error);
+      return null;
+    }
 
-  if (error) {
-    console.error("Upload error:", error);
-    return null;
-  }
+    return filePath;
+  };
 
-  const { data } = supabase.storage
-    .from("chat-media")
-    .getPublicUrl(filePath);
+  const getSignedUrl = async (path: string) => {
+    const { data } = await supabase.storage
+      .from("chat-media")
+      .createSignedUrl(path, 60 * 60);
 
-  console.log("Public URL:", data.publicUrl);
+    return data?.signedUrl || null;
+  };
 
-  return data.publicUrl;
-};
-
-  /* ========================= */
-  /* Send Message */
-  /* ========================= */
+  /* ================= SEND ================= */
 
   const sendMessage = async () => {
     if ((!newMessage.trim() && !selectedFile) || sending) return;
@@ -138,9 +138,9 @@ export default function ChatTab({
     let content = newMessage.trim();
 
     if (selectedFile) {
-      const fileUrl = await uploadFile();
-      if (fileUrl) {
-        content += `\n${fileUrl}`;
+      const filePath = await uploadFile();
+      if (filePath) {
+        content += `\n__FILE__${filePath}`;
       }
     }
 
@@ -178,78 +178,197 @@ export default function ChatTab({
 
   const emojis = ["😀", "🔥", "🚀", "💡", "🎉", "👍", "😂", "❤️"];
 
+  /* ================= RENDER ================= */
+
   return (
-    <div className="space-y-6">
+  <div className="h-full">
+    <div className="bg-white rounded-3xl border border-gray-200 shadow-sm flex flex-col h-[70vh] max-h-[680px] overflow-hidden">
+
       {/* Header */}
-      
+      <div className="px-6 py-4 border-b border-gray-100 font-semibold sticky top-0 bg-white z-10">
+        Team Chat
+      </div>
 
-      {/* Chat Container */}
-      <div className="bg-white rounded-3xl border border-gray-200 shadow-sm flex flex-col h-[70vh] overflow-hidden">
+      {/* Messages */}
+      <div
+        ref={messageContainerRef}
+        className="flex-1 overflow-y-auto px-8 py-8 space-y-6 bg-gray-50"
+      >
+        <AnimatePresence>
+          {messages.map((msg, index) => {
+            const isOwn = msg.user_id === currentUserId;
+            const name = msg.profiles?.full_name || "Unknown";
 
-        {/* Top */}
-        <div className="px-6 py-4 border-b border-gray-100 font-medium">
-          Team Chat
-        </div>
+            const prevMsg = messages[index - 1];
+            const isSameSender =
+              prevMsg && prevMsg.user_id === msg.user_id;
 
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-8 bg-gradient-to-b from-white to-gray-50">
-          <AnimatePresence>
-            {messages.map((msg) => {
-              const isOwn = msg.user_id === currentUserId;
-              const name = msg.profiles?.full_name || "Unknown User";
+            return (
+              <motion.div
+                key={msg.id}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.18 }}
+                className={`flex ${
+                  isOwn ? "justify-end" : "justify-start"
+                }`}
+              >
+                <div className="max-w-[65%]">
 
-              return (
-                <motion.div
-                  key={msg.id}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className={`flex gap-4 ${
-                    isOwn ? "flex-row-reverse text-right" : ""
-                  }`}
-                >
-                  <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-sm font-semibold shadow-sm">
-                    {getInitials(name)}
+                  {/* Show name only if sender changes */}
+                  {!isOwn && !isSameSender && (
+                    <div className="text-xs text-gray-500 mb-1 ml-1">
+                      {name}
+                    </div>
+                  )}
+
+                  <div
+                    className={`px-5 py-3 rounded-2xl text-sm leading-relaxed shadow-sm ${
+                      isOwn
+                        ? "bg-black text-white rounded-br-md"
+                        : "bg-white border border-gray-200 rounded-bl-md"
+                    }`}
+                  >
+                    {msg.content.split("\n").map((line, i) => {
+                      if (line.startsWith("__FILE__")) {
+                        const filePath = line.replace("__FILE__", "");
+                        return (
+                          <FilePreview
+                            key={i}
+                            filePath={filePath}
+                            getSignedUrl={getSignedUrl}
+                          />
+                        );
+                      }
+                      return <p key={i}>{line}</p>;
+                    })}
                   </div>
 
-                  <div className="max-w-xl">
-                    <div className="text-sm font-medium flex gap-2 items-center">
-                      {isOwn ? "You" : name}
-                      <span className="text-gray-400 text-xs font-normal">
-                        {new Date(msg.created_at).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </span>
-                    </div>
+                  {/* Timestamp */}
+                  <div
+                    className={`text-[11px] text-gray-400 mt-1 ${
+                      isOwn ? "text-right mr-1" : "ml-1"
+                    }`}
+                  >
+                    {new Date(msg.created_at).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
+      </div>
 
-                    <div
-  className={`mt-2 px-5 py-3 rounded-2xl text-sm shadow-sm ${
-    isOwn
-      ? "bg-black text-white"
-      : "bg-white border border-gray-200"
-  }`}
->
-  
-{msg.content.split("\n").map((line, i) => {
-  const isUrl =
-    line.startsWith("http://") || line.startsWith("https://");
+      {/* Input Bar */}
+      <div className="border-t border-gray-100 bg-white px-6 py-4">
+        {selectedFile && (
+          <div className="flex items-center justify-between bg-gray-100 px-4 py-2 rounded-xl mb-3 text-sm">
+            <span className="truncate">{selectedFile.name}</span>
+            <button
+              onClick={() => setSelectedFile(null)}
+              className="text-gray-400 hover:text-black"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        )}
 
-  if (!isUrl) {
-    return <p key={i}>{line}</p>;
-  }
+        <div className="flex items-center gap-3">
 
-  const isImage = line.match(/\.(jpeg|jpg|png|gif|webp|heic)$/i);
-  const isVideo = line.match(/\.(mp4|webm|ogg)$/i);
+          <button
+            onClick={() => setShowEmoji(!showEmoji)}
+            className="p-2 hover:bg-gray-100 rounded-xl transition"
+          >
+            <Smile size={18} />
+          </button>
+
+          <label className="p-2 hover:bg-gray-100 rounded-xl cursor-pointer transition">
+            <Paperclip size={18} />
+            <input
+              type="file"
+              hidden
+              onChange={(e) =>
+                e.target.files && handleFileChange(e.target.files[0])
+              }
+            />
+          </label>
+
+          <input
+            type="text"
+            placeholder="Type a message..."
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+            className="flex-1 bg-gray-100 rounded-full px-6 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-black/10"
+          />
+
+          <button
+            onClick={sendMessage}
+            disabled={sending}
+            className="bg-black text-white p-3 rounded-full hover:opacity-80 transition disabled:opacity-40"
+          >
+            <Send size={16} />
+          </button>
+        </div>
+
+        {showEmoji && (
+          <div className="absolute bottom-20 left-6 bg-white border border-gray-200 rounded-2xl shadow-lg p-3 flex gap-2">
+            {emojis.map((e) => (
+              <button
+                key={e}
+                onClick={() => {
+                  setNewMessage((prev) => prev + e);
+                  setShowEmoji(false);
+                }}
+                className="text-lg hover:scale-110 transition"
+              >
+                {e}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+);}
+
+/* ================= FILE PREVIEW ================= */
+
+function FilePreview({
+  filePath,
+  getSignedUrl,
+}: {
+  filePath: string;
+  getSignedUrl: (path: string) => Promise<string | null>;
+}) {
+  const [url, setUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    getSignedUrl(filePath).then(setUrl);
+  }, [filePath]);
+
+  if (!url) return <p className="mt-2 text-xs">Loading...</p>;
+
+  const fileName = filePath.split("/").pop() || "file";
+  const cleanName = fileName.replace(/^\d+-/, "");
+  const extension = cleanName.split(".").pop()?.toLowerCase();
+
+  const isImage = ["jpg", "jpeg", "png", "gif", "webp", "heic"].includes(
+    extension || ""
+  );
+
+  const isVideo = ["mp4", "webm", "ogg"].includes(extension || "");
 
   if (isImage) {
     return (
-      <div key={i} className="mt-3">
+      <div className="mt-3">
         <img
-          src={line}
-          alt="uploaded"
-          className="rounded-xl max-h-72 object-cover border"
+          src={url}
+          alt={cleanName}
+          className="rounded-xl max-h-80 object-cover"
         />
       </div>
     );
@@ -258,104 +377,24 @@ export default function ChatTab({
   if (isVideo) {
     return (
       <video
-        key={i}
-        src={line}
+        src={url}
         controls
-        className="mt-3 rounded-xl max-h-72 border"
+        className="mt-3 rounded-xl max-h-80"
       />
     );
   }
 
   return (
-    <a
-      key={i}
-      href={line}
-      target="_blank"
-      className="block mt-2 text-blue-500 underline"
-    >
-      Download file
-    </a>
-  );
-})}
-</div>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </AnimatePresence>
-
-          <div ref={bottomRef} />
-        </div>
-
-        {/* Input Area */}
-        <div className="border-t border-gray-100 p-4 bg-white backdrop-blur-md">
-          {selectedFile && (
-            <div className="flex items-center justify-between bg-gray-100 px-3 py-2 rounded-xl mb-3 text-sm">
-              <span>{selectedFile.name}</span>
-              <button onClick={() => setSelectedFile(null)}>
-                <X size={16} />
-              </button>
-            </div>
-          )}
-
-          <div className="flex items-center gap-3 relative">
-            {/* Emoji Button */}
-            <button
-              onClick={() => setShowEmoji(!showEmoji)}
-              className="p-2 hover:bg-gray-100 rounded-lg"
-            >
-              <Smile size={18} />
-            </button>
-
-            {/* File Upload */}
-            <label className="p-2 hover:bg-gray-100 rounded-lg cursor-pointer">
-              <Paperclip size={18} />
-              <input
-                type="file"
-                hidden
-                onChange={(e) =>
-                  e.target.files && handleFileChange(e.target.files[0])
-                }
-              />
-            </label>
-
-            <input
-              type="text"
-              placeholder="Type your message..."
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-              className="flex-1 bg-gray-100 rounded-2xl px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-black/20"
-            />
-
-            <button
-              onClick={sendMessage}
-              disabled={sending}
-              className="bg-black text-white p-3 rounded-2xl hover:opacity-80 transition disabled:opacity-40"
-            >
-              <Send size={16} />
-            </button>
-
-            {/* Emoji Picker */}
-            {showEmoji && (
-              <div className="absolute bottom-14 left-0 bg-white border border-gray-200 rounded-2xl shadow-lg p-3 flex gap-2">
-                {emojis.map((e) => (
-                  <button
-                    key={e}
-                    onClick={() => {
-                      setNewMessage((prev) => prev + e);
-                      setShowEmoji(false);
-                    }}
-                    className="text-lg hover:scale-110 transition"
-                  >
-                    {e}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+    <div className="mt-3">
+      <a
+        href={url}
+        download={cleanName}
+        target="_blank"
+        className="flex items-center gap-2 text-sm underline hover:opacity-80"
+      >
+        <span>📎</span>
+        <span>{cleanName}</span>
+      </a>
     </div>
   );
 }
