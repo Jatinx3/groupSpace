@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent, useEffect } from "react";
+import { useState, FormEvent } from "react";
 import { createClientSupabase } from "../../../lib/supabase-client";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
@@ -26,23 +26,6 @@ export default function SignupPage() {
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
-  // Render Turnstile after script loads
-  useEffect(() => {
-    if (!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY) {
-      console.error("Turnstile site key missing.");
-      return;
-    }
-
-    if (window.turnstile) {
-      window.turnstile.render("#turnstile-container", {
-        sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
-        callback: (token: string) => {
-          setCaptchaToken(token);
-        },
-      });
-    }
-  }, []);
 
   const handleSignup = async (e: FormEvent) => {
     e.preventDefault();
@@ -125,10 +108,23 @@ export default function SignupPage() {
 
   return (
     <>
-      {/* Load Turnstile script properly */}
+      {/* Turnstile Script */}
       <Script
         src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
         strategy="afterInteractive"
+        onLoad={() => {
+          if (!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY) {
+            console.error("Missing Turnstile site key");
+            return;
+          }
+
+          window.turnstile.render("#turnstile-container", {
+            sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!,
+            callback: (token: string) => {
+              setCaptchaToken(token);
+            },
+          });
+        }}
       />
 
       <div className="min-h-screen bg-slate-100 flex items-center justify-center px-4">
@@ -150,7 +146,6 @@ export default function SignupPage() {
 
           <form onSubmit={handleSignup} className="space-y-5">
 
-            {/* Name Row */}
             <div className="grid grid-cols-2 gap-4">
               <input
                 type="text"
@@ -168,7 +163,6 @@ export default function SignupPage() {
               />
             </div>
 
-            {/* Phone */}
             <div className="flex gap-3">
               <select
                 className="p-3 border rounded-lg focus:ring-2 focus:ring-slate-900 outline-none"
@@ -190,7 +184,6 @@ export default function SignupPage() {
               />
             </div>
 
-            {/* Email */}
             <input
               type="email"
               placeholder="University Email"
@@ -199,7 +192,6 @@ export default function SignupPage() {
               onChange={(e) => setEmail(e.target.value)}
             />
 
-            {/* Password */}
             <input
               type="password"
               placeholder="Password"
@@ -208,7 +200,6 @@ export default function SignupPage() {
               onChange={(e) => setPassword(e.target.value)}
             />
 
-            {/* Confirm Password */}
             <input
               type="password"
               placeholder="Retype Password"
@@ -217,10 +208,9 @@ export default function SignupPage() {
               onChange={(e) => setConfirmPassword(e.target.value)}
             />
 
-            {/* Turnstile */}
+            {/* Turnstile Container */}
             <div id="turnstile-container" />
 
-            {/* Error */}
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-600 text-sm p-3 rounded-lg">
                 {error}
