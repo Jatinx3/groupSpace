@@ -3,10 +3,12 @@
 import { createServerSupabase } from "../../../lib/supabase-server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { randomUUID } from "crypto";
 
 /* =========================
    CREATE TEAM
 ========================= */
+
 export async function createTeam(formData: FormData) {
   const supabase = await createServerSupabase();
 
@@ -23,24 +25,26 @@ export async function createTeam(formData: FormData) {
 
   if (!user) throw new Error("Not authenticated");
 
+  const teamId = randomUUID();
   const joinCode = crypto.randomUUID().slice(0, 8).toUpperCase();
 
-  const { data: team, error } = await supabase
+  // 1️⃣ Insert team (no select)
+  const { error: teamError } = await supabase
     .from("teams")
     .insert({
+      id: teamId,
       name,
       course_id: courseId,
       join_code: joinCode,
-    })
-    .select()
-    .single();
+    });
 
-  if (error || !team) throw error;
+  if (teamError) throw teamError;
 
+  // 2️⃣ Insert membership
   const { error: memberError } = await supabase
     .from("team_members")
     .insert({
-      team_id: team.id,
+      team_id: teamId,
       user_id: user.id,
       role: "LEADER",
     });
@@ -49,6 +53,7 @@ export async function createTeam(formData: FormData) {
 
   revalidatePath("/student/teams");
 }
+
 
 /* =========================
    LEAVE TEAM
