@@ -3,6 +3,7 @@
 import { useState, FormEvent, useEffect } from "react";
 import { createClientSupabase } from "../../../lib/supabase-client";
 import { useRouter } from "next/navigation";
+import Script from "next/script";
 
 declare global {
   interface Window {
@@ -23,24 +24,16 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // Render Turnstile after script loads
   useEffect(() => {
-    const script = document.createElement("script");
-    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
-    script.async = true;
-    document.body.appendChild(script);
-  }, []);
+    if (!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY) {
+      console.error("Turnstile site key missing.");
+      return;
+    }
 
-  useEffect(() => {
-  const script = document.createElement("script");
-  script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
-  script.async = true;
-  document.body.appendChild(script);
-
-  script.onload = () => {
     if (window.turnstile) {
       window.turnstile.render("#turnstile-container", {
         sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
@@ -49,8 +42,7 @@ export default function SignupPage() {
         },
       });
     }
-  };
-}, []);
+  }, []);
 
   const handleSignup = async (e: FormEvent) => {
     e.preventDefault();
@@ -110,7 +102,6 @@ export default function SignupPage() {
       return;
     }
 
-    // Safe profile creation
     const { error: profileError } = await supabase
       .from("profiles")
       .upsert({
@@ -133,154 +124,127 @@ export default function SignupPage() {
   };
 
   return (
-  <div className="min-h-screen bg-slate-100 flex items-center justify-center px-4">
-    <div className="w-full max-w-md bg-white rounded-2xl shadow-lg border border-slate-200 p-8">
+    <>
+      {/* Load Turnstile script properly */}
+      <Script
+        src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+        strategy="afterInteractive"
+      />
 
-      {/* Icon */}
-      <div className="flex justify-center mb-6">
-        <div className="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center text-white text-xl">
-          🎓
+      <div className="min-h-screen bg-slate-100 flex items-center justify-center px-4">
+        <div className="w-full max-w-md bg-white rounded-2xl shadow-lg border border-slate-200 p-8">
+
+          <div className="flex justify-center mb-6">
+            <div className="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center text-white text-xl">
+              🎓
+            </div>
+          </div>
+
+          <h1 className="text-2xl font-semibold text-center text-slate-900">
+            Create your student account
+          </h1>
+
+          <p className="text-sm text-slate-500 text-center mt-2 mb-8">
+            Sign up to access your university portal
+          </p>
+
+          <form onSubmit={handleSignup} className="space-y-5">
+
+            {/* Name Row */}
+            <div className="grid grid-cols-2 gap-4">
+              <input
+                type="text"
+                placeholder="First Name"
+                className="p-3 border rounded-lg focus:ring-2 focus:ring-slate-900 outline-none"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+              />
+              <input
+                type="text"
+                placeholder="Last Name"
+                className="p-3 border rounded-lg focus:ring-2 focus:ring-slate-900 outline-none"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+              />
+            </div>
+
+            {/* Phone */}
+            <div className="flex gap-3">
+              <select
+                className="p-3 border rounded-lg focus:ring-2 focus:ring-slate-900 outline-none"
+                value={countryCode}
+                onChange={(e) => setCountryCode(e.target.value)}
+              >
+                <option value="+353">+353</option>
+                <option value="+44">+44</option>
+                <option value="+91">+91</option>
+                <option value="+1">+1</option>
+              </select>
+
+              <input
+                type="tel"
+                placeholder="Phone Number"
+                className="flex-1 p-3 border rounded-lg focus:ring-2 focus:ring-slate-900 outline-none"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
+            </div>
+
+            {/* Email */}
+            <input
+              type="email"
+              placeholder="University Email"
+              className="p-3 border rounded-lg focus:ring-2 focus:ring-slate-900 outline-none w-full"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+
+            {/* Password */}
+            <input
+              type="password"
+              placeholder="Password"
+              className="p-3 border rounded-lg focus:ring-2 focus:ring-slate-900 outline-none w-full"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+
+            {/* Confirm Password */}
+            <input
+              type="password"
+              placeholder="Retype Password"
+              className="p-3 border rounded-lg focus:ring-2 focus:ring-slate-900 outline-none w-full"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+            />
+
+            {/* Turnstile */}
+            <div id="turnstile-container" />
+
+            {/* Error */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-600 text-sm p-3 rounded-lg">
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-slate-900 text-white p-3 rounded-lg hover:bg-slate-800 transition font-medium"
+            >
+              {loading ? "Creating account..." : "Create Account"}
+            </button>
+
+            <p className="text-sm text-center text-slate-500 mt-4">
+              Already have an account?{" "}
+              <a href="/login" className="text-slate-900 font-medium hover:underline">
+                Log in
+              </a>
+            </p>
+
+          </form>
         </div>
       </div>
-
-      {/* Heading */}
-      <h1 className="text-2xl font-semibold text-center text-slate-900">
-        Create your student account
-      </h1>
-      <p className="text-sm text-slate-500 text-center mt-2 mb-8">
-        Sign up to access your university portal
-      </p>
-
-      <form onSubmit={handleSignup} className="space-y-5">
-
-        {/* Name Row */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="text-sm font-medium text-slate-700">
-              First Name *
-            </label>
-            <input
-              type="text"
-              className="mt-1 w-full p-3 border rounded-lg focus:ring-2 focus:ring-slate-900 outline-none"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-            />
-          </div>
-
-          <div>
-            <label className="text-sm font-medium text-slate-700">
-              Last Name *
-            </label>
-            <input
-              type="text"
-              className="mt-1 w-full p-3 border rounded-lg focus:ring-2 focus:ring-slate-900 outline-none"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-            />
-          </div>
-        </div>
-
-        {/* Phone */}
-        <div>
-          <label className="text-sm font-medium text-slate-700">
-            Phone Number *
-          </label>
-          <div className="flex gap-3 mt-1">
-            <select
-              className="p-3 border rounded-lg focus:ring-2 focus:ring-slate-900 outline-none"
-              value={countryCode}
-              onChange={(e) => setCountryCode(e.target.value)}
-            >
-              <option value="+353">+353</option>
-              <option value="+44">+44</option>
-              <option value="+91">+91</option>
-              <option value="+1">+1</option>
-            </select>
-
-            <input
-              type="tel"
-              className="flex-1 p-3 border rounded-lg focus:ring-2 focus:ring-slate-900 outline-none"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-            />
-          </div>
-        </div>
-
-        {/* Email */}
-        <div>
-          <label className="text-sm font-medium text-slate-700">
-            University Email *
-          </label>
-          <input
-            type="email"
-            className="mt-1 w-full p-3 border rounded-lg focus:ring-2 focus:ring-slate-900 outline-none"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </div>
-
-        {/* Password */}
-        <div>
-          <label className="text-sm font-medium text-slate-700">
-            Password *
-          </label>
-          <input
-            type="password"
-            className="mt-1 w-full p-3 border rounded-lg focus:ring-2 focus:ring-slate-900 outline-none"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
-
-        {/* Confirm Password */}
-        <div>
-          <label className="text-sm font-medium text-slate-700">
-            Retype Password *
-          </label>
-          <input
-            type="password"
-            className="mt-1 w-full p-3 border rounded-lg focus:ring-2 focus:ring-slate-900 outline-none"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-          />
-        </div>
-
-        {/* Divider */}
-        <div className="border-t pt-4">
-          <div className="border-t pt-4">
-  <div id="turnstile-container"></div>
-</div>
-        </div>
-
-        {/* Error */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-600 text-sm p-3 rounded-lg">
-            {error}
-          </div>
-        )}
-
-        {/* Submit */}
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-slate-900 text-white p-3 rounded-lg hover:bg-slate-800 transition font-medium"
-        >
-          {loading ? "Creating account..." : "Create Account"}
-        </button>
-
-        {/* Footer */}
-        <p className="text-sm text-center text-slate-500 mt-4">
-          Already have an account?{" "}
-          <a
-            href="/login"
-            className="text-slate-900 font-medium hover:underline"
-          >
-            Log in
-          </a>
-        </p>
-
-      </form>
-    </div>
-  </div>
-);
+    </>
+  );
 }
