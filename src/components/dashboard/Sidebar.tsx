@@ -7,6 +7,7 @@ import {
   BookOpen,
   ClipboardList,
   Users,
+  GraduationCap,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -25,6 +26,11 @@ export default function Sidebar({
     { name: "Courses", href: "/student/courses", icon: BookOpen },
     { name: "Assignments", href: "/student/assignments", icon: ClipboardList },
     { name: "Teams", href: "/student/teams", icon: Users },
+    {
+      name: "Thesis Collab",
+      href: "/student/thesis",
+      icon: GraduationCap,
+    },
   ];
 
   return (

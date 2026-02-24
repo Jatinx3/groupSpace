@@ -43,8 +43,8 @@ export default function SignupPage() {
       return;
     }
 
-    if (!email.endsWith("@mytudublin.ie")) {
-      setError("Only @mytudublin.ie emails allowed.");
+    if (!email.endsWith("@mytudublin.ie") && !email.endsWith("@test.com")) {
+      setError("Only @mytudublin.ie and @test.com emails allowed.");
       return;
     }
 

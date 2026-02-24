@@ -206,6 +206,88 @@ export default async function TeamDetailPage({
   }
 
   /* =========================
+     FETCH FOLDERS
+  ========================= */
+
+  const { data: foldersRaw, error: foldersError } = await supabase
+    .from("folders")
+    .select("id, name, parent_id")
+    .eq("team_id", teamId);
+
+  if (foldersError) {
+    console.error("Folders fetch error:", foldersError);
+  }
+
+  const folders = foldersRaw ?? [];
+
+  /* =========================
+     FETCH FILES
+  ========================= */
+
+  const { data: filesRaw, error: filesError } = await supabase
+    .from("project_files")
+    .select(
+      "id, file_name, file_size, created_at, folder_id, uploaded_by"
+    )
+    .eq("team_id", teamId)
+    .order("created_at", { ascending: false });
+
+  if (filesError) {
+    console.error("Files fetch error:", filesError);
+  }
+
+  let files: any[] = [];
+
+  if (filesRaw && filesRaw.length > 0) {
+    const uploaderIds = Array.from(
+      new Set(
+        filesRaw
+          .map((file: any) => file.uploaded_by)
+          .filter((id: string | null) => !!id)
+      )
+    );
+
+    let uploaders: any[] = [];
+
+    if (uploaderIds.length > 0) {
+      const { data: uploaderProfiles, error: uploaderError } =
+        await supabase
+          .from("profiles")
+          .select("id, first_name, last_name")
+          .in("id", uploaderIds);
+
+      if (uploaderError) {
+        console.error(
+          "File uploader profiles error:",
+          uploaderError
+        );
+      } else {
+        uploaders = uploaderProfiles ?? [];
+      }
+    }
+
+    files = filesRaw.map((file: any) => {
+      const uploader =
+        uploaders.find((p: any) => p.id === file.uploaded_by) ??
+        null;
+
+      return {
+        id: file.id,
+        file_name: file.file_name,
+        file_size: file.file_size,
+        created_at: file.created_at,
+        folder_id: file.folder_id,
+        uploaded_by: uploader
+          ? {
+              first_name: uploader.first_name,
+              last_name: uploader.last_name,
+            }
+          : null,
+      };
+    });
+  }
+
+  /* =========================
      RETURN
   ========================= */
 
@@ -217,8 +299,8 @@ export default async function TeamDetailPage({
       inviteCode={team.join_code}
       members={memberList}
       tasks={formattedTasks}
-      files={[]}
-      folders={[]}
+      files={files}
+      folders={folders}
       isLeader={isLeader}
       messages={messages}
       currentUserId={user.id}

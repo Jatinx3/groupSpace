@@ -4,7 +4,7 @@ import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClientSupabase } from "../../../lib/supabase-client";
 
-export default function LoginPage() {
+export default function ProfessorLoginPage() {
   const router = useRouter();
   const supabase = createClientSupabase();
 
@@ -37,14 +37,13 @@ export default function LoginPage() {
         password,
       });
 
-   if (loginError) {
-  console.log("Supabase login error:", loginError);
-  setError(loginError.message);
-  setLoading(false);
-  return;
-}
+    if (loginError) {
+      console.log("Supabase login error (professor):", loginError);
+      setError(loginError.message);
+      setLoading(false);
+      return;
+    }
 
-    // Get authenticated user
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -55,46 +54,40 @@ export default function LoginPage() {
       return;
     }
 
-    // Check role
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")
       .eq("id", user.id)
       .single();
 
-    if (!profile || profile.role !== "student") {
+    if (!profile || profile.role !== "professor") {
       await supabase.auth.signOut();
-      setError("Access denied. Student account required.");
+      setError("Access denied. Professor account required.");
       setLoading(false);
       return;
     }
 
-    router.push("/student/");
+    router.push("/professor");
     router.refresh();
   };
 
   return (
     <div className="min-h-screen bg-slate-100 flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-lg border border-slate-200 p-8">
-
-        {/* Icon */}
         <div className="flex justify-center mb-6">
           <div className="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center text-white text-xl">
-            🎓
+            👨‍🏫
           </div>
         </div>
 
-        {/* Heading */}
         <h1 className="text-2xl font-semibold text-center text-slate-900">
-          Welcome back
+          Professor login
         </h1>
         <p className="text-sm text-slate-500 text-center mt-2 mb-8">
-          Sign in to your student account
+          Sign in to your thesis and course dashboard
         </p>
 
         <form onSubmit={handleLogin} className="space-y-5">
-
-          {/* Email */}
           <div>
             <label className="text-sm font-medium text-slate-700">
               University Email *
@@ -104,11 +97,10 @@ export default function LoginPage() {
               className="mt-1 w-full p-3 border rounded-lg focus:ring-2 focus:ring-slate-900 outline-none"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="john.doe@mytudublin.ie"
+              placeholder="jane.smith@mytudublin.ie"
             />
           </div>
 
-          {/* Password */}
           <div>
             <label className="text-sm font-medium text-slate-700">
               Password *
@@ -122,7 +114,6 @@ export default function LoginPage() {
             />
           </div>
 
-          {/* Remember + Forgot */}
           <div className="flex items-center justify-between text-sm">
             <label className="flex items-center gap-2 text-slate-600">
               <input
@@ -141,14 +132,12 @@ export default function LoginPage() {
             </a>
           </div>
 
-          {/* Error */}
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-600 text-sm p-3 rounded-lg">
               {error}
             </div>
           )}
 
-          {/* Submit */}
           <button
             type="submit"
             disabled={loading}
@@ -157,30 +146,18 @@ export default function LoginPage() {
             {loading ? "Signing in..." : "Sign in"}
           </button>
 
-          {/* Footer */}
-          <div className="space-y-1 text-sm text-center text-slate-500 mt-4">
-            <p>
-              Don’t have an account?{" "}
-              <a
-                href="/signup"
-                className="text-slate-900 font-medium hover:underline"
-              >
-                Sign up
-              </a>
-            </p>
-            <p>
-              Are you a professor?{" "}
-              <a
-                href="/professor-login"
-                className="text-slate-900 font-medium hover:underline"
-              >
-                Log in here
-              </a>
-            </p>
-          </div>
-
+          <p className="text-sm text-center text-slate-500 mt-4">
+            Are you a student?{" "}
+            <a
+              href="/login"
+              className="text-slate-900 font-medium hover:underline"
+            >
+              Log in here
+            </a>
+          </p>
         </form>
       </div>
     </div>
   );
 }
+

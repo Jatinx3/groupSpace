@@ -1,9 +1,7 @@
 import { redirect } from "next/navigation";
 import { createServerSupabase } from "../../lib/supabase-server";
-import LogoutButton from "../../components/auth/LogoutButton";
-import ProfessorTabs from "./professor-tabs";
 
-export default async function ProfessorLayout({
+export default async function SupervisorLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -18,7 +16,7 @@ export default async function ProfessorLayout({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, first_name")
     .eq("id", user.id)
     .single();
 
@@ -28,22 +26,21 @@ export default async function ProfessorLayout({
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <header className="border-b bg-white">
+      <div className="border-b bg-white">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-semibold text-slate-900">
-              Professor Dashboard
+            <h1 className="text-lg font-semibold text-slate-900">
+              Thesis Supervision
             </h1>
             <p className="text-xs text-slate-500">
-              Course oversight and thesis supervision in one place.
+              Structured oversight across all your supervisees.
             </p>
           </div>
-          <LogoutButton />
+          <p className="text-xs text-slate-500">
+            Signed in as {profile.first_name}
+          </p>
         </div>
-
-        {/* Tabs */}
-        <ProfessorTabs />
-      </header>
+      </div>
 
       <main className="max-w-6xl mx-auto px-6 py-8">
         {children}
@@ -51,3 +48,4 @@ export default async function ProfessorLayout({
     </div>
   );
 }
+
