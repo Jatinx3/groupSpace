@@ -19,12 +19,17 @@ export default function LoginPage() {
     e.preventDefault();
     setError(null);
 
-    if (!email || !password) {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedEmail || !password) {
       setError("All fields are required.");
       return;
     }
 
-    if (!email.endsWith("@mytudublin.ie") && !email.endsWith("@test.com")) {
+    if (
+      !normalizedEmail.endsWith("@mytudublin.ie") &&
+      !normalizedEmail.endsWith("@test.com")
+    ) {
       setError("Only @mytudublin.ie and @test.com emails are allowed.");
       return;
     }
@@ -33,7 +38,7 @@ export default function LoginPage() {
 
     const { error: loginError } =
       await supabase.auth.signInWithPassword({
-        email,
+        email: normalizedEmail,
         password,
       });
 
@@ -74,96 +79,88 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 flex items-center justify-center px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-lg border border-slate-200 p-8">
-
-        {/* Icon */}
+    <div className="min-h-screen bg-[#F3F3F3] flex items-center justify-center px-4">
+      <div className="w-full max-w-md bg-white rounded-2xl border border-black/10 p-8 shadow-sm">
         <div className="flex justify-center mb-6">
-          <div className="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center text-white text-xl">
-            🎓
+          <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center text-white text-xs font-bold tracking-[0.2em] uppercase">
+            GS
           </div>
         </div>
 
-        {/* Heading */}
-        <h1 className="text-2xl font-semibold text-center text-slate-900">
-          Welcome back
+        <h1 className="text-3xl font-black text-center tracking-tight uppercase text-black">
+          Student Sign In
         </h1>
-        <p className="text-sm text-slate-500 text-center mt-2 mb-8">
-          Sign in to your student account
+        <p className="text-xs text-neutral-500 text-center mt-3 mb-8 tracking-[0.18em] uppercase">
+          Access your GroupSpace workspace
         </p>
 
         <form onSubmit={handleLogin} className="space-y-5">
-
-          {/* Email */}
           <div>
-            <label className="text-sm font-medium text-slate-700">
-              University Email *
+            <label className="text-xs font-bold uppercase tracking-[0.18em] text-neutral-600">
+              University Email
             </label>
             <input
               type="email"
-              className="mt-1 w-full p-3 border rounded-lg focus:ring-2 focus:ring-slate-900 outline-none"
+              className="mt-2 w-full p-3 border border-black/10 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-black"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="john.doe@mytudublin.ie"
             />
           </div>
 
-          {/* Password */}
           <div>
-            <label className="text-sm font-medium text-slate-700">
-              Password *
+            <label className="text-xs font-bold uppercase tracking-[0.18em] text-neutral-600">
+              Password
             </label>
             <input
               type="password"
-              className="mt-1 w-full p-3 border rounded-lg focus:ring-2 focus:ring-slate-900 outline-none"
+              className="mt-2 w-full p-3 border border-black/10 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-black"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
             />
           </div>
 
-          {/* Remember + Forgot */}
-          <div className="flex items-center justify-between text-sm">
-            <label className="flex items-center gap-2 text-slate-600">
+          <div className="flex items-center justify-between text-xs">
+            <label className="flex items-center gap-2 text-neutral-600">
               <input
                 type="checkbox"
                 checked={remember}
                 onChange={(e) => setRemember(e.target.checked)}
               />
-              Remember me
+              <span className="uppercase tracking-[0.16em]">
+                Remember me
+              </span>
             </label>
 
             <a
               href="#"
-              className="text-slate-900 font-medium hover:underline"
+              className="font-medium uppercase tracking-[0.16em] text-black hover:underline"
             >
               Forgot password?
             </a>
           </div>
 
-          {/* Error */}
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 text-sm p-3 rounded-lg">
+            <div className="bg-red-50 border border-red-200 text-red-600 text-xs p-3 rounded-lg">
               {error}
             </div>
           )}
 
-          {/* Submit */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-slate-900 text-white p-3 rounded-lg hover:bg-slate-800 transition font-medium"
+            className="w-full bg-black text-white p-3 rounded-lg text-xs font-bold uppercase tracking-[0.2em] hover:bg-neutral-800 transition-colors"
           >
-            {loading ? "Signing in..." : "Sign in"}
+            {loading ? "Signing in..." : "Sign In"}
           </button>
 
-          {/* Footer */}
-          <div className="space-y-1 text-sm text-center text-slate-500 mt-4">
+          <div className="space-y-1 text-xs text-center text-neutral-600 mt-4">
             <p>
               Don’t have an account?{" "}
               <a
                 href="/signup"
-                className="text-slate-900 font-medium hover:underline"
+                className="font-semibold text-black hover:underline"
               >
                 Sign up
               </a>
@@ -172,13 +169,12 @@ export default function LoginPage() {
               Are you a professor?{" "}
               <a
                 href="/professor-login"
-                className="text-slate-900 font-medium hover:underline"
+                className="font-semibold text-black hover:underline"
               >
                 Log in here
               </a>
             </p>
           </div>
-
         </form>
       </div>
     </div>

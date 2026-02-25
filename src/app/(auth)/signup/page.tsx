@@ -30,11 +30,12 @@ export default function SignupPage() {
   const handleSignup = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
+    const normalizedEmail = email.trim().toLowerCase();
 
     if (
       !firstName ||
       !lastName ||
-      !email ||
+      !normalizedEmail ||
       !password ||
       !confirmPassword ||
       !phone
@@ -43,7 +44,10 @@ export default function SignupPage() {
       return;
     }
 
-    if (!email.endsWith("@mytudublin.ie") && !email.endsWith("@test.com")) {
+    if (
+      !normalizedEmail.endsWith("@mytudublin.ie") &&
+      !normalizedEmail.endsWith("@test.com")
+    ) {
       setError("Only @mytudublin.ie and @test.com emails allowed.");
       return;
     }
@@ -66,7 +70,7 @@ export default function SignupPage() {
     setLoading(true);
 
     const { data, error: signupError } = await supabase.auth.signUp({
-      email,
+      email: normalizedEmail,
       password,
       options: {
         captchaToken,
@@ -91,7 +95,7 @@ export default function SignupPage() {
         id: data.user.id,
         first_name: firstName,
         last_name: lastName,
-        email,
+        email: normalizedEmail,
         role: "student",
         phone: `${countryCode}${phone}`,
       });
@@ -127,21 +131,21 @@ export default function SignupPage() {
         }}
       />
 
-      <div className="min-h-screen bg-slate-100 flex items-center justify-center px-4">
-        <div className="w-full max-w-md bg-white rounded-2xl shadow-lg border border-slate-200 p-8">
+      <div className="min-h-screen bg-[#F3F3F3] flex items-center justify-center px-4">
+        <div className="w-full max-w-md bg-white rounded-2xl border border-black/10 p-8 shadow-sm">
 
           <div className="flex justify-center mb-6">
-            <div className="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center text-white text-xl">
-              🎓
+            <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center text-white text-xs font-bold tracking-[0.2em] uppercase">
+              GS
             </div>
           </div>
 
-          <h1 className="text-2xl font-semibold text-center text-slate-900">
-            Create your student account
+          <h1 className="text-3xl font-black text-center tracking-tight uppercase text-black">
+            Create Account
           </h1>
 
-          <p className="text-sm text-slate-500 text-center mt-2 mb-8">
-            Sign up to access your university portal
+          <p className="text-xs text-neutral-500 text-center mt-3 mb-8 tracking-[0.18em] uppercase">
+            Join your university workspace in GroupSpace
           </p>
 
           <form onSubmit={handleSignup} className="space-y-5">
@@ -150,14 +154,14 @@ export default function SignupPage() {
               <input
                 type="text"
                 placeholder="First Name"
-                className="p-3 border rounded-lg focus:ring-2 focus:ring-slate-900 outline-none"
+                className="p-3 border border-black/10 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-black"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
               />
               <input
                 type="text"
                 placeholder="Last Name"
-                className="p-3 border rounded-lg focus:ring-2 focus:ring-slate-900 outline-none"
+                className="p-3 border border-black/10 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-black"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
               />
@@ -165,7 +169,7 @@ export default function SignupPage() {
 
             <div className="flex gap-3">
               <select
-                className="p-3 border rounded-lg focus:ring-2 focus:ring-slate-900 outline-none"
+                className="p-3 border border-black/10 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-black"
                 value={countryCode}
                 onChange={(e) => setCountryCode(e.target.value)}
               >
@@ -178,7 +182,7 @@ export default function SignupPage() {
               <input
                 type="tel"
                 placeholder="Phone Number"
-                className="flex-1 p-3 border rounded-lg focus:ring-2 focus:ring-slate-900 outline-none"
+                className="flex-1 p-3 border border-black/10 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-black"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
               />
@@ -187,7 +191,7 @@ export default function SignupPage() {
             <input
               type="email"
               placeholder="University Email"
-              className="p-3 border rounded-lg focus:ring-2 focus:ring-slate-900 outline-none w-full"
+              className="p-3 border border-black/10 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-black w-full"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
@@ -195,7 +199,7 @@ export default function SignupPage() {
             <input
               type="password"
               placeholder="Password"
-              className="p-3 border rounded-lg focus:ring-2 focus:ring-slate-900 outline-none w-full"
+              className="p-3 border border-black/10 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-black w-full"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
@@ -203,7 +207,7 @@ export default function SignupPage() {
             <input
               type="password"
               placeholder="Retype Password"
-              className="p-3 border rounded-lg focus:ring-2 focus:ring-slate-900 outline-none w-full"
+              className="p-3 border border-black/10 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-black w-full"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
             />
@@ -212,7 +216,7 @@ export default function SignupPage() {
             <div id="turnstile-container" />
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 text-sm p-3 rounded-lg">
+              <div className="bg-red-50 border border-red-200 text-red-600 text-xs p-3 rounded-lg">
                 {error}
               </div>
             )}
@@ -220,14 +224,14 @@ export default function SignupPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-slate-900 text-white p-3 rounded-lg hover:bg-slate-800 transition font-medium"
+              className="w-full bg-black text-white p-3 rounded-lg text-xs font-bold uppercase tracking-[0.2em] hover:bg-neutral-800 transition-colors"
             >
               {loading ? "Creating account..." : "Create Account"}
             </button>
 
-            <p className="text-sm text-center text-slate-500 mt-4">
+            <p className="text-xs text-center text-neutral-600 mt-4">
               Already have an account?{" "}
-              <a href="/login" className="text-slate-900 font-medium hover:underline">
+              <a href="/login" className="font-semibold text-black hover:underline">
                 Log in
               </a>
             </p>

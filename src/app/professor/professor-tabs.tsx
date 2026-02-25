@@ -12,8 +12,8 @@ export default function ProfessorTabs() {
   ];
 
   return (
-    <nav className="border-t border-slate-100 bg-white">
-      <div className="max-w-6xl mx-auto px-6 flex gap-4">
+    <nav className="border-t border-black/5 bg-white">
+      <div className="max-w-6xl mx-auto px-6 flex gap-6">
         {tabs.map((tab) => {
           const active =
             pathname === tab.href ||
@@ -23,10 +23,10 @@ export default function ProfessorTabs() {
             <Link
               key={tab.href}
               href={tab.href}
-              className={`py-2 border-b-2 text-sm font-medium transition-colors ${
+              className={`py-3 border-b-2 text-xs font-bold uppercase tracking-[0.18em] transition-colors ${
                 active
-                  ? "border-slate-900 text-slate-900"
-                  : "border-transparent text-slate-500 hover:text-slate-900"
+                  ? "border-black text-black"
+                  : "border-transparent text-neutral-500 hover:text-black"
               }`}
             >
               {tab.label}
