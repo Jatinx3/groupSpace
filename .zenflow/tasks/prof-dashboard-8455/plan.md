@@ -20,7 +20,8 @@ If you are blocked and need user clarification, mark the current step with `[!]`
 
 ## Workflow Steps
 
-### [ ] Step: Technical Specification
+### [x] Step: Technical Specification
+<!-- chat-id: dd785c4f-8452-4609-aac3-5255c1a245bb -->
 
 Assess the task's difficulty, as underestimating it leads to poor outcomes.
 - easy: Straightforward implementation, trivial bug fix or feature
@@ -54,16 +55,23 @@ Save to `{@artifacts_path}/plan.md`. If the feature is trivial and doesn't warra
 
 ---
 
-### [ ] Step: Implementation
+### [x] Step: Build professor sidebar and client layout
+<!-- chat-id: 65073c32-d0ef-4bf2-8cc3-7b5ec76608d4 -->
 
-Implement the task according to the technical specification and general engineering best practices.
+Create the interactive layout shell matching the student dashboard pattern.
+- Create `src/components/professor/ProfessorSidebar.tsx` — collapsible sidebar with Overview and Thesis Collab nav items, indigo active state, GroupSpace logo
+- Create `src/components/professor/ProfessorLayoutClient.tsx` — client component with: mobile overlay, sidebar toggle (hamburger), avatar dropdown (profile/logout), and content area with `bg-slate-100`
+- Modify `src/app/professor/layout.tsx` — keep server-side auth guard, pass `firstName` to `ProfessorLayoutClient`, remove old header/tab JSX
+- Remove `src/app/professor/professor-tabs.tsx` (navigation now in sidebar)
+- Run `npm run build` and verify no errors
 
-1. Break the task into steps where possible.
-2. Implement the required changes in the codebase
-3. If relevant, write unit tests alongside each change.
-4. Run relevant tests and linters in the end of each step.
-5. Perform basic manual verification if applicable.
-6. After completion, write a report to `{@artifacts_path}/report.md` describing:
-   - What was implemented
-   - How the solution was tested
-   - The biggest issues or challenges encountered
+### [x] Step: Redesign professor overview page
+<!-- chat-id: 47748706-6fce-4bb6-9f3e-bb492e713094 -->
+
+Improve `src/app/professor/page.tsx` with richer UI.
+- Add 2 minimal count queries: courses taught (`courses WHERE professor_id = user.id`) and thesis supervisees (`thesis_projects WHERE supervisor_id = user.id`)
+- Reuse `Greeting` component for welcome header
+- Add stats row using `StatsCard` (or inline equivalent): Courses, Thesis Supervisees
+- Replace static info cards with styled quick-action cards linking to `/professor/thesis` and courses sections
+- Run `npm run build` and verify no errors
+- Write `{@artifacts_path}/report.md`
