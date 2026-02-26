@@ -68,29 +68,28 @@ export default function ActivityFeed({ tasks, teams }: Props) {
 
   return (
     <Card>
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-8">
-        <div className="p-2 rounded-xl bg-sky-100 text-sky-600">
-          <Activity className="w-5 h-5" />
+      <div className="flex items-center gap-3 mb-6">
+        <div className="p-2 rounded-lg bg-gray-100 text-gray-600">
+          <Activity className="w-4 h-4" />
         </div>
-        <h2 className="text-2xl font-semibold text-slate-800">
+        <h2 className="font-semibold text-gray-900">
           Recent Activity
         </h2>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-4">
         {recent.length === 0 && (
-          <p className="text-slate-500 text-sm">
+          <p className="text-gray-500 text-sm">
             No recent activity yet.
           </p>
         )}
 
         {recent.map((item) => (
           <div key={item.id}>
-            <p className="text-slate-700">
+            <p className="text-sm text-gray-700">
               {item.text}
             </p>
-            <p className="text-sm text-slate-400 mt-1">
+            <p className="text-xs text-gray-400 mt-0.5">
               {item.time}
             </p>
           </div>
