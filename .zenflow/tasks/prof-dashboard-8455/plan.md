@@ -75,3 +75,9 @@ Improve `src/app/professor/page.tsx` with richer UI.
 - Replace static info cards with styled quick-action cards linking to `/professor/thesis` and courses sections
 - Run `npm run build` and verify no errors
 - Write `{@artifacts_path}/report.md`
+
+### [x] Step: Revamp professor again new UI
+<!-- chat-id: c2ce6f15-d387-4de5-ba3d-98ab659162c5 -->
+
+### [ ] Step: how do i push all this in current repo
+<!-- chat-id: 9cbc871d-ceb2-427e-a36d-c0d84ebf6d57 -->

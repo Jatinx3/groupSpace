@@ -51,6 +51,13 @@ export default async function ProfessorThesisDashboardPage() {
         .in("thesis_id", thesisIds)
     : { data: [] };
 
+  const { data: comments } = thesisIds.length
+    ? await supabase
+        .from("thesis_comments")
+        .select("id, thesis_id")
+        .in("thesis_id", thesisIds)
+    : { data: [] };
+
   const progressByThesis: Record<
     string,
     { total: number; approved: number }
@@ -67,13 +74,15 @@ export default async function ProfessorThesisDashboardPage() {
     }
   });
 
+  const messageCountByThesis: Record<string, number> = {};
+  (comments ?? []).forEach((c: any) => {
+    messageCountByThesis[c.thesis_id] =
+      (messageCountByThesis[c.thesis_id] ?? 0) + 1;
+  });
+
   const enrichedTheses =
     theses?.map((t: any) => {
-      const stats = progressByThesis[t.id] ?? {
-        total: 0,
-        approved: 0,
-      };
-
+      const stats = progressByThesis[t.id] ?? { total: 0, approved: 0 };
       const pct =
         stats.total > 0
           ? Math.round((stats.approved / stats.total) * 100)
@@ -89,6 +98,9 @@ export default async function ProfessorThesisDashboardPage() {
           ? `${t.student.first_name} ${t.student.last_name}`
           : "Unknown student",
         progress: pct,
+        milestoneCount: stats.total,
+        approvedCount: stats.approved,
+        messageCount: messageCountByThesis[t.id] ?? 0,
       };
     }) ?? [];
 
@@ -99,4 +111,3 @@ export default async function ProfessorThesisDashboardPage() {
     />
   );
 }
-
