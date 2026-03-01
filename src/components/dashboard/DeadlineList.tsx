@@ -36,20 +36,19 @@ export default function DeadlineList({ tasks, teams }: Props) {
 
   return (
     <Card>
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-8">
-        <div className="p-2 rounded-xl bg-rose-100 text-rose-600">
-          <Clock className="w-5 h-5" />
+      <div className="flex items-center gap-3 mb-6">
+        <div className="p-2 rounded-lg bg-gray-100 text-gray-600">
+          <Clock className="w-4 h-4" />
         </div>
-        <h2 className="text-2xl font-semibold text-slate-800">
+        <h2 className="font-semibold text-gray-900">
           Upcoming Deadlines
         </h2>
       </div>
 
-      <div className="space-y-5">
+      <div className="space-y-4">
         {upcoming.length === 0 && (
-          <p className="text-slate-500 text-sm">
-            No upcoming deadlines 🎉
+          <p className="text-gray-500 text-sm">
+            No upcoming deadlines.
           </p>
         )}
 
@@ -62,10 +61,10 @@ export default function DeadlineList({ tasks, teams }: Props) {
 
           const urgency =
             daysLeft <= 3
-              ? "border-rose-500"
+              ? "border-black"
               : daysLeft <= 7
-              ? "border-amber-400"
-              : "border-slate-200";
+              ? "border-gray-500"
+              : "border-gray-200";
 
           const teamName =
             teams.find((t) => t.id === task.team_id)
@@ -74,19 +73,18 @@ export default function DeadlineList({ tasks, teams }: Props) {
           return (
             <div
               key={task.id}
-              className={`border-l-4 ${urgency} pl-5 py-3`}
+              className={`border-l-2 ${urgency} pl-4 py-2`}
             >
-              <h3 className="font-semibold text-slate-800">
+              <h3 className="font-medium text-gray-900 text-sm">
                 {task.title}
               </h3>
 
-              <p className="text-sm text-slate-500 mt-1">
+              <p className="text-xs text-gray-500 mt-0.5">
                 {teamName}
               </p>
 
-              <p className="text-sm mt-2 text-slate-600">
-                Due in {daysLeft} day
-                {daysLeft !== 1 && "s"}
+              <p className="text-xs mt-1 text-gray-400">
+                Due in {daysLeft} day{daysLeft !== 1 && "s"}
               </p>
             </div>
           );

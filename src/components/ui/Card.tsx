@@ -9,13 +9,12 @@ export default function Card({ children, className = "" }: CardProps) {
   return (
     <div
       className={`
-        bg-white/80
-        backdrop-blur-sm
-        rounded-3xl
-        p-8
-        shadow-sm
+        bg-white
+        border border-gray-200
+        rounded-xl
+        p-6
         transition-all
-        hover:shadow-md
+        hover:shadow-sm
         ${className}
       `}
     >

@@ -45,7 +45,8 @@ export default async function ProfessorThesisDetailPage({
       student:profiles!thesis_projects_student_id_fkey (
         id,
         first_name,
-        last_name
+        last_name,
+        email
       ),
       supervisor:profiles!thesis_projects_supervisor_id_fkey (
         id,
@@ -62,11 +63,15 @@ export default async function ProfessorThesisDetailPage({
     notFound();
   }
 
-  // 🔄 Normalize thesis relations
+  // 🔄 Normalize thesis relations (Supabase returns object or array depending on version)
+  const toSingle = (val: any) => {
+    if (!val) return null;
+    return Array.isArray(val) ? (val[0] ?? null) : val;
+  };
   const normalizedThesis = {
     ...thesis,
-    student: thesis.student?.[0] ?? null,
-    supervisor: thesis.supervisor?.[0] ?? null,
+    student: toSingle(thesis.student),
+    supervisor: toSingle(thesis.supervisor),
   };
 
   // 📅 Milestones
@@ -102,7 +107,8 @@ export default async function ProfessorThesisDetailPage({
       author:profiles!thesis_comments_author_id_fkey (
         id,
         first_name,
-        last_name
+        last_name,
+        email
       )
       `
     )
@@ -113,7 +119,7 @@ export default async function ProfessorThesisDetailPage({
   const normalizedComments =
     comments?.map((comment) => ({
       ...comment,
-      author: comment.author?.[0] ?? null,
+      author: toSingle(comment.author),
     })) ?? [];
 
   return (

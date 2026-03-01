@@ -13,11 +13,11 @@ export default function CourseGrid({ courses }: { courses: Course[] }) {
   return (
     <section>
       {/* Section Header */}
-      <div className="flex items-center gap-3 mb-8">
-        <div className="p-2 rounded-xl bg-indigo-100 text-indigo-600">
-          <BookOpen className="w-5 h-5" />
+      <div className="flex items-center gap-3 mb-6">
+        <div className="p-2 rounded-lg bg-gray-100 text-gray-600">
+          <BookOpen className="w-4 h-4" />
         </div>
-        <h2 className="text-2xl font-semibold text-slate-800">
+        <h2 className="font-semibold text-gray-900">
           Your Courses
         </h2>
       </div>
