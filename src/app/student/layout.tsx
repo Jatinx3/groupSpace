@@ -142,11 +142,11 @@ export default function StudentLayout({
   };
 
   return (
-    <div className="min-h-screen flex relative bg-white">
+    <div className="min-h-screen flex relative bg-[#0A0A0A] text-zinc-100">
       {/* Mobile Overlay */}
       {isMobileOpen && (
         <div
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 md:hidden"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
           onClick={() => setIsMobileOpen(false)}
         />
       )}
@@ -160,21 +160,21 @@ export default function StudentLayout({
       {/* Main */}
       <main className="flex-1 flex flex-col min-h-screen overflow-hidden">
         {/* Header */}
-        <div className="px-6 md:px-8 py-4 flex items-center justify-between bg-white border-b border-gray-100">
+        <div className="px-6 md:px-8 py-4 flex items-center justify-between bg-[#0A0A0A] border-b border-white/5">
           {/* Left Controls */}
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsMobileOpen(true)}
-              className="md:hidden p-2 rounded-xl hover:bg-gray-100 transition"
+              className="md:hidden p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 transition"
             >
-              <Menu className="w-4 h-4 text-gray-600" />
+              <Menu className="w-4 h-4" />
             </button>
 
             <button
               onClick={() => setIsDesktopOpen(!isDesktopOpen)}
-              className="hidden md:block p-2 rounded-xl hover:bg-gray-100 transition"
+              className="hidden md:block p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 transition"
             >
-              <Menu className="w-4 h-4 text-gray-600" />
+              <Menu className="w-4 h-4" />
             </button>
           </div>
 
@@ -187,21 +187,21 @@ export default function StudentLayout({
                   setNotificationOpen(!notificationOpen);
                   setProfileOpen(false);
                 }}
-                className="relative p-2 rounded-xl hover:bg-gray-100 text-gray-500 hover:text-gray-900 transition"
+                className="relative p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 transition"
               >
                 <Bell className="w-4 h-4" />
                 {unreadCount > 0 && (
-                  <span className="absolute top-1 right-1 w-2 h-2 bg-gray-900 rounded-full" />
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-white rounded-full" />
                 )}
               </button>
 
               {notificationOpen && (
-                <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50">
-                  <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-                    <p className="text-sm font-semibold text-gray-900">
+                <div className="absolute right-0 mt-2 w-80 bg-zinc-900 rounded-2xl shadow-2xl border border-white/10 overflow-hidden z-50">
+                  <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between">
+                    <p className="text-sm font-semibold text-zinc-100">
                       Notifications
                       {unreadCount > 0 && (
-                        <span className="ml-2 text-xs font-semibold bg-gray-900 text-white px-1.5 py-0.5 rounded-full">
+                        <span className="ml-2 text-xs font-semibold bg-white text-black px-1.5 py-0.5 rounded-full">
                           {unreadCount}
                         </span>
                       )}
@@ -220,14 +220,14 @@ export default function StudentLayout({
                             setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
                             setUnreadCount(0);
                           }}
-                          className="text-xs text-gray-500 hover:text-gray-900 transition"
+                          className="text-xs text-zinc-400 hover:text-white transition"
                         >
                           Mark all read
                         </button>
                       )}
                       <button
                         onClick={clearReadNotifications}
-                        className="text-xs text-gray-400 hover:text-gray-700 transition"
+                        className="text-xs text-zinc-500 hover:text-zinc-300 transition"
                       >
                         Clear
                       </button>
@@ -235,7 +235,7 @@ export default function StudentLayout({
                   </div>
                   <div className="max-h-72 overflow-y-auto">
                     {notifications.length === 0 && (
-                      <p className="text-sm text-gray-400 text-center py-6">
+                      <p className="text-sm text-zinc-500 text-center py-6">
                         No notifications yet.
                       </p>
                     )}
@@ -245,16 +245,16 @@ export default function StudentLayout({
                         onClick={() => {
                           if (!n.read) markAsRead(n.id);
                         }}
-                        className={`px-4 py-3 cursor-pointer transition border-b border-gray-50 last:border-0 ${
+                        className={`px-4 py-3 cursor-pointer transition border-b border-white/5 last:border-0 ${
                           n.read
-                            ? "hover:bg-gray-50"
-                            : "bg-gray-50 hover:bg-gray-100 border-l-2 border-l-gray-900"
+                            ? "hover:bg-white/5"
+                            : "bg-white/5 hover:bg-white/10 border-l-2 border-l-white"
                         }`}
                       >
-                        <p className="text-sm font-medium text-gray-800">
+                        <p className="text-sm font-medium text-zinc-100">
                           {n.title}
                         </p>
-                        <p className="text-xs text-gray-400 mt-0.5">
+                        <p className="text-xs text-zinc-400 mt-0.5">
                           {n.message}
                         </p>
                       </div>
@@ -281,26 +281,26 @@ export default function StudentLayout({
               </button>
 
               {profileOpen && (
-                <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50">
-                  <div className="px-4 py-3 border-b border-gray-100">
-                    <p className="text-sm font-semibold text-gray-900">
+                <div className="absolute right-0 mt-2 w-52 bg-zinc-900 rounded-2xl shadow-2xl border border-white/10 overflow-hidden z-50">
+                  <div className="px-4 py-3 border-b border-white/5">
+                    <p className="text-sm font-semibold text-zinc-100">
                       {userProfile?.first_name}
                     </p>
-                    <p className="text-xs text-gray-400 truncate">
+                    <p className="text-xs text-zinc-400 truncate">
                       {userProfile?.email}
                     </p>
                   </div>
 
                   <button
                     onClick={() => router.push("/student/profile")}
-                    className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition"
+                    className="w-full text-left px-4 py-2.5 text-sm text-zinc-300 hover:bg-white/5 transition"
                   >
                     Profile
                   </button>
 
                   <button
                     onClick={handleLogout}
-                    className="w-full text-left px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition border-t border-gray-100"
+                    className="w-full text-left px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition border-t border-white/5"
                   >
                     Logout
                   </button>
@@ -311,15 +311,15 @@ export default function StudentLayout({
         </div>
 
         {/* Content Canvas */}
-        <div className="flex-1 w-full bg-gray-50">
+        <div className="flex-1 w-full bg-[#0A0A0A]">
           <div className="px-6 md:px-8 max-w-6xl mx-auto pb-12 pt-8 space-y-8">
             {children}
           </div>
         </div>
 
         {/* Footer */}
-        <div className="w-full border-t border-gray-100 bg-white">
-          <div className="px-6 md:px-8 max-w-6xl mx-auto">
+        <div className="w-full border-t border-white/5 bg-[#0A0A0A]">
+          <div className="px-6 md:px-8 max-w-6xl mx-auto opacity-70">
             <Footer />
           </div>
         </div>

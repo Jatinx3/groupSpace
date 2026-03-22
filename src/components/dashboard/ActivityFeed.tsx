@@ -68,41 +68,50 @@ export default function ActivityFeed({ tasks, teams }: Props) {
     .slice(0, 5);
 
   return (
-    <Card>
-      <div className="flex items-center gap-3 mb-6">
-        <div className="p-2 rounded-xl bg-gray-900 text-white">
+    <div className="bg-[#111111] border border-white/10 rounded-2xl p-6 h-full flex flex-col relative overflow-hidden">
+      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/5 to-transparent" />
+
+      <div className="flex items-center gap-4 mb-6 relative z-10">
+        <div className="p-2.5 rounded-xl bg-white/5 border border-white/5 text-zinc-300">
           <Activity className="w-4 h-4" />
         </div>
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
             Feed
           </p>
-          <h2 className="font-semibold text-gray-900 leading-none">
+          <h2 className="font-semibold text-zinc-100 leading-none mt-1">
             Recent Activity
           </h2>
         </div>
       </div>
 
-      <div className="space-y-1">
+      <div className="relative z-10 flex-1">
         {recent.length === 0 && (
-          <p className="text-gray-400 text-sm py-4 text-center">
+          <p className="text-zinc-500 text-sm py-8 text-center border border-dashed border-white/5 rounded-xl">
             No recent activity yet.
           </p>
         )}
 
-        {recent.map((item) => (
-          <div
-            key={item.id}
-            className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-gray-50 transition"
-          >
-            <div className="mt-1 w-1.5 h-1.5 rounded-full bg-gray-400 shrink-0" />
-            <div className="min-w-0">
-              <p className="text-sm text-gray-700 leading-snug">{item.text}</p>
-              <p className="text-xs text-gray-400 mt-0.5">{item.time}</p>
+        <div className="space-y-[1px]">
+          {recent.map((item, index) => (
+            <div
+              key={item.id}
+              className="group flex flex-col bg-white/5 px-4 py-3 border border-white/0 hover:border-white/5 hover:bg-white/10 transition-all cursor-default first:rounded-t-xl last:rounded-b-xl"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <p className="text-sm font-medium text-zinc-300 leading-snug group-hover:text-zinc-100 transition-colors">
+                  {item.text}
+                </p>
+                <div className="shrink-0 flex items-center pt-0.5">
+                  <span className="text-[10px] text-zinc-500 font-medium whitespace-nowrap">
+                    {item.time}
+                  </span>
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-    </Card>
+    </div>
   );
 }

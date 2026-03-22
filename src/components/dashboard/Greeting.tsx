@@ -13,34 +13,48 @@ export default function Greeting({ greeting, name, subtitle }: GreetingProps) {
   });
 
   const hour = now.getHours();
-  const timeEmoji = hour < 12 ? "🌤" : hour < 17 ? "☀️" : "🌙";
+  let timeEmoji = "☀️";
+  let dynamicGreeting = greeting;
+  
+  if (hour < 5 || hour >= 22) {
+    timeEmoji = "🌙";
+    dynamicGreeting = "Still up? Let's get things done.";
+  } else if (hour < 12) {
+    timeEmoji = "🌤";
+  } else if (hour < 17) {
+    timeEmoji = "☀️";
+  } else {
+    timeEmoji = "🌙";
+  }
 
   return (
-    <section className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
-      <div className="px-8 py-7 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <section className="bg-[#111111] border border-white/10 rounded-2xl overflow-hidden relative shadow-sm">
+      <div className="px-8 py-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 relative z-10">
         <div>
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-base">{timeEmoji}</span>
-            <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-sm">{timeEmoji}</span>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">
               Dashboard
             </p>
           </div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 leading-tight">
-            {greeting},<br />
-            <span className="text-gray-700">{name}</span>
+          <h1 className="text-3xl font-bold tracking-tight text-white leading-tight">
+            {hour < 5 || hour >= 22 ? dynamicGreeting : `${dynamicGreeting}, ${name}`}
           </h1>
-          <p className="mt-2 text-sm text-gray-400 font-medium">
+          <p className="mt-2 text-sm text-zinc-400 font-medium">
             {subtitle ?? "Here's what's happening in your courses today."}
           </p>
         </div>
+        
         <div className="shrink-0 sm:text-right hidden sm:block">
-          <div className="inline-block bg-gray-50 border border-gray-100 rounded-2xl px-5 py-3">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Today</p>
-            <p className="text-sm font-bold text-gray-800">{dateLabel}</p>
+          <div className="inline-flex flex-col items-end">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-1">Today</p>
+            <p className="text-sm font-semibold text-zinc-300">{dateLabel}</p>
           </div>
         </div>
       </div>
-      <div className="h-1 bg-gradient-to-r from-gray-900 via-gray-600 to-gray-200" />
+      
+      {/* Subtle top glare effect for a premium feel */}
+      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
     </section>
   );
 }

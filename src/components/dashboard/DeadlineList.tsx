@@ -35,25 +35,27 @@ export default function DeadlineList({ tasks, teams }: Props) {
     .slice(0, 5);
 
   return (
-    <Card>
-      <div className="flex items-center gap-3 mb-6">
-        <div className="p-2 rounded-xl bg-gray-900 text-white">
+    <div className="bg-[#111111] border border-white/10 rounded-2xl p-6 h-full flex flex-col relative overflow-hidden">
+      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/5 to-transparent" />
+      
+      <div className="flex items-center gap-4 mb-6 relative z-10">
+        <div className="p-2.5 rounded-xl bg-white/5 border border-white/5 text-zinc-300">
           <Clock className="w-4 h-4" />
         </div>
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
             Upcoming
           </p>
-          <h2 className="font-semibold text-gray-900 leading-none">
+          <h2 className="font-semibold text-zinc-100 leading-none mt-1">
             Deadlines
           </h2>
         </div>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-3 relative z-10">
         {upcoming.length === 0 && (
-          <p className="text-gray-400 text-sm py-4 text-center">
-            No upcoming deadlines.
+          <p className="text-zinc-500 text-sm py-8 text-center border border-dashed border-white/5 rounded-xl">
+            No upcoming deadlines. You&apos;re all caught up!
           </p>
         )}
 
@@ -62,12 +64,12 @@ export default function DeadlineList({ tasks, teams }: Props) {
           const diffTime = due.getTime() - now.getTime();
           const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-          const urgencyBg =
+          const urgencyClass =
             daysLeft <= 3
-              ? "bg-gray-900 text-white"
+              ? "bg-rose-500/10 border-rose-500/20 text-rose-400"
               : daysLeft <= 7
-              ? "bg-gray-200 text-gray-700"
-              : "bg-gray-100 text-gray-500";
+              ? "bg-amber-500/10 border-amber-500/20 text-amber-400"
+              : "bg-white/5 border-white/5 text-zinc-400";
 
           const teamName =
             teams.find((t) => t.id === task.team_id)?.name ?? "Team";
@@ -75,21 +77,24 @@ export default function DeadlineList({ tasks, teams }: Props) {
           return (
             <div
               key={task.id}
-              className="flex items-center justify-between gap-4 p-3 rounded-xl border border-gray-100 hover:border-gray-200 hover:bg-gray-50 transition"
+              className="group flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border border-white/5 bg-white/5 hover:border-white/10 hover:bg-white/10 transition-all duration-300 cursor-default"
             >
               <div className="min-w-0">
-                <h3 className="font-medium text-gray-900 text-sm truncate">
+                <h3 className="font-medium text-zinc-200 text-sm truncate group-hover:text-white transition-colors">
                   {task.title}
                 </h3>
-                <p className="text-xs text-gray-400 mt-0.5">{teamName}</p>
+                <div className="flex items-center gap-2 mt-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-zinc-700" />
+                  <p className="text-[11px] text-zinc-500">{teamName}</p>
+                </div>
               </div>
-              <span className={`shrink-0 text-[11px] font-semibold px-2.5 py-1 rounded-full ${urgencyBg}`}>
+              <span className={`shrink-0 text-[10px] font-semibold px-2.5 py-1 rounded-md border ${urgencyClass}`}>
                 {daysLeft}d left
               </span>
             </div>
           );
         })}
       </div>
-    </Card>
+    </div>
   );
 }

@@ -5,8 +5,7 @@ import Greeting from "../../components/dashboard/Greeting";
 import StatsGrid from "../../components/dashboard/StatsGrid";
 import DeadlineList from "../../components/dashboard/DeadlineList";
 import ActivityFeed from "../../components/dashboard/ActivityFeed";
-import QuickLinks from "../../components/dashboard/QuickLinks";
-import TaskProgress from "../../components/dashboard/TaskProgress";
+import { Plus, UploadCloud, Users } from "lucide-react";
 
 export default async function StudentDashboard() {
   const supabase = await createServerSupabase();
@@ -141,7 +140,27 @@ export default async function StudentDashboard() {
 
   return (
     <>
-      <Greeting greeting={greeting} name={firstName} />
+      <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+        <div className="flex-1">
+          <Greeting greeting={greeting} name={firstName} />
+        </div>
+        
+        {/* Quick Actions */}
+        <div className="flex items-center gap-3 shrink-0">
+          <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition text-sm font-medium text-zinc-300">
+            <Plus className="w-4 h-4 text-zinc-400" />
+            Create Task
+          </button>
+          <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition text-sm font-medium text-zinc-300">
+            <UploadCloud className="w-4 h-4 text-zinc-400" />
+            Upload File
+          </button>
+          <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition text-sm font-medium text-zinc-300">
+            <Users className="w-4 h-4 text-zinc-400" />
+            Join Team
+          </button>
+        </div>
+      </div>
 
       <StatsGrid
         totalCourses={courses.length}
@@ -150,8 +169,8 @@ export default async function StudentDashboard() {
         pendingTasks={pendingTasks}
       />
 
-      <section className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        <div className="lg:col-span-2">
+      <section className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="xl:col-span-2">
           <DeadlineList tasks={upcomingTasks} teams={teams} />
         </div>
 
@@ -159,10 +178,6 @@ export default async function StudentDashboard() {
           <ActivityFeed tasks={safeTasks} teams={teams} />
         </div>
       </section>
-
-      <QuickLinks totalCourses={courses.length} totalTeams={teams.length} />
-
-      <TaskProgress tasks={safeTasks} teams={teams} completionRate={completionRate} />
     </>
   );
 }
