@@ -223,15 +223,13 @@ export default function StructureTab({
             </h2>
 
             <div className="flex gap-2">
-              {isLeader && (
-                <button
-                  onClick={() => openCreateFolder(null)}
-                  className="flex items-center gap-2 text-sm px-3 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition"
-                >
-                  <FolderPlus size={16} />
-                  New Folder
-                </button>
-              )}
+              <button
+                onClick={() => openCreateFolder(null)}
+                className="flex items-center gap-2 text-sm px-3 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition"
+              >
+                <FolderPlus size={16} />
+                New Folder
+              </button>
 
               <button
                 onClick={handleDownloadZip}
@@ -390,8 +388,7 @@ function TreeNode({
               {node.name}
             </span>
 
-            {isLeader && (
-              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
+            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
                 <FolderPlus
                   size={15}
                   className="text-gray-500 hover:text-gray-800 cursor-pointer"
@@ -419,7 +416,6 @@ function TreeNode({
                   onClick={() => onDeleteFolder(node)}
                 />
               </div>
-            )}
           </>
         ) : (
           <>

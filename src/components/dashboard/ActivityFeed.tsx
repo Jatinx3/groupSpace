@@ -34,11 +34,10 @@ export default function ActivityFeed({ tasks, teams }: Props) {
       const diffDays = Math.floor(diffHours / 24);
 
       let timeLabel = "";
-
       if (diffHours < 1) timeLabel = "Just now";
       else if (diffHours < 24) timeLabel = `${diffHours}h ago`;
       else if (diffDays === 1) timeLabel = "Yesterday";
-      else timeLabel = `${diffDays} days ago`;
+      else timeLabel = `${diffDays}d ago`;
 
       const teamName =
         teams.find((t) => t.id === task.team_id)?.name ?? "Team";
@@ -52,6 +51,7 @@ export default function ActivityFeed({ tasks, teams }: Props) {
         id: task.id,
         text,
         time: timeLabel,
+        isCompleted: task.status === "completed",
         created_at: createdTime.getTime(),
       };
     })
@@ -59,6 +59,7 @@ export default function ActivityFeed({ tasks, teams }: Props) {
     id: string;
     text: string;
     time: string;
+    isCompleted: boolean;
     created_at: number;
   }[];
 
@@ -69,29 +70,36 @@ export default function ActivityFeed({ tasks, teams }: Props) {
   return (
     <Card>
       <div className="flex items-center gap-3 mb-6">
-        <div className="p-2 rounded-lg bg-gray-100 text-gray-600">
+        <div className="p-2 rounded-xl bg-gray-900 text-white">
           <Activity className="w-4 h-4" />
         </div>
-        <h2 className="font-semibold text-gray-900">
-          Recent Activity
-        </h2>
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">
+            Feed
+          </p>
+          <h2 className="font-semibold text-gray-900 leading-none">
+            Recent Activity
+          </h2>
+        </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-1">
         {recent.length === 0 && (
-          <p className="text-gray-500 text-sm">
+          <p className="text-gray-400 text-sm py-4 text-center">
             No recent activity yet.
           </p>
         )}
 
         {recent.map((item) => (
-          <div key={item.id}>
-            <p className="text-sm text-gray-700">
-              {item.text}
-            </p>
-            <p className="text-xs text-gray-400 mt-0.5">
-              {item.time}
-            </p>
+          <div
+            key={item.id}
+            className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-gray-50 transition"
+          >
+            <div className="mt-1 w-1.5 h-1.5 rounded-full bg-gray-400 shrink-0" />
+            <div className="min-w-0">
+              <p className="text-sm text-gray-700 leading-snug">{item.text}</p>
+              <p className="text-xs text-gray-400 mt-0.5">{item.time}</p>
+            </div>
           </div>
         ))}
       </div>

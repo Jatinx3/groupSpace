@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createServerSupabase } from "../../../../lib/supabase-server";
+import { createServerSupabase, createAdminSupabase } from "../../../../lib/supabase-server";
 
 export async function POST(request: Request) {
   const supabase = await createServerSupabase();
@@ -59,6 +59,21 @@ export async function POST(request: Request) {
       { error: "Could not save comment" },
       { status: 500 }
     );
+  }
+
+  const targetUserId =
+    authorRole === "student" ? thesis.supervisor_id : thesis.student_id;
+
+  if (targetUserId) {
+    const senderLabel = authorRole === "student" ? "Student" : "Supervisor";
+    const admin = createAdminSupabase();
+    await admin.from("notifications").insert({
+      user_id: targetUserId,
+      type: "comment",
+      title: "New Thesis Comment",
+      message: `${senderLabel} posted a new comment on your thesis`,
+      read: false,
+    });
   }
 
   return NextResponse.json({ ok: true });

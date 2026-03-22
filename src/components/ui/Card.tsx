@@ -10,10 +10,11 @@ export default function Card({ children, className = "" }: CardProps) {
     <div
       className={`
         bg-white
-        border border-gray-200
-        rounded-xl
+        border border-gray-100
+        rounded-2xl
         p-6
         transition-all
+        hover:border-gray-200
         hover:shadow-sm
         ${className}
       `}

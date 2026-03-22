@@ -40,6 +40,14 @@ export default async function ProfessorCourseDetailPage({
 
   const studentCount = courseMembers?.length ?? 0;
 
+  const studentUserIds = (courseMembers ?? []).map((m: any) => m.user_id);
+  const { data: studentProfilesRaw } = studentUserIds.length
+    ? await supabase
+        .from("profiles")
+        .select("id, first_name, last_name, email")
+        .in("id", studentUserIds)
+    : { data: [] };
+
   const { data: teamsRaw } = await supabase
     .from("teams")
     .select("id, name, course_id, created_at")
@@ -95,10 +103,24 @@ export default async function ProfessorCourseDetailPage({
     };
   });
 
+  const students = (studentProfilesRaw ?? []).map((p: any) => {
+    const teamMember = (teamMembersRaw ?? []).find((m: any) => m.user_id === p.id);
+    const team = teamMember ? (teamsRaw ?? []).find((t: any) => t.id === teamMember.team_id) : null;
+    return {
+      id: p.id,
+      firstName: p.first_name ?? "",
+      lastName: p.last_name ?? "",
+      email: p.email ?? "",
+      teamName: team?.name ?? null,
+      teamId: team?.id ?? null,
+    };
+  });
+
   return (
     <ProfessorCourseDetailClient
       course={{ id: course.id, name: course.name, inviteCode: course.invite_code }}
       teams={teams}
+      students={students}
       studentCount={studentCount}
     />
   );

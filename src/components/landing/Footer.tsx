@@ -1,12 +1,25 @@
 "use client";
 
 import { Github, Twitter, Linkedin, Mail } from "lucide-react";
+import Link from "next/link";
 import { BackgroundPattern } from "./BackgroundPattern";
 
-const platformLinks = ["Features", "Pricing", "Security", "Roadmap"];
-const resourceLinks = ["Documentation", "Help Center", "Blog", "Community"];
-const companyLinks = ["About", "Careers", "Contact", "Partners"];
-const socialIcons = [Twitter, Github, Linkedin, Mail];
+const platformLinks = [
+  { label: "Features", href: "/features" },
+  { label: "Security", href: "/security" },
+];
+
+const companyLinks = [
+  { label: "About", href: "/about" },
+  { label: "Contact", href: "/contact" },
+];
+
+const socialIcons = [
+  { Icon: Twitter, label: "Twitter" },
+  { Icon: Github, label: "GitHub" },
+  { Icon: Linkedin, label: "LinkedIn" },
+  { Icon: Mail, label: "Email" },
+];
 
 export default function Footer() {
   return (
@@ -18,26 +31,13 @@ export default function Footer() {
             <h4 className="text-sm font-bold uppercase tracking-widest text-neutral-400">Platform</h4>
             <ul className="space-y-4">
               {platformLinks.map((item) => (
-                <li key={item}>
-                  <a
-                    href={`#${item.toLowerCase()}`}
+                <li key={item.label}>
+                  <Link
+                    href={item.href}
                     className="text-lg font-bold uppercase tracking-wide hover:text-neutral-500 transition-colors"
                   >
-                    {item}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="space-y-6">
-            <h4 className="text-sm font-bold uppercase tracking-widest text-neutral-400">Resources</h4>
-            <ul className="space-y-4">
-              {resourceLinks.map((item) => (
-                <li key={item}>
-                  <a href="#" className="text-lg font-bold uppercase tracking-wide hover:text-neutral-500 transition-colors">
-                    {item}
-                  </a>
+                    {item.label}
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -47,24 +47,27 @@ export default function Footer() {
             <h4 className="text-sm font-bold uppercase tracking-widest text-neutral-400">Company</h4>
             <ul className="space-y-4">
               {companyLinks.map((item) => (
-                <li key={item}>
-                  <a href="#" className="text-lg font-bold uppercase tracking-wide hover:text-neutral-500 transition-colors">
-                    {item}
-                  </a>
+                <li key={item.label}>
+                  <Link
+                    href={item.href}
+                    className="text-lg font-bold uppercase tracking-wide hover:text-neutral-500 transition-colors"
+                  >
+                    {item.label}
+                  </Link>
                 </li>
               ))}
             </ul>
           </div>
 
-          <div className="space-y-6">
+          <div className="md:col-span-2 space-y-6">
             <h4 className="text-sm font-bold uppercase tracking-widest text-neutral-400">Social</h4>
             <div className="flex gap-4">
-              {socialIcons.map((Icon, i) => (
+              {socialIcons.map(({ Icon, label }) => (
                 <a
-                  key={i}
+                  key={label}
                   href="#"
                   className="w-10 h-10 border border-black/10 rounded-full flex items-center justify-center hover:bg-black hover:text-white transition-all duration-300"
-                  aria-label={`Social link ${i + 1}`}
+                  aria-label={label}
                 >
                   <Icon className="w-4 h-4" />
                 </a>

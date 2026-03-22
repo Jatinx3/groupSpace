@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import {
   Users,
-  GraduationCap,
   BookOpen,
   Clock,
   ArrowRight,
@@ -19,30 +18,30 @@ function ThesisStatusBadge({ status }: { status: string }) {
   const s = status?.toLowerCase();
   if (s === "completed")
     return (
-      <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+      <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-900 text-white">
         Completed
       </span>
     );
   if (s === "proposal")
     return (
-      <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+      <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 text-gray-600 border border-gray-200">
         Proposal
       </span>
     );
   if (s === "review" || s === "under review")
     return (
-      <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold bg-violet-50 text-violet-700 border border-violet-200">
+      <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-800 text-white">
         Under Review
       </span>
     );
   if (s === "in_progress" || s === "research" || s === "writing")
     return (
-      <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+      <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-200 text-gray-700">
         In Progress
       </span>
     );
   return (
-    <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 text-gray-600 border border-gray-200">
+    <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 text-gray-500 border border-gray-200">
       {status || "Unknown"}
     </span>
   );
@@ -262,32 +261,24 @@ export default async function ProfessorPage() {
       value: totalStudents,
       sub: "Across all courses",
       icon: Users,
-      iconColor: "text-blue-500",
-      iconBg: "bg-blue-50",
     },
     {
       label: "Active Theses",
       value: activeTheses,
       sub: "Under supervision",
       icon: FileText,
-      iconColor: "text-violet-500",
-      iconBg: "bg-violet-50",
     },
     {
       label: "Courses Running",
       value: courseCount,
       sub: `${season} ${year}`,
       icon: BookOpen,
-      iconColor: "text-emerald-500",
-      iconBg: "bg-emerald-50",
     },
     {
       label: "Pending Reviews",
       value: pendingMilestones,
       sub: "Milestones to review",
       icon: Clock,
-      iconColor: "text-amber-500",
-      iconBg: "bg-amber-50",
     },
   ];
 
@@ -296,69 +287,78 @@ export default async function ProfessorPage() {
   return (
     <div className="space-y-6">
       {/* Hero Banner */}
-      <div className="bg-white rounded-2xl border border-gray-200 p-8">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+        <div className="px-8 py-7 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">
-              Overview · {season} {year}
-            </p>
-            <h1 className="text-3xl font-bold text-gray-900 mt-2 tracking-tight">
-              Welcome back, {firstName}
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-base">🎓</span>
+              <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">
+                Overview · {season} {year}
+              </p>
+            </div>
+            <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight leading-tight">
+              Welcome back,<br />
+              <span className="text-gray-700">{firstName}</span>
             </h1>
-            <p className="text-sm text-gray-500 mt-1.5">
+            <p className="text-sm text-gray-400 font-medium mt-2">
               Your central workspace for courses and thesis supervision.
             </p>
           </div>
           <div className="flex flex-col items-start sm:items-end gap-3 shrink-0">
-            <div className="sm:text-right">
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">
-                Today
-              </p>
-              <p className="text-sm font-medium text-gray-700 mt-0.5">
-                {dateLabel}
-              </p>
+            <div className="inline-block bg-gray-50 border border-gray-100 rounded-2xl px-5 py-3 sm:text-right">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Today</p>
+              <p className="text-sm font-bold text-gray-800">{dateLabel}</p>
             </div>
             <Link
               href="/professor/thesis"
-              className="inline-flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition"
+              className="inline-flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition"
             >
               Thesis Collab
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
         </div>
+        <div className="h-1 bg-gradient-to-r from-gray-900 via-gray-600 to-gray-200" />
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map(({ label, value, sub, icon: Icon, iconBg, iconColor }) => (
-          <div key={label} className="bg-white rounded-2xl border border-gray-200 p-5">
-            <div className={`inline-flex p-2.5 rounded-xl ${iconBg} mb-4`}>
-              <Icon className={`w-5 h-5 ${iconColor}`} />
+        {stats.map(({ label, value, sub, icon: Icon }) => (
+          <div key={label} className="group bg-white rounded-2xl border border-gray-100 p-5 hover:border-gray-200 hover:shadow-sm transition">
+            <div className="flex items-start justify-between mb-4">
+              <div className="p-2.5 rounded-xl bg-gray-900 text-white group-hover:scale-105 transition-transform duration-200">
+                <Icon className="w-4 h-4" />
+              </div>
+              <div className="w-1.5 h-1.5 rounded-full bg-gray-200 group-hover:bg-gray-900 transition-colors duration-300" />
             </div>
-            <p className="text-3xl font-bold text-gray-900 tracking-tight tabular-nums">
+            <p className="text-3xl font-extrabold text-gray-900 tracking-tight tabular-nums leading-none">
               {value}
             </p>
-            <p className="text-sm font-medium text-gray-800 mt-1">{label}</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 mt-2">{label}</p>
             <p className="text-xs text-gray-400 mt-0.5">{sub}</p>
           </div>
         ))}
       </div>
 
       {/* Main 2-col grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
         {/* LEFT col */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-5">
           {/* Your Courses */}
-          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:border-gray-200 hover:shadow-sm transition">
             <div className="flex items-center justify-between px-6 pt-6 pb-4">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">
-                  Teaching
-                </p>
-                <h2 className="text-base font-semibold text-gray-900 mt-0.5">
-                  Your Courses
-                </h2>
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-gray-900 text-white">
+                  <BookOpen className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">
+                    Teaching
+                  </p>
+                  <h2 className="text-sm font-semibold text-gray-900 leading-none">
+                    Your Courses
+                  </h2>
+                </div>
               </div>
               <div className="flex items-center gap-3">
                 {courseCount > 0 && (
@@ -368,7 +368,7 @@ export default async function ProfessorPage() {
                 )}
                 <Link
                   href="/professor/courses"
-                  className="text-xs font-medium text-gray-500 hover:text-gray-900 flex items-center gap-1 transition"
+                  className="text-xs font-medium text-gray-400 hover:text-gray-900 flex items-center gap-1 transition"
                 >
                   Manage
                   <ChevronRight className="w-3.5 h-3.5" />
@@ -392,7 +392,7 @@ export default async function ProfessorPage() {
                     className="flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition group"
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
+                      <div className="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
                         <BookOpen className="w-4 h-4 text-gray-500" />
                       </div>
                       <p className="text-sm font-medium text-gray-900 truncate">
@@ -400,7 +400,7 @@ export default async function ProfessorPage() {
                       </p>
                     </div>
                     <div className="flex items-center gap-4 shrink-0 ml-4">
-                      <div className="hidden sm:flex items-center gap-4 text-xs text-gray-500">
+                      <div className="hidden sm:flex items-center gap-4 text-xs text-gray-400">
                         <span>
                           <span className="font-semibold text-gray-700 tabular-nums">{studentCount}</span>
                           {" "}students
@@ -410,7 +410,7 @@ export default async function ProfessorPage() {
                           {" "}teams
                         </span>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 transition" />
+                      <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-600 transition" />
                     </div>
                   </Link>
                 );
@@ -419,19 +419,24 @@ export default async function ProfessorPage() {
           </div>
 
           {/* Active Supervisees */}
-          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:border-gray-200 hover:shadow-sm transition">
             <div className="flex items-center justify-between px-6 pt-6 pb-4">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">
-                  Thesis Collab
-                </p>
-                <h2 className="text-base font-semibold text-gray-900 mt-0.5">
-                  Active Supervisees
-                </h2>
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-gray-900 text-white">
+                  <FileText className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">
+                    Thesis Collab
+                  </p>
+                  <h2 className="text-sm font-semibold text-gray-900 leading-none">
+                    Active Supervisees
+                  </h2>
+                </div>
               </div>
               <Link
                 href="/professor/thesis"
-                className="text-xs font-medium text-gray-500 hover:text-gray-900 flex items-center gap-1 transition"
+                className="text-xs font-medium text-gray-400 hover:text-gray-900 flex items-center gap-1 transition"
               >
                 View all
                 <ChevronRight className="w-3.5 h-3.5" />
@@ -450,7 +455,7 @@ export default async function ProfessorPage() {
                   href={`/professor/thesis/${thesis.id}`}
                   className="flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition group"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
                     <FileText className="w-4 h-4 text-gray-400" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -460,11 +465,11 @@ export default async function ProfessorPage() {
                       </p>
                       <ThesisStatusBadge status={thesis.status} />
                     </div>
-                    <p className="text-xs text-gray-500 mt-0.5">{thesis.studentName}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">{thesis.studentName}</p>
                     <div className="mt-2 flex items-center gap-2">
-                      <div className="flex-1 bg-gray-100 rounded-full h-1.5">
+                      <div className="flex-1 bg-gray-100 rounded-full h-1">
                         <div
-                          className="h-1.5 rounded-full bg-gray-800 transition-all"
+                          className="h-1 rounded-full bg-gray-900 transition-all"
                           style={{ width: `${thesis.progress}%` }}
                         />
                       </div>
@@ -473,7 +478,7 @@ export default async function ProfessorPage() {
                       </span>
                     </div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 transition shrink-0" />
+                  <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-600 transition shrink-0" />
                 </Link>
               ))}
             </div>
@@ -481,10 +486,10 @@ export default async function ProfessorPage() {
         </div>
 
         {/* RIGHT col */}
-        <div className="space-y-5">
+        <div className="space-y-4">
           {/* Quick Actions */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-5">
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 mb-4">
+          <div className="bg-white rounded-2xl border border-gray-100 p-5 hover:border-gray-200 hover:shadow-sm transition">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-4">
               Quick Actions
             </p>
             <div className="space-y-2">
@@ -497,19 +502,19 @@ export default async function ProfessorPage() {
               </Link>
               <Link
                 href="/professor/thesis"
-                className="flex items-center gap-3 w-full border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-3 rounded-xl text-sm font-medium transition"
+                className="flex items-center gap-3 w-full border border-gray-100 text-gray-700 hover:bg-gray-50 px-4 py-3 rounded-xl text-sm font-medium transition"
               >
                 <Clock className="w-4 h-4 shrink-0 text-gray-400" />
                 Review Submissions
               </Link>
               <Link
                 href="/professor/courses"
-                className="flex items-center gap-3 w-full border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-3 rounded-xl text-sm font-medium transition"
+                className="flex items-center gap-3 w-full border border-gray-100 text-gray-700 hover:bg-gray-50 px-4 py-3 rounded-xl text-sm font-medium transition"
               >
                 <BarChart2 className="w-4 h-4 shrink-0 text-gray-400" />
                 Manage Courses
               </Link>
-              <button className="flex items-center gap-3 w-full border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-3 rounded-xl text-sm font-medium transition">
+              <button className="flex items-center gap-3 w-full border border-gray-100 text-gray-700 hover:bg-gray-50 px-4 py-3 rounded-xl text-sm font-medium transition">
                 <Calendar className="w-4 h-4 shrink-0 text-gray-400" />
                 Schedule Meeting
               </button>
@@ -517,23 +522,23 @@ export default async function ProfessorPage() {
           </div>
 
           {/* Recent Activity */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-5">
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 mb-4">
+          <div className="bg-white rounded-2xl border border-gray-100 p-5 hover:border-gray-200 hover:shadow-sm transition">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-4">
               Recent Activity
             </p>
-            <div className="space-y-4">
+            <div className="space-y-1">
               {sortedActivity.length === 0 && (
-                <p className="text-sm text-gray-400">No recent activity.</p>
+                <p className="text-sm text-gray-400 py-4 text-center">No recent activity.</p>
               )}
               {sortedActivity.map((item) => {
                 const Icon = item.icon;
                 return (
-                  <div key={item.id} className="flex items-start gap-3">
-                    <div className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center shrink-0 mt-0.5">
-                      <Icon className="w-3.5 h-3.5 text-gray-400" />
+                  <div key={item.id} className="flex items-start gap-3 p-2 rounded-xl hover:bg-gray-50 transition">
+                    <div className="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center shrink-0 mt-0.5">
+                      <Icon className="w-3 h-3 text-gray-500" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-xs font-medium text-gray-800 leading-snug">
+                      <p className="text-xs font-medium text-gray-700 leading-snug">
                         {item.text}
                       </p>
                       {item.time && (
@@ -548,8 +553,8 @@ export default async function ProfessorPage() {
 
           {/* Thesis Progress */}
           {activeThesesList.length > 0 && (
-            <div className="bg-white rounded-2xl border border-gray-200 p-5">
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 mb-4">
+            <div className="bg-white rounded-2xl border border-gray-100 p-5 hover:border-gray-200 hover:shadow-sm transition">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-4">
                 Thesis Progress
               </p>
               <div className="space-y-3">
@@ -559,21 +564,13 @@ export default async function ProfessorPage() {
                       <p className="text-xs font-medium text-gray-700 truncate flex-1 min-w-0 mr-2">
                         {thesis.studentName}
                       </p>
-                      <span className="text-xs text-gray-500 tabular-nums shrink-0">
+                      <span className="text-xs text-gray-400 tabular-nums shrink-0">
                         {thesis.progress}%
                       </span>
                     </div>
-                    <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
                       <div
-                        className={`h-1.5 rounded-full transition-all ${
-                          thesis.progress === 0
-                            ? "bg-gray-300"
-                            : thesis.progress >= 75
-                            ? "bg-emerald-500"
-                            : thesis.progress >= 40
-                            ? "bg-violet-500"
-                            : "bg-blue-400"
-                        }`}
+                        className="h-1 rounded-full bg-gray-900 transition-all"
                         style={{ width: `${thesis.progress}%` }}
                       />
                     </div>

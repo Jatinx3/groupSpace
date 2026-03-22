@@ -12,19 +12,17 @@ interface Props {
 export default function CourseList({ courses }: Props) {
   const [open, setOpen] = useState(false);
 
-  const personalNames = [
-    "Hackathons",
-    "Solo Projects",
-    "Team Projects",
-  ];
+  const isPersonal = (name: string) => {
+    const n = name.toLowerCase();
+    return (
+      n.includes("hackathon") ||
+      n.includes("solo project") ||
+      n.includes("team project")
+    );
+  };
 
-  const personalCourses = courses.filter((c) =>
-    personalNames.includes(c.name)
-  );
-
-  const academicCourses = courses.filter(
-    (c) => !personalNames.includes(c.name)
-  );
+  const personalCourses = courses.filter((c) => isPersonal(c.name));
+  const academicCourses = courses.filter((c) => !isPersonal(c.name));
 
   return (
     <div className="space-y-12">

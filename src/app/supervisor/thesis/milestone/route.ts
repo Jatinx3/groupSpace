@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createServerSupabase } from "../../../../lib/supabase-server";
+import { createServerSupabase, createAdminSupabase } from "../../../../lib/supabase-server";
 
 export async function POST(request: Request) {
   const supabase = await createServerSupabase();
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
 
   const { data: thesis } = await supabase
     .from("thesis_projects")
-    .select("supervisor_id")
+    .select("supervisor_id, student_id")
     .eq("id", thesisId)
     .single();
 
@@ -49,6 +49,17 @@ export async function POST(request: Request) {
       { error: "Could not create milestone" },
       { status: 500 }
     );
+  }
+
+  if (thesis.student_id) {
+    const admin = createAdminSupabase();
+    await admin.from("notifications").insert({
+      user_id: thesis.student_id,
+      type: "milestone",
+      title: "New Milestone Added",
+      message: `Your supervisor added a new milestone: "${title}"`,
+      read: false,
+    });
   }
 
   return NextResponse.json({ ok: true });
@@ -97,7 +108,7 @@ export async function PATCH(request: Request) {
 
   const { data: thesis } = await supabase
     .from("thesis_projects")
-    .select("supervisor_id")
+    .select("supervisor_id, student_id")
     .eq("id", milestone.thesis_id)
     .single();
 
@@ -119,6 +130,18 @@ export async function PATCH(request: Request) {
       { error: "Could not update milestone" },
       { status: 500 }
     );
+  }
+
+  if (thesis.student_id && (status === "approved" || status === "rejected")) {
+    const statusLabel = status === "approved" ? "approved" : "rejected";
+    const admin = createAdminSupabase();
+    await admin.from("notifications").insert({
+      user_id: thesis.student_id,
+      type: "milestone",
+      title: `Milestone ${status === "approved" ? "Approved" : "Rejected"}`,
+      message: `Your supervisor ${statusLabel} the milestone${feedback ? `: "${feedback}"` : ""}`,
+      read: false,
+    });
   }
 
   return NextResponse.json({ ok: true });

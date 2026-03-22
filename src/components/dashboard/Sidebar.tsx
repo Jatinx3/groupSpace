@@ -37,36 +37,41 @@ export default function Sidebar({
     <aside
       className={`
         fixed md:relative z-50 h-full
-        bg-white border-r border-slate-100
+        bg-white border-r border-gray-100
         transition-all duration-300 ease-in-out
         ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}
         md:translate-x-0
-        ${isDesktopOpen ? "md:w-64" : "md:w-20"}
+        ${isDesktopOpen ? "md:w-64" : "md:w-[72px]"}
         w-64
-        px-4 py-8
+        px-3 py-6
       `}
     >
       {/* Logo */}
-      <div className="mb-12 px-3">
+      <div className="mb-8 px-3">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-600 to-indigo-500 flex items-center justify-center text-white font-semibold shadow-sm">
+          <div className="w-9 h-9 rounded-xl bg-gray-900 flex items-center justify-center text-white font-bold text-sm shrink-0">
             G
           </div>
-
           {isDesktopOpen && (
-            <h1 className="text-lg font-semibold text-slate-900 tracking-tight">
-              GroupSpace
-            </h1>
+            <div>
+              <h1 className="text-sm font-bold text-gray-900 tracking-tight leading-none">
+                GroupSpace
+              </h1>
+              <p className="text-[10px] text-gray-400 font-medium mt-0.5 uppercase tracking-widest">
+                Student
+              </p>
+            </div>
           )}
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="space-y-2">
+      <nav className="space-y-1">
         {navItems.map((item) => {
           const isActive =
-            pathname === item.href ||
-            pathname.startsWith(item.href + "/");
+            item.href === "/student"
+              ? pathname === "/student"
+              : pathname === item.href || pathname.startsWith(item.href + "/");
 
           const Icon = item.icon;
 
@@ -75,24 +80,18 @@ export default function Sidebar({
               key={item.name}
               href={item.href}
               className={`
-                relative flex items-center gap-3
-                px-3 py-2.5 rounded-lg
+                flex items-center gap-3
+                px-3 py-2.5 rounded-xl
                 text-sm font-medium
-                transition-all duration-200
+                transition-all duration-150
                 ${
                   isActive
-                    ? "text-indigo-600 bg-indigo-50"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                    ? "bg-gray-900 text-white"
+                    : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
                 }
               `}
             >
-              {/* Active Indicator */}
-              {isActive && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-indigo-600 rounded-r-full" />
-              )}
-
-              <Icon className="w-5 h-5 shrink-0" />
-
+              <Icon className="w-4 h-4 shrink-0" />
               {isDesktopOpen && (
                 <span className="truncate">{item.name}</span>
               )}

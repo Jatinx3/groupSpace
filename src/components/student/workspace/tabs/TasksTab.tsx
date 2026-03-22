@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { Plus } from "lucide-react";
 import AddTaskModal from "./AddTaskModal";
 import EditTaskModal from "./EditTaskModal";
+import { createClientSupabase } from "../../../../lib/supabase-client";
 
 import type { Task } from "../../../../types/task";
 import type { Member } from "../../../../types/member";
@@ -18,7 +19,7 @@ interface Props {
 const TASKS_PER_PAGE = 8;
 
 export default function TasksTab({
-  tasks,
+  tasks: propTasks,
   teamId,
   isLeader,
   members,
@@ -29,17 +30,72 @@ export default function TasksTab({
     "all" | "pending" | "in_progress" | "completed"
   >("all");
   const [page, setPage] = useState(1);
+  const [tasks, setTasks] = useState<Task[]>(propTasks);
+
+  const supabaseRef = useRef(createClientSupabase());
+  const channelRef = useRef<ReturnType<typeof supabaseRef.current.channel> | null>(null);
+
+  const fetchTasks = useCallback(async () => {
+    const { data } = await supabaseRef.current
+      .from("tasks")
+      .select(`
+        id, team_id, title, description, status, priority, due_date, created_at,
+        task_assignees (
+          user:profiles (id, first_name, last_name, email)
+        )
+      `)
+      .eq("team_id", teamId)
+      .order("created_at", { ascending: false });
+
+    if (data) {
+      setTasks(
+        data.map((t: any) => ({
+          ...t,
+          assignees: t.task_assignees?.map((a: any) => a.user).filter(Boolean) ?? [],
+        }))
+      );
+    }
+  }, [teamId]);
+
+  useEffect(() => {
+    if (channelRef.current) return;
+
+    const supabase = supabaseRef.current;
+
+    const channel = supabase
+      .channel(`tasks-room:${teamId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "tasks", filter: `team_id=eq.${teamId}` },
+        () => { fetchTasks(); }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "task_assignees" },
+        () => { fetchTasks(); }
+      )
+      .subscribe();
+
+    channelRef.current = channel;
+
+    return () => {
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
+    };
+  }, [teamId, fetchTasks]);
+
+  useEffect(() => {
+    setTasks(propTasks);
+  }, [propTasks]);
 
   const safeTasks = tasks ?? [];
-
-  /* ---------------- Filtering ---------------- */
 
   const filteredTasks = useMemo(() => {
     if (filter === "all") return safeTasks;
     return safeTasks.filter((t) => t.status === filter);
   }, [safeTasks, filter]);
-
-  /* ---------------- Pagination ---------------- */
 
   const totalPages = Math.ceil(filteredTasks.length / TASKS_PER_PAGE);
 
@@ -52,8 +108,6 @@ export default function TasksTab({
     setFilter(value);
     setPage(1);
   }
-
-  /* ---------------- Stats ---------------- */
 
   const totalTasks = safeTasks.length;
   const completed = safeTasks.filter((t) => t.status === "completed").length;
@@ -72,15 +126,13 @@ export default function TasksTab({
           </p>
         </div>
 
-        {isLeader && (
-          <button
-            onClick={() => setOpenAdd(true)}
-            className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-lg"
-          >
-            <Plus size={16} />
-            Add Task
-          </button>
-        )}
+        <button
+          onClick={() => setOpenAdd(true)}
+          className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-lg"
+        >
+          <Plus size={16} />
+          Add Task
+        </button>
       </div>
 
       {/* Stats */}
@@ -142,6 +194,20 @@ export default function TasksTab({
                   </p>
                 )}
 
+                {task.assignees && task.assignees.length > 0 && (
+                  <div className="flex flex-wrap gap-1 items-center">
+                    <span className="text-xs text-gray-400">Assigned to:</span>
+                    {task.assignees.map((a) => (
+                      <span
+                        key={a.id}
+                        className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full"
+                      >
+                        {[a.first_name, a.last_name].filter(Boolean).join(" ") || a.email || "Unknown"}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
                 {task.due_date && (
                   <p className="text-xs text-gray-400">
                     Due {new Date(task.due_date).toLocaleDateString()}
@@ -193,6 +259,7 @@ export default function TasksTab({
           teamId={teamId}
           members={members}
           onClose={() => setOpenAdd(false)}
+          onSuccess={() => fetchTasks()}
         />
       )}
 
@@ -200,7 +267,9 @@ export default function TasksTab({
         <EditTaskModal
           task={editTask}
           teamId={teamId}
+          members={members}
           onClose={() => setEditTask(null)}
+          onSuccess={() => fetchTasks()}
         />
       )}
     </div>
@@ -219,9 +288,9 @@ function StatCard({
   color?: string;
 }) {
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-6 text-center">
-      <p className={`text-2xl font-semibold ${color}`}>{value}</p>
-      <p className="text-sm text-gray-500 mt-1">{label}</p>
+    <div className="bg-white border border-gray-100 rounded-2xl p-6 text-center hover:border-gray-200 hover:shadow-sm transition">
+      <p className={`text-3xl font-extrabold tracking-tight tabular-nums leading-none ${color}`}>{value}</p>
+      <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 mt-2">{label}</p>
     </div>
   );
 }
@@ -229,13 +298,13 @@ function StatCard({
 function StatusBadge({ status }: { status: string }) {
   const styles =
     status === "completed"
-      ? "bg-green-100 text-green-700"
+      ? "bg-gray-900 text-white"
       : status === "in_progress"
-      ? "bg-blue-100 text-blue-700"
+      ? "bg-gray-800 text-white"
       : "bg-gray-100 text-gray-600";
 
   return (
-    <span className={`text-xs px-2 py-1 rounded-full ${styles}`}>
+    <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${styles}`}>
       {status.replace("_", " ")}
     </span>
   );
@@ -246,10 +315,10 @@ function PriorityBadge({ priority }: { priority?: string | null }) {
 
   const styles =
     value === "high"
-      ? "text-red-600"
+      ? "text-gray-900 font-bold"
       : value === "medium"
-      ? "text-yellow-600"
-      : "text-green-600";
+      ? "text-gray-600 font-semibold"
+      : "text-gray-400";
 
   return (
     <span className={`text-xs ${styles}`}>

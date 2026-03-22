@@ -3,11 +3,12 @@ export interface Task {
   title: string;
   description?: string | null;
   priority?: string | null;
-assignees?: {
-  id: string;
-  first_name: string;
-  last_name: string;
-}[] | null;  status: string;
+  assignees?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+  }[] | null;
+  status: string;
   due_date: string | null;
   team_id: string;
   created_at: string;

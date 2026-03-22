@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createServerSupabase } from "../../../../lib/supabase-server";
+import { createServerSupabase, createAdminSupabase } from "../../../../lib/supabase-server";
 
 export async function POST(request: Request) {
   const supabase = await createServerSupabase();
@@ -79,6 +79,29 @@ export async function POST(request: Request) {
       { error: "Could not create thesis project." },
       { status: 500 }
     );
+  }
+
+  const { data: profProfile } = await supabase
+    .from("profiles")
+    .select("first_name, last_name")
+    .eq("id", user.id)
+    .single();
+
+  const profName = profProfile
+    ? `${profProfile.first_name} ${profProfile.last_name}`.trim()
+    : "Your professor";
+
+  const admin = createAdminSupabase();
+  const { error: notifError } = await admin.from("notifications").insert({
+    user_id: student.id,
+    type: "thesis",
+    title: "Thesis Project Assigned",
+    message: `${profName} assigned you a thesis project: "${title}"`,
+    read: false,
+  });
+
+  if (notifError) {
+    console.error("Notification insert error:", notifError);
   }
 
   return NextResponse.json({ ok: true });

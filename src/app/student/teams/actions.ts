@@ -1,6 +1,6 @@
 "use server";
 
-import { createServerSupabase } from "../../../lib/supabase-server";
+import { createServerSupabase, createAdminSupabase } from "../../../lib/supabase-server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { randomUUID } from "crypto";
@@ -153,6 +153,40 @@ export async function joinTeamByCode(formData: FormData) {
       });
 
     if (insertError) throw insertError;
+
+    const { data: joinerProfile } = await supabase
+      .from("profiles")
+      .select("first_name, last_name")
+      .eq("id", user.id)
+      .single();
+
+    const joinerName = joinerProfile
+      ? `${joinerProfile.first_name} ${joinerProfile.last_name}`.trim()
+      : "Someone";
+
+    const { data: teamDetails } = await supabase
+      .from("teams")
+      .select("name")
+      .eq("id", team.id)
+      .single();
+
+    const { data: existingMembers } = await supabase
+      .from("team_members")
+      .select("user_id")
+      .eq("team_id", team.id)
+      .neq("user_id", user.id);
+
+    if (existingMembers && existingMembers.length > 0) {
+      const admin = createAdminSupabase();
+      const notifRows = existingMembers.map((m) => ({
+        user_id: m.user_id,
+        type: "team",
+        title: "New Team Member",
+        message: `${joinerName} joined your team "${teamDetails?.name ?? "your team"}"`,
+        read: false,
+      }));
+      await admin.from("notifications").insert(notifRows);
+    }
   }
 
   revalidatePath("/student/teams");
@@ -207,6 +241,32 @@ export async function createTask(formData: FormData) {
       .insert(rows);
 
     if (assignError) throw assignError;
+
+    // 3️⃣ Notify each assignee (skip the creator)
+    const { data: creatorProfile } = await supabase
+      .from("profiles")
+      .select("first_name, last_name")
+      .eq("id", user.id)
+      .single();
+
+    const creatorName = creatorProfile
+      ? `${creatorProfile.first_name} ${creatorProfile.last_name}`.trim()
+      : "Someone";
+
+    const notifRows = assignees
+      .filter((uid) => uid !== user.id)
+      .map((uid) => ({
+        user_id: uid,
+        type: "task",
+        title: "Task Assigned",
+        message: `${creatorName} assigned you to "${task.title}"`,
+        read: false,
+      }));
+
+    if (notifRows.length > 0) {
+      const admin = createAdminSupabase();
+      await admin.from("notifications").insert(notifRows);
+    }
   }
 
   revalidatePath(`/student/teams/${teamId}`);
@@ -558,4 +618,24 @@ export async function joinCourseByCode(formData: FormData) {
   }
 
   revalidatePath("/student/courses");
+}
+
+/* =========================
+   SEND CHAT NOTIFICATIONS
+========================= */
+export async function sendChatNotifications(
+  recipientIds: string[],
+  senderName: string,
+  preview: string
+) {
+  if (recipientIds.length === 0) return;
+  const admin = createAdminSupabase();
+  const rows = recipientIds.map((uid) => ({
+    user_id: uid,
+    type: "chat",
+    title: "New Chat Message",
+    message: `${senderName}: ${preview}`,
+    read: false,
+  }));
+  await admin.from("notifications").insert(rows);
 }

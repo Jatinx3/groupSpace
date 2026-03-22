@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState, FormEvent, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -14,8 +13,11 @@ import {
   CheckCircle2,
   MessageSquare,
   X,
-  ChevronRight,
   Flag,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+  ExternalLink,
 } from "lucide-react";
 
 interface ThesisCard {
@@ -80,6 +82,8 @@ function progressBarColor(p: number) {
   return "bg-blue-400";
 }
 
+const STATUS_OPTIONS = ["proposal", "research", "writing", "review", "completed"];
+
 export default function SupervisorThesisDashboardClient({
   supervisorName,
   theses,
@@ -97,6 +101,74 @@ export default function SupervisorThesisDashboardClient({
   const [submitting, setSubmitting] = useState(false);
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState("All");
+
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [editThesis, setEditThesis] = useState<ThesisCard | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editDeadline, setEditDeadline] = useState("");
+  const [editStatus, setEditStatus] = useState("");
+  const [editSubmitting, setEditSubmitting] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ThesisCard | null>(null);
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
+
+  function openEdit(t: ThesisCard) {
+    setEditThesis(t);
+    setEditTitle(t.title);
+    setEditDescription(t.description || "");
+    setEditDeadline(t.deadline || "");
+    setEditStatus(t.status);
+    setEditError(null);
+    setOpenMenuId(null);
+  }
+
+  function closeEdit() {
+    setEditThesis(null);
+    setEditError(null);
+  }
+
+  async function handleEdit(e: FormEvent) {
+    e.preventDefault();
+    if (!editThesis || !editTitle.trim()) return;
+    setEditSubmitting(true);
+    setEditError(null);
+    try {
+      const res = await fetch(`/professor/thesis/${editThesis.id}/api`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: editTitle.trim(),
+          description: editDescription.trim() || null,
+          deadline: editDeadline || null,
+          status: editStatus,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        setEditError(data?.error || "Could not update thesis.");
+      } else {
+        closeEdit();
+        router.refresh();
+      }
+    } finally {
+      setEditSubmitting(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    setDeleteSubmitting(true);
+    try {
+      const res = await fetch(`/professor/thesis/${deleteTarget.id}/api`, { method: "DELETE" });
+      if (res.ok) {
+        setDeleteTarget(null);
+        router.refresh();
+      }
+    } finally {
+      setDeleteSubmitting(false);
+    }
+  }
 
   useEffect(() => {
     if (!showModal) return;
@@ -256,76 +328,237 @@ export default function SupervisorThesisDashboardClient({
               const initials = getInitials(t.studentName);
               const avatarColor = AVATAR_COLORS[i % AVATAR_COLORS.length];
               return (
-                <Link
+                <div
                   key={t.id}
-                  href={`/professor/thesis/${t.id}`}
-                  className="bg-white rounded-2xl border border-gray-200 p-5 hover:border-gray-300 hover:shadow-sm transition group block"
+                  className="bg-white rounded-2xl border border-gray-200 p-5 hover:border-gray-300 hover:shadow-sm transition group relative"
                 >
-                  {/* Top row: avatar + name + status + arrow */}
+                  {/* Top row: avatar + name + menu */}
                   <div className="flex items-start gap-3">
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold shrink-0 ${avatarColor}`}>
                       {initials}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-gray-900 truncate leading-tight">
-                            {t.title || "Untitled"}
-                          </p>
-                          <p className="text-xs text-gray-500 mt-0.5">{t.studentName}</p>
-                        </div>
-                        <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 transition shrink-0 mt-0.5" />
+                    <div
+                      className="flex-1 min-w-0 cursor-pointer"
+                      onClick={() => router.push(`/professor/thesis/${t.id}`)}
+                    >
+                      <p className="text-sm font-semibold text-gray-900 truncate leading-tight">
+                        {t.title || "Untitled"}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-0.5">{t.studentName}</p>
+                    </div>
+                    <div className="relative shrink-0">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenMenuId(openMenuId === t.id ? null : t.id);
+                        }}
+                        className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition"
+                      >
+                        <MoreHorizontal className="w-4 h-4" />
+                      </button>
+                      {openMenuId === t.id && (
+                        <>
+                          <div
+                            className="fixed inset-0 z-10"
+                            onClick={() => setOpenMenuId(null)}
+                          />
+                          <div className="absolute right-0 top-8 z-20 w-44 bg-white rounded-xl shadow-lg border border-gray-100 py-1 overflow-hidden">
+                            <button
+                              onClick={() => { setOpenMenuId(null); router.push(`/professor/thesis/${t.id}`); }}
+                              className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-gray-700 hover:bg-gray-50 transition"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5 text-gray-400" />
+                              View Details
+                            </button>
+                            <button
+                              onClick={() => openEdit(t)}
+                              className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-gray-700 hover:bg-gray-50 transition"
+                            >
+                              <Pencil className="w-3.5 h-3.5 text-gray-400" />
+                              Edit
+                            </button>
+                            <div className="my-1 border-t border-gray-100" />
+                            <button
+                              onClick={() => { setOpenMenuId(null); setDeleteTarget(t); }}
+                              className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-red-600 hover:bg-red-50 transition"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              Delete
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Clickable body */}
+                  <div
+                    className="cursor-pointer"
+                    onClick={() => router.push(`/professor/thesis/${t.id}`)}
+                  >
+                    {/* Description */}
+                    {t.description && (
+                      <p className="text-xs text-gray-400 mt-3 line-clamp-2 leading-relaxed">
+                        {t.description}
+                      </p>
+                    )}
+
+                    {/* Badges row */}
+                    <div className="flex items-center gap-2 mt-3 flex-wrap">
+                      <StatusBadge status={t.status} />
+                      {t.deadline && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-medium text-gray-500 bg-gray-50 border border-gray-200 px-2 py-0.5 rounded-full">
+                          <Flag className="w-2.5 h-2.5" />
+                          {t.deadline}
+                        </span>
+                      )}
+                      {t.messageCount > 0 && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-medium text-gray-500 bg-gray-50 border border-gray-200 px-2 py-0.5 rounded-full">
+                          <MessageSquare className="w-2.5 h-2.5" />
+                          {t.messageCount}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Progress */}
+                    <div className="mt-4">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">
+                          Progress
+                        </span>
+                        <span className="text-xs font-semibold text-gray-700 tabular-nums">
+                          {t.approvedCount}/{t.milestoneCount} milestones · {t.progress}%
+                        </span>
+                      </div>
+                      <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div
+                          className={`h-1.5 rounded-full transition-all ${progressBarColor(t.progress)}`}
+                          style={{ width: `${t.progress}%` }}
+                        />
                       </div>
                     </div>
                   </div>
-
-                  {/* Description */}
-                  {t.description && (
-                    <p className="text-xs text-gray-400 mt-3 line-clamp-2 leading-relaxed">
-                      {t.description}
-                    </p>
-                  )}
-
-                  {/* Badges row */}
-                  <div className="flex items-center gap-2 mt-3 flex-wrap">
-                    <StatusBadge status={t.status} />
-                    {t.deadline && (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-medium text-gray-500 bg-gray-50 border border-gray-200 px-2 py-0.5 rounded-full">
-                        <Flag className="w-2.5 h-2.5" />
-                        {t.deadline}
-                      </span>
-                    )}
-                    {t.messageCount > 0 && (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-medium text-gray-500 bg-gray-50 border border-gray-200 px-2 py-0.5 rounded-full">
-                        <MessageSquare className="w-2.5 h-2.5" />
-                        {t.messageCount}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Progress */}
-                  <div className="mt-4">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">
-                        Progress
-                      </span>
-                      <span className="text-xs font-semibold text-gray-700 tabular-nums">
-                        {t.approvedCount}/{t.milestoneCount} milestones · {t.progress}%
-                      </span>
-                    </div>
-                    <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                      <div
-                        className={`h-1.5 rounded-full transition-all ${progressBarColor(t.progress)}`}
-                        style={{ width: `${t.progress}%` }}
-                      />
-                    </div>
-                  </div>
-                </Link>
+                </div>
               );
             })}
           </div>
         )}
       </div>
+
+      {/* Edit Thesis Modal */}
+      {editThesis && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={closeEdit} />
+          <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+              <div>
+                <h2 className="text-base font-semibold text-gray-900">Edit Thesis</h2>
+                <p className="text-xs text-gray-500 mt-0.5">Update thesis details</p>
+              </div>
+              <button onClick={closeEdit} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <form onSubmit={handleEdit} className="px-6 py-5 space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">
+                  Title <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  className="w-full text-sm border border-gray-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-gray-900 bg-gray-50 transition"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">Description</label>
+                <textarea
+                  rows={3}
+                  className="w-full text-sm border border-gray-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-gray-900 bg-gray-50 transition resize-none"
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">Status</label>
+                <select
+                  className="w-full text-sm border border-gray-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-gray-900 bg-gray-50 transition"
+                  value={editStatus}
+                  onChange={(e) => setEditStatus(e.target.value)}
+                >
+                  {STATUS_OPTIONS.map((s) => (
+                    <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">Deadline</label>
+                <div className="relative">
+                  <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                  <input
+                    type="date"
+                    className="w-full text-sm border border-gray-200 rounded-xl pl-10 pr-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-gray-900 bg-gray-50 transition"
+                    value={editDeadline}
+                    onChange={(e) => setEditDeadline(e.target.value)}
+                  />
+                </div>
+              </div>
+              {editError && (
+                <div className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{editError}</div>
+              )}
+              <div className="flex gap-3 pt-1">
+                <button type="button" onClick={closeEdit} className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 border border-gray-200 rounded-xl hover:bg-gray-50 transition">
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={editSubmitting || !editTitle.trim()}
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gray-900 text-white text-sm font-medium disabled:opacity-50 hover:bg-gray-800 transition"
+                >
+                  {editSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setDeleteTarget(null)} />
+          <div className="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
+            <div className="px-6 py-6">
+              <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center mb-4">
+                <Trash2 className="w-5 h-5 text-red-500" />
+              </div>
+              <h2 className="text-base font-semibold text-gray-900">Delete Thesis?</h2>
+              <p className="text-sm text-gray-500 mt-1.5 leading-relaxed">
+                <span className="font-medium text-gray-700">"{deleteTarget.title}"</span> will be permanently deleted along with all its milestones and comments. This cannot be undone.
+              </p>
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => setDeleteTarget(null)}
+                  className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 border border-gray-200 rounded-xl hover:bg-gray-50 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={deleteSubmitting}
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-red-600 text-white text-sm font-medium disabled:opacity-50 hover:bg-red-700 transition"
+                >
+                  {deleteSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Create Thesis Modal */}
       {showModal && (

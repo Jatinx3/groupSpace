@@ -106,6 +106,13 @@ export default async function StudentThesisPage({
       author: comment.author?.[0] ?? null,
     })) ?? [];
 
+  // 📄 Drafts
+  const { data: drafts } = await supabase
+    .from("thesis_drafts")
+    .select("id, thesis_id, uploaded_by, version_number, file_path, file_url, file_name, uploaded_at, student_note")
+    .eq("thesis_id", normalizedThesis?.id ?? "")
+    .order("version_number", { ascending: false });
+
   return (
     <StudentThesisPageClient
       studentName={profile.first_name}
@@ -113,6 +120,7 @@ export default async function StudentThesisPage({
       milestones={milestones ?? []}
       submissions={submissions ?? []}
       comments={normalizedComments}
+      drafts={drafts ?? []}
     />
   );
 }

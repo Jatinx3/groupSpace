@@ -49,15 +49,9 @@ export default function Navbar() {
           >
             <Link
               href="/login"
-              className="hidden md:block text-sm font-bold uppercase tracking-wide hover:underline decoration-2 underline-offset-4"
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/login"
               className="px-6 py-3 bg-black text-white text-xs md:text-sm font-bold uppercase tracking-wider hover:bg-neutral-800 transition-all"
             >
-              Get Access
+              Sign In
             </Link>
             <button type="button" className="md:hidden" aria-label="Open menu">
               <Menu className="w-6 h-6" />

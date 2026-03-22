@@ -1,40 +1,29 @@
 import Card from "../ui/Card";
+import { BookOpen } from "lucide-react";
 
 interface CourseCardProps {
   title: string;
   professor: string;
   progress: number;
-  color: "indigo" | "emerald" | "orange" | "sky";
+  color?: string;
 }
 
 export default function CourseCard({
   title,
   professor,
-  progress,
 }: CourseCardProps) {
   return (
-    <Card className="hover:-translate-y-0.5 transition-all duration-200">
-      <h3 className="font-semibold text-gray-900">
+    <Card className="hover:-translate-y-0.5 transition-all duration-200 group cursor-pointer">
+      <div className="flex items-start justify-between mb-4">
+        <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
+          <BookOpen className="w-4 h-4 text-gray-600" />
+        </div>
+        <div className="w-1.5 h-1.5 rounded-full bg-gray-300 group-hover:bg-gray-900 transition-colors mt-1" />
+      </div>
+      <h3 className="font-semibold text-gray-900 leading-snug">
         {title}
       </h3>
-
-      <p className="text-sm text-gray-500 mt-1">
-        {professor}
-      </p>
-
-      <div className="mt-5">
-        <div className="flex justify-between text-xs text-gray-500 mb-2">
-          <span>Progress</span>
-          <span>{progress}%</span>
-        </div>
-
-        <div className="w-full bg-gray-100 rounded-full h-1.5">
-          <div
-            className="h-1.5 rounded-full bg-black transition-all"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-      </div>
+      <p className="text-xs text-gray-400 mt-1">{professor}</p>
     </Card>
   );
 }

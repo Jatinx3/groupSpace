@@ -6,7 +6,6 @@ import { createClientSupabase } from "../../../lib/supabase-client";
 
 export default function LoginPage() {
   const router = useRouter();
-  const supabase = createClientSupabase();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,6 +18,7 @@ export default function LoginPage() {
     e.preventDefault();
     setError(null);
 
+    const supabase = createClientSupabase(remember);
     const normalizedEmail = email.trim().toLowerCase();
 
     if (!normalizedEmail || !password) {
@@ -134,7 +134,7 @@ export default function LoginPage() {
             </label>
 
             <a
-              href="#"
+              href="/forgot-password"
               className="font-medium uppercase tracking-[0.16em] text-black hover:underline"
             >
               Forgot password?

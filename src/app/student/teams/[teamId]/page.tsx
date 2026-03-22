@@ -1,4 +1,4 @@
-import { createServerSupabase } from "../../../../lib/supabase-server";
+import { createServerSupabase, createAdminSupabase } from "../../../../lib/supabase-server";
 import { deleteTeam } from "../actions";
 import TeamWorkspace from "../../../../components/student/workspace/TeamWorkspace";
 
@@ -96,7 +96,9 @@ export default async function TeamDetailPage({
      FETCH MEMBERS (SAFE VERSION)
   ========================= */
 
-  const { data: teamMembers, error: teamMembersError } = await supabase
+  const admin = createAdminSupabase();
+
+  const { data: teamMembers, error: teamMembersError } = await admin
     .from("team_members")
     .select("user_id, role")
     .eq("team_id", teamId);
@@ -107,7 +109,7 @@ export default async function TeamDetailPage({
 
   const userIds = teamMembers?.map((m) => m.user_id) ?? [];
 
-  const { data: profiles, error: profilesError } = await supabase
+  const { data: profiles, error: profilesError } = await admin
     .from("profiles")
     .select("id, first_name, last_name, email")
     .in("id", userIds);

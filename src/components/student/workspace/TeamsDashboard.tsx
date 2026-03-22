@@ -19,18 +19,21 @@ export default function TeamsDashboard({ teams, courses }: Props) {
     return acc;
   }, {});
 
-  const personalCourses = [
-    "Hackathons",
-    "Solo Projects",
-    "Team Projects",
-  ];
+  const isPersonalCourse = (name: string) => {
+    const n = name.toLowerCase();
+    return (
+      n.includes("hackathon") ||
+      n.includes("solo project") ||
+      n.includes("team project")
+    );
+  };
 
   const personalTeams = Object.entries(grouped)
-    .filter(([courseName]) => personalCourses.includes(courseName))
+    .filter(([courseName]) => isPersonalCourse(courseName))
     .flatMap(([, teams]) => teams);
 
   const academicTeams = Object.entries(grouped)
-    .filter(([courseName]) => !personalCourses.includes(courseName));
+    .filter(([courseName]) => !isPersonalCourse(courseName));
 
   return (
     <div className="space-y-12">

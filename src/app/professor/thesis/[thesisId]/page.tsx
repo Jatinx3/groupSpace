@@ -122,6 +122,13 @@ export default async function ProfessorThesisDetailPage({
       author: toSingle(comment.author),
     })) ?? [];
 
+  // 📄 Drafts
+  const { data: drafts } = await supabase
+    .from("thesis_drafts")
+    .select("id, thesis_id, uploaded_by, version_number, file_path, file_url, file_name, uploaded_at, student_note")
+    .eq("thesis_id", thesisId)
+    .order("version_number", { ascending: false });
+
   return (
     <SupervisorThesisDetailClient
       supervisorName={profile.first_name}
@@ -129,6 +136,7 @@ export default async function ProfessorThesisDetailPage({
       milestones={milestones ?? []}
       submissions={submissions ?? []}
       comments={normalizedComments}
+      drafts={drafts ?? []}
     />
   );
 }

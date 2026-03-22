@@ -1,4 +1,4 @@
-import { createServerSupabase } from "../../../../../../lib/supabase-server";
+import { createServerSupabase, createAdminSupabase } from "../../../../../../lib/supabase-server";
 import { redirect } from "next/navigation";
 import ProfessorTeamWorkspaceClient from "../../../../../../components/professor/ProfessorTeamWorkspaceClient";
 
@@ -35,14 +35,16 @@ export default async function ProfessorTeamWorkspacePage({
 
   const { data: team } = await supabase
     .from("teams")
-    .select("id, name, course_id, created_at")
+    .select("id, name, course_id, created_at, join_code")
     .eq("id", teamId)
     .eq("course_id", courseId)
     .single();
 
   if (!team) redirect(`/professor/courses/${courseId}`);
 
-  const { data: teamMembersRaw } = await supabase
+  const adminSupabase = createAdminSupabase();
+
+  const { data: teamMembersRaw } = await adminSupabase
     .from("team_members")
     .select("user_id, role")
     .eq("team_id", teamId);
@@ -50,7 +52,7 @@ export default async function ProfessorTeamWorkspacePage({
   const userIds = teamMembersRaw?.map((m) => m.user_id) ?? [];
 
   const { data: memberProfiles } = userIds.length
-    ? await supabase
+    ? await adminSupabase
         .from("profiles")
         .select("id, first_name, last_name, email")
         .in("id", userIds)
@@ -94,15 +96,21 @@ export default async function ProfessorTeamWorkspacePage({
     senderName: profileMap[m.user_id] ?? "Unknown",
   }));
 
-  const { data: filesRaw } = await supabase
+  const { data: filesRaw } = await adminSupabase
     .from("project_files")
     .select("id, file_name, file_size, created_at, uploaded_by")
     .eq("team_id", teamId)
     .order("created_at", { ascending: false });
 
+  const { data: foldersRaw } = await adminSupabase
+    .from("folders")
+    .select("id, name, parent_id")
+    .eq("team_id", teamId)
+    .order("name", { ascending: true });
+
   const uploaderIds = Array.from(new Set((filesRaw ?? []).map((f: any) => f.uploaded_by).filter(Boolean)));
   const { data: uploaderProfiles } = uploaderIds.length
-    ? await supabase
+    ? await adminSupabase
         .from("profiles")
         .select("id, first_name, last_name")
         .in("id", uploaderIds)
@@ -121,15 +129,23 @@ export default async function ProfessorTeamWorkspacePage({
     uploaderName: uploaderMap[f.uploaded_by] ?? "Unknown",
   }));
 
+  const folders = (foldersRaw ?? []).map((f: any) => ({
+    id: f.id,
+    name: f.name,
+    parent_id: f.parent_id,
+  }));
+
   return (
     <ProfessorTeamWorkspaceClient
       courseId={courseId}
       courseName={course.name}
       teamId={teamId}
       teamName={team.name}
+      inviteCode={team.join_code ?? ""}
       members={members}
       initialMessages={messages}
       files={files}
+      folders={folders}
       currentUserId={user.id}
       currentUserName={profile.first_name ?? "Professor"}
     />

@@ -5,8 +5,8 @@ import Greeting from "../../components/dashboard/Greeting";
 import StatsGrid from "../../components/dashboard/StatsGrid";
 import DeadlineList from "../../components/dashboard/DeadlineList";
 import ActivityFeed from "../../components/dashboard/ActivityFeed";
-import CourseGrid from "../../components/dashboard/CourseGrid";
-import TeamGrid from "../../components/dashboard/TeamGrid";
+import QuickLinks from "../../components/dashboard/QuickLinks";
+import TaskProgress from "../../components/dashboard/TaskProgress";
 
 export default async function StudentDashboard() {
   const supabase = await createServerSupabase();
@@ -140,8 +140,7 @@ export default async function StudentDashboard() {
   ========================= */
 
   return (
-    <div className="space-y-12">
-
+    <>
       <Greeting greeting={greeting} name={firstName} />
 
       <StatsGrid
@@ -151,7 +150,7 @@ export default async function StudentDashboard() {
         pendingTasks={pendingTasks}
       />
 
-      <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <section className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <div className="lg:col-span-2">
           <DeadlineList tasks={upcomingTasks} teams={teams} />
         </div>
@@ -161,9 +160,9 @@ export default async function StudentDashboard() {
         </div>
       </section>
 
-      <CourseGrid courses={courses} />
-      <TeamGrid teams={teams} />
+      <QuickLinks totalCourses={courses.length} totalTeams={teams.length} />
 
-    </div>
+      <TaskProgress tasks={safeTasks} teams={teams} completionRate={completionRate} />
+    </>
   );
 }

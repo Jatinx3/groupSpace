@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Sidebar from "../../components/dashboard/Sidebar";
 import { Menu, Bell } from "lucide-react";
 import Footer from "@/src/components/layout/Footer";
 import { useRouter } from "next/navigation";
 import { createClientSupabase } from "../../lib/supabase-client";
+import { playChime } from "../../lib/chime";
 import Avatar from "../../components/ui/Avatar";
 
 export default function StudentLayout({
@@ -28,15 +29,21 @@ export default function StudentLayout({
   const [unreadCount, setUnreadCount] = useState(0);
 
   const router = useRouter();
-  const supabase = createClientSupabase();
+
+  /* stable references — never recreated on re-render */
+  const supabaseRef = useRef(createClientSupabase());
+  const channelRef = useRef<ReturnType<typeof supabaseRef.current.channel> | null>(null);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    await supabaseRef.current.auth.signOut();
     router.push("/login");
   };
 
   useEffect(() => {
-    let channel: any;
+    /* guard: only run once even in React Strict Mode double-invoke */
+    if (channelRef.current) return;
+
+    const supabase = supabaseRef.current;
 
     const setup = async () => {
       const {
@@ -45,103 +52,101 @@ export default function StudentLayout({
 
       if (!user) return;
 
-      // 🔹 Fetch profile
       const { data: profile } = await supabase
         .from("profiles")
         .select("first_name, email, avatar_url")
         .eq("id", user.id)
         .single();
 
-      if (profile) {
-        setUserProfile(profile);
-      }
+      if (profile) setUserProfile(profile);
 
-      // 🔹 Initial notifications fetch
       const { data: initialNotifications } = await supabase
         .from("notifications")
         .select("*")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
-        .limit(5);
+        .limit(20);
 
       if (initialNotifications) {
         setNotifications(initialNotifications);
-        setUnreadCount(
-          initialNotifications.filter((n) => !n.read).length
-        );
+        setUnreadCount(initialNotifications.filter((n) => !n.read).length);
       }
 
-      // 🔹 Realtime subscription
-      channel = supabase
-        .channel("realtime-notifications")
+      const channel = supabase
+        .channel(`notif:${user.id}`)
         .on(
           "postgres_changes",
           {
             event: "INSERT",
             schema: "public",
             table: "notifications",
+            filter: `user_id=eq.${user.id}`,
           },
           (payload) => {
-            if (payload.new.user_id === user.id) {
-              setNotifications((prev) => [
-                payload.new,
-                ...prev.slice(0, 4),
-              ]);
-              setUnreadCount((prev) => prev + 1);
-            }
+            setNotifications((prev) => [payload.new as any, ...prev.slice(0, 19)]);
+            setUnreadCount((prev) => prev + 1);
+            playChime();
           }
         )
-        .subscribe();
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: "notifications",
+            filter: `user_id=eq.${user.id}`,
+          },
+          (payload) => {
+            setNotifications((prev) =>
+              prev.map((n) => (n.id === payload.new.id ? { ...n, ...(payload.new as any) } : n))
+            );
+            setUnreadCount((prev) =>
+              (payload.new as any).read && !(payload.old as any).read
+                ? Math.max(0, prev - 1)
+                : prev
+            );
+          }
+        )
+        .subscribe((status) => {
+          if (status === "SUBSCRIBED") {
+            console.log("[notif] realtime subscribed for", user.id);
+          } else {
+            console.warn("[notif] realtime status:", status);
+          }
+        });
+
+      channelRef.current = channel;
     };
 
     setup();
 
     return () => {
-      if (channel) {
-        supabase.removeChannel(channel);
+      if (channelRef.current) {
+        supabaseRef.current.removeChannel(channelRef.current);
+        channelRef.current = null;
       }
     };
   }, []);
-const markAsRead = async (id: string) => {
-  await supabase
-    .from("notifications")
-    .update({ read: true })
-    .eq("id", id);
 
-  setNotifications((prev) =>
-    prev.map((n) =>
-      n.id === id ? { ...n, read: true } : n
-    )
-  );
+  const markAsRead = async (id: string) => {
+    await supabaseRef.current.from("notifications").update({ read: true }).eq("id", id);
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+    setUnreadCount((prev) => Math.max(0, prev - 1));
+  };
 
-  setUnreadCount((prev) =>
-    prev > 0 ? prev - 1 : 0
-  );
-};
+  const clearReadNotifications = async () => {
+    const { data: { user } } = await supabaseRef.current.auth.getUser();
+    if (!user) return;
+    await supabaseRef.current.from("notifications").delete().eq("user_id", user.id).eq("read", true);
+    setNotifications((prev) => prev.filter((n) => !n.read));
+  };
 
-const clearReadNotifications = async () => {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) return;
-
-  await supabase
-    .from("notifications")
-    .delete()
-    .eq("user_id", user.id)
-    .eq("read", true);
-
-  setNotifications((prev) =>
-    prev.filter((n) => !n.read)
-  );
-};
   return (
     <div className="min-h-screen flex relative bg-white">
       {/* Mobile Overlay */}
       {isMobileOpen && (
         <div
-          className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 md:hidden"
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 md:hidden"
           onClick={() => setIsMobileOpen(false)}
         />
       )}
@@ -153,115 +158,113 @@ const clearReadNotifications = async () => {
       />
 
       {/* Main */}
-      <main className="flex-1 flex flex-col min-h-screen">
+      <main className="flex-1 flex flex-col min-h-screen overflow-hidden">
         {/* Header */}
-        <div className="px-8 py-5 flex items-center justify-between">
+        <div className="px-6 md:px-8 py-4 flex items-center justify-between bg-white border-b border-gray-100">
           {/* Left Controls */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <button
               onClick={() => setIsMobileOpen(true)}
-              className="md:hidden p-2 rounded-lg hover:bg-slate-200 transition"
+              className="md:hidden p-2 rounded-xl hover:bg-gray-100 transition"
             >
-              <Menu className="w-5 h-5 text-slate-600" />
+              <Menu className="w-4 h-4 text-gray-600" />
             </button>
 
             <button
               onClick={() => setIsDesktopOpen(!isDesktopOpen)}
-              className="hidden md:block p-2 rounded-lg hover:bg-slate-200 transition"
+              className="hidden md:block p-2 rounded-xl hover:bg-gray-100 transition"
             >
-              <Menu className="w-5 h-5 text-slate-600" />
+              <Menu className="w-4 h-4 text-gray-600" />
             </button>
           </div>
 
           {/* Right Controls */}
-          <div className="flex items-center gap-6">
-            {/* 🔔 Notifications */}
+          <div className="flex items-center gap-4">
+            {/* Notifications */}
             <div className="relative">
               <button
                 onClick={() => {
                   setNotificationOpen(!notificationOpen);
                   setProfileOpen(false);
                 }}
-                className="relative text-slate-500 hover:text-slate-900 transition"
+                className="relative p-2 rounded-xl hover:bg-gray-100 text-gray-500 hover:text-gray-900 transition"
               >
-                <Bell className="w-5 h-5" />
-
+                <Bell className="w-4 h-4" />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">
-                    {unreadCount}
-                  </span>
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-gray-900 rounded-full" />
                 )}
               </button>
 
               {notificationOpen && (
-                <div className="absolute right-0 mt-3 w-80 bg-white rounded-xl shadow-xl border border-slate-100 p-4 space-y-3 z-50">
-                  <p className="text-sm font-semibold text-slate-900">
-                    Notifications
-                  </p>
-                  {notifications.length > 0 && unreadCount > 0 && (
-  <button
-    onClick={async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) return;
-
-      await supabase
-        .from("notifications")
-        .update({ read: true })
-        .eq("user_id", user.id)
-        .eq("read", false);
-
-      setNotifications((prev) =>
-        prev.map((n) => ({ ...n, read: true }))
-      );
-
-      setUnreadCount(0);
-    }}
-    className="text-xs text-indigo-600 hover:underline"
-  >
-    Mark all as read
-  </button>
-)}
-<button
-  onClick={clearReadNotifications}
-  className="text-xs text-slate-500 hover:underline"
->
-  Clear read
-</button>
-                  {notifications.length === 0 && (
-                    <p className="text-sm text-slate-500">
-                      No notifications yet.
+                <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50">
+                  <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                    <p className="text-sm font-semibold text-gray-900">
+                      Notifications
+                      {unreadCount > 0 && (
+                        <span className="ml-2 text-xs font-semibold bg-gray-900 text-white px-1.5 py-0.5 rounded-full">
+                          {unreadCount}
+                        </span>
+                      )}
                     </p>
-                  )}
-                  
-
-                  {notifications.map((n) => (
-                    <div
-  key={n.id}
-  onClick={() => {
-    if (!n.read) markAsRead(n.id);
-  }}
-  className={`p-3 rounded-lg text-sm cursor-pointer transition ${
-    n.read
-      ? "bg-slate-50"
-      : "bg-indigo-50 hover:bg-indigo-100"
-  }`}
->
-                      <p className="font-medium text-slate-800">
-                        {n.title}
-                      </p>
-                      <p className="text-slate-500 text-xs mt-1">
-                        {n.message}
-                      </p>
+                    <div className="flex items-center gap-3">
+                      {unreadCount > 0 && (
+                        <button
+                          onClick={async () => {
+                            const { data: { user } } = await supabaseRef.current.auth.getUser();
+                            if (!user) return;
+                            await supabaseRef.current
+                              .from("notifications")
+                              .update({ read: true })
+                              .eq("user_id", user.id)
+                              .eq("read", false);
+                            setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+                            setUnreadCount(0);
+                          }}
+                          className="text-xs text-gray-500 hover:text-gray-900 transition"
+                        >
+                          Mark all read
+                        </button>
+                      )}
+                      <button
+                        onClick={clearReadNotifications}
+                        className="text-xs text-gray-400 hover:text-gray-700 transition"
+                      >
+                        Clear
+                      </button>
                     </div>
-                  ))}
+                  </div>
+                  <div className="max-h-72 overflow-y-auto">
+                    {notifications.length === 0 && (
+                      <p className="text-sm text-gray-400 text-center py-6">
+                        No notifications yet.
+                      </p>
+                    )}
+                    {notifications.map((n) => (
+                      <div
+                        key={n.id}
+                        onClick={() => {
+                          if (!n.read) markAsRead(n.id);
+                        }}
+                        className={`px-4 py-3 cursor-pointer transition border-b border-gray-50 last:border-0 ${
+                          n.read
+                            ? "hover:bg-gray-50"
+                            : "bg-gray-50 hover:bg-gray-100 border-l-2 border-l-gray-900"
+                        }`}
+                      >
+                        <p className="text-sm font-medium text-gray-800">
+                          {n.title}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          {n.message}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
 
-            {/* 👤 Profile */}
+            {/* Profile */}
             <div className="relative">
               <button
                 onClick={() => {
@@ -273,33 +276,31 @@ const clearReadNotifications = async () => {
                 <Avatar
                   name={userProfile?.first_name}
                   avatarUrl={userProfile?.avatar_url}
-                  size={36}
+                  size={34}
                 />
               </button>
 
               {profileOpen && (
-                <div className="absolute right-0 mt-3 w-52 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-50">
-                  <div className="px-4 py-3 border-b border-slate-100">
-                    <p className="text-sm font-medium text-slate-900">
+                <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50">
+                  <div className="px-4 py-3 border-b border-gray-100">
+                    <p className="text-sm font-semibold text-gray-900">
                       {userProfile?.first_name}
                     </p>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-gray-400 truncate">
                       {userProfile?.email}
                     </p>
                   </div>
 
                   <button
-                    onClick={() =>
-                      router.push("/student/profile")
-                    }
-                    className="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 transition"
+                    onClick={() => router.push("/student/profile")}
+                    className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition"
                   >
                     Profile
                   </button>
 
                   <button
                     onClick={handleLogout}
-                    className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 transition"
+                    className="w-full text-left px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition border-t border-gray-100"
                   >
                     Logout
                   </button>
@@ -310,14 +311,14 @@ const clearReadNotifications = async () => {
         </div>
 
         {/* Content Canvas */}
-        <div className="flex-1 w-full bg-slate-100">
-          <div className="px-6 md:px-8 max-w-6xl mx-auto pb-12 pt-8">
+        <div className="flex-1 w-full bg-gray-50">
+          <div className="px-6 md:px-8 max-w-6xl mx-auto pb-12 pt-8 space-y-8">
             {children}
           </div>
         </div>
 
         {/* Footer */}
-        <div className="w-full border-t border-slate-200 bg-white">
+        <div className="w-full border-t border-gray-100 bg-white">
           <div className="px-6 md:px-8 max-w-6xl mx-auto">
             <Footer />
           </div>

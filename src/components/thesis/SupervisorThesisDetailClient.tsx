@@ -14,6 +14,9 @@ import {
   AlertCircle,
   X,
   Send,
+  BookOpen,
+  Download,
+  StickyNote,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -68,7 +71,19 @@ interface Comment {
   author?: { id: string; first_name: string; last_name: string; email?: string | null } | null;
 }
 
-type Tab = "milestones" | "thread" | "details";
+interface Draft {
+  id: string;
+  thesis_id: string;
+  uploaded_by: string;
+  version_number: number;
+  file_path: string;
+  file_url: string;
+  file_name: string;
+  uploaded_at: string;
+  student_note: string | null;
+}
+
+type Tab = "milestones" | "thread" | "details" | "drafts";
 
 function StatusBadge({ status }: { status: string }) {
   const s = status?.toLowerCase();
@@ -143,12 +158,14 @@ export default function SupervisorThesisDetailClient({
   milestones,
   submissions,
   comments,
+  drafts,
 }: {
   supervisorName: string;
   thesis: Thesis;
   milestones: Milestone[];
   submissions: Submission[];
   comments: Comment[];
+  drafts: Draft[];
 }) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>("milestones");
@@ -256,6 +273,7 @@ export default function SupervisorThesisDetailClient({
 
   const tabs: { id: Tab; label: string; icon: typeof FileText; count?: number }[] = [
     { id: "milestones", label: "Milestones", icon: FileText },
+    { id: "drafts", label: "Drafts", icon: BookOpen, count: drafts.length },
     { id: "thread", label: "Supervision Thread", icon: MessageCircle, count: comments.length },
     { id: "details", label: "Details", icon: FileText },
   ];
@@ -460,6 +478,94 @@ export default function SupervisorThesisDetailClient({
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* DRAFTS TAB */}
+      {activeTab === "drafts" && (
+        <div className="bg-white rounded-2xl border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <h2 className="text-base font-semibold text-gray-900">Student Drafts</h2>
+              <p className="text-xs text-gray-400 mt-0.5">
+                Full thesis draft versions submitted by the student.
+              </p>
+            </div>
+            {drafts.length > 0 && (
+              <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">
+                {drafts.length} version{drafts.length !== 1 ? "s" : ""}
+              </span>
+            )}
+          </div>
+
+          {drafts.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-3">
+                <BookOpen className="w-5 h-5 text-gray-400" />
+              </div>
+              <p className="text-sm font-medium text-gray-500">No drafts uploaded yet.</p>
+              <p className="text-xs text-gray-400 mt-1">
+                The student hasn&apos;t submitted any thesis drafts yet.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {drafts
+                .slice()
+                .sort((a, b) => b.version_number - a.version_number)
+                .map((d, idx) => (
+                  <div
+                    key={d.id}
+                    className="rounded-xl border border-gray-100 bg-gray-50 px-5 py-4 hover:border-gray-200 transition-colors"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-start gap-3 min-w-0">
+                        <div className="shrink-0 w-9 h-9 rounded-xl bg-gray-900 text-white flex items-center justify-center text-xs font-bold mt-0.5">
+                          v{d.version_number}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-sm font-semibold text-gray-900">
+                              Version {d.version_number}
+                            </span>
+                            {idx === 0 && (
+                              <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-semibold uppercase tracking-wide">
+                                Latest
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-gray-400 mt-0.5">
+                            {d.file_name}&nbsp;·&nbsp;Uploaded{" "}
+                            {new Date(d.uploaded_at).toLocaleDateString("en-US", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            })}
+                          </p>
+                          {d.student_note && (
+                            <div className="mt-2 flex items-start gap-1.5">
+                              <StickyNote className="w-3 h-3 text-gray-400 shrink-0 mt-0.5" />
+                              <p className="text-xs text-gray-600 italic leading-snug">
+                                {d.student_note}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <a
+                        href={d.file_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="shrink-0 inline-flex items-center gap-1.5 text-[11px] font-semibold text-gray-500 hover:text-gray-900 border border-gray-200 hover:border-gray-400 px-3 py-1.5 rounded-lg transition"
+                      >
+                        <Download className="w-3 h-3" />
+                        Download
+                      </a>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          )}
         </div>
       )}
 

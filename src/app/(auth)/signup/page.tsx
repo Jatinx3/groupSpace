@@ -106,6 +106,8 @@ export default function SignupPage() {
       return;
     }
 
+    await fetch("/api/enroll-defaults", { method: "POST" });
+
     router.push("/student/");
     router.refresh();
   };

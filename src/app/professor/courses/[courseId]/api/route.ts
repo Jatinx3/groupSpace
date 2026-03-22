@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createServerSupabase } from "../../../../../lib/supabase-server";
+import { createServerSupabase, createAdminSupabase } from "../../../../../lib/supabase-server";
 
 async function getProfessorWithCourse(courseId: string) {
   const supabase = await createServerSupabase();
@@ -53,6 +53,32 @@ export async function POST(
     if (error && error.code !== "23505") {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    const { data: course } = await supabase
+      .from("courses")
+      .select("name")
+      .eq("id", courseId)
+      .single();
+
+    const { data: profProfile } = await supabase
+      .from("profiles")
+      .select("first_name, last_name")
+      .eq("id", ctx.user.id)
+      .single();
+
+    const profName = profProfile
+      ? `${profProfile.first_name} ${profProfile.last_name}`.trim()
+      : "Your professor";
+
+    const admin = createAdminSupabase();
+    await admin.from("notifications").insert({
+      user_id: student.id,
+      type: "course",
+      title: "Added to Course",
+      message: `${profName} added you to the course "${course?.name ?? "a course"}"`,
+      read: false,
+    });
+
     return NextResponse.json({ ok: true });
   }
 
