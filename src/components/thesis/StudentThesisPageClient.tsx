@@ -391,11 +391,18 @@ export default function StudentThesisPageClient({
           {activeTab === "milestones" && (
             <>
               {milestones.length === 0 ? (
-                <p className="text-sm text-gray-400 py-8 text-center">
-                  No milestones added yet.
-                </p>
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                  <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center mx-auto mb-4">
+                    <Calendar className="w-6 h-6 text-gray-400" />
+                  </div>
+                  <p className="text-sm font-medium text-gray-500">No milestones yet.</p>
+                  <p className="text-xs text-gray-400 mt-1">Your supervisor hasn't assigned any milestones.</p>
+                </div>
               ) : (
-                <ol className="space-y-0">
+                <div className="relative pl-4 space-y-8">
+                  {/* Vertical Line */}
+                  <div className="absolute left-[31px] top-4 bottom-4 w-px bg-gray-200" />
+
                   {milestones.map((m, index) => {
                     const mSubmissions = submissionsByMilestone[m.id] ?? [];
                     const latest = mSubmissions[0];
@@ -403,47 +410,48 @@ export default function StudentThesisPageClient({
                     const isRejected = m.status === "rejected";
 
                     return (
-                      <li key={m.id} className="relative flex gap-5 pb-7 last:pb-0">
-                        {index < milestones.length - 1 && (
-                          <div className="absolute left-[15px] top-8 bottom-0 w-px bg-gray-100" />
-                        )}
-                        <div className="shrink-0 mt-1">
+                      <div key={m.id} className="relative flex gap-6 group">
+                        {/* Timeline Node */}
+                        <div className="shrink-0 mt-1 z-10">
                           <div
-                            className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-[11px] font-bold transition-colors ${
+                            className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-[11px] font-bold bg-white transition-all duration-300 group-hover:scale-110 shadow-sm ${
                               isApproved
-                                ? "bg-gray-900 border-gray-900 text-white"
+                                ? "border-emerald-500 text-emerald-600 ring-4 ring-emerald-50"
                                 : isRejected
-                                ? "bg-white border-gray-300 text-gray-400"
-                                : "bg-white border-gray-300 text-gray-500"
+                                ? "border-red-400 text-red-500 ring-4 ring-red-50"
+                                : "border-gray-900 text-gray-900 ring-4 ring-gray-50"
                             }`}
                           >
-                            {isApproved ? <CheckCircle2 className="w-4 h-4" /> : index + 1}
+                            {isApproved ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : index + 1}
                           </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
-                            <div>
-                              <p className="text-sm font-semibold text-gray-900">{m.title}</p>
+
+                        {/* Card Content */}
+                        <div className="flex-1 min-w-0 bg-white border border-gray-100/80 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow duration-300">
+                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 flex-wrap mb-1.5">
+                                <h3 className="text-base font-bold text-gray-900">{m.title}</h3>
+                                <StatusBadge status={m.status} />
+                              </div>
+                              
                               {m.due_date && (
-                                <p className="text-[11px] text-gray-400 mt-0.5 flex items-center gap-1">
-                                  <Calendar className="w-3 h-3" />
-                                  Due{" "}
-                                  {new Date(m.due_date).toLocaleDateString("en-GB", {
-                                    day: "numeric",
-                                    month: "short",
-                                    year: "numeric",
-                                  })}
-                                </p>
+                                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-50 text-[11px] font-semibold text-gray-500 mb-3">
+                                  <Calendar className="w-3.5 h-3.5" />
+                                  <span>Due {new Date(m.due_date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</span>
+                                </div>
                               )}
+                              
                               {m.description && (
-                                <p className="text-xs text-gray-400 mt-1">{m.description}</p>
+                                <p className="text-sm text-gray-600 leading-relaxed max-w-2xl">{m.description}</p>
                               )}
                             </div>
-                            <div className="flex items-center gap-2 shrink-0">
-                              <StatusBadge status={m.status} />
-                              <label className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 uppercase tracking-wide cursor-pointer hover:bg-gray-200 transition-colors">
-                                <Upload className="w-3 h-3" />
-                                {latest ? "New version" : "Upload"}
+
+                            {/* Actions / Upload */}
+                            <div className="shrink-0">
+                              <label className="group/btn relative cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-xl text-xs font-bold uppercase tracking-wide transition-all duration-300 shadow-sm hover:shadow-md active:scale-95">
+                                <Upload className="w-4 h-4 transition-transform group-hover/btn:-translate-y-0.5" />
+                                {latest ? "Update Version" : "Upload Delivery"}
                                 <input
                                   type="file"
                                   className="hidden"
@@ -456,42 +464,55 @@ export default function StudentThesisPageClient({
                               </label>
                             </div>
                           </div>
+
                           {m.supervisor_feedback && (
-                            <div className="mt-3 flex gap-2.5 bg-gray-50 border border-gray-200 rounded-xl p-3">
-                              <AlertCircle className="w-3.5 h-3.5 text-gray-500 shrink-0 mt-0.5" />
+                            <div className="mt-5 flex gap-3 bg-amber-50/50 border border-amber-100 rounded-xl p-4">
+                              <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                               <div>
-                                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">
+                                <h4 className="text-[10px] font-extrabold uppercase tracking-widest text-amber-800 mb-1.5">
                                   Supervisor Feedback
-                                </p>
-                                <p className="text-xs text-gray-700">{m.supervisor_feedback}</p>
+                                </h4>
+                                <p className="text-sm text-amber-900 leading-relaxed">{m.supervisor_feedback}</p>
                               </div>
                             </div>
                           )}
+
                           {latest && (
-                            <div className="mt-3 flex items-center justify-between bg-gray-50 border border-gray-100 rounded-xl px-3 py-2">
-                              <div className="flex items-center gap-2 min-w-0">
-                                <FileText className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                                <span className="text-xs text-gray-600 truncate">{latest.file_name}</span>
-                                <span className="shrink-0 px-1.5 py-0.5 rounded-full bg-gray-900 text-white text-[10px] font-bold">
-                                  v{latest.version_number}
-                                </span>
+                            <div className="mt-4 flex items-center justify-between bg-gray-50/80 border border-gray-100 rounded-xl px-4 py-3 group/sub transition-colors hover:bg-gray-50 hover:border-gray-200">
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className="w-8 h-8 rounded-lg bg-white border border-gray-200 flex items-center justify-center shrink-0">
+                                  <FileText className="w-4 h-4 text-gray-400" />
+                                </div>
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs font-semibold text-gray-900 truncate">
+                                      {latest.file_name}
+                                    </span>
+                                    <span className="shrink-0 px-2 py-0.5 rounded-full bg-gray-900 text-white text-[10px] font-bold">
+                                      v{latest.version_number}
+                                    </span>
+                                  </div>
+                                  <span className="text-[10px] text-gray-400 mt-0.5 block">
+                                    Delivered {new Date(latest.created_at).toLocaleDateString()}
+                                  </span>
+                                </div>
                               </div>
                               <a
                                 href={latest.file_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold text-gray-500 hover:text-gray-900 transition-colors ml-3"
+                                className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-gray-500 hover:text-gray-900 hover:bg-white border border-transparent hover:border-gray-200 transition-all opacity-0 group-hover/sub:opacity-100"
                               >
-                                <Download className="w-3 h-3" />
+                                <Download className="w-3.5 h-3.5" />
                                 Download
                               </a>
                             </div>
                           )}
                         </div>
-                      </li>
+                      </div>
                     );
                   })}
-                </ol>
+                </div>
               )}
             </>
           )}
@@ -500,9 +521,15 @@ export default function StudentThesisPageClient({
           {activeTab === "submissions" && (
             <>
               {submissions.length === 0 ? (
-                <p className="text-sm text-gray-400 py-8 text-center">No submissions yet.</p>
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                  <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center mx-auto mb-4">
+                    <FileText className="w-6 h-6 text-gray-400" />
+                  </div>
+                  <p className="text-sm font-medium text-gray-500">No submissions found.</p>
+                  <p className="text-xs text-gray-400 mt-1">Upload files on your milestones to see them here.</p>
+                </div>
               ) : (
-                <div className="space-y-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                   {submissions
                     .slice()
                     .sort(
@@ -511,50 +538,51 @@ export default function StudentThesisPageClient({
                         new Date(a.created_at).getTime()
                     )
                     .map((s) => {
-                      const isLatest =
-                        submissionsByMilestone[s.milestone_id]?.[0]?.id === s.id;
+                      const isLatest = submissionsByMilestone[s.milestone_id]?.[0]?.id === s.id;
                       const milestone = milestones.find((m) => m.id === s.milestone_id);
 
                       return (
                         <div
                           key={s.id}
-                          className="flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50 px-4 py-3 hover:border-gray-200 transition-colors"
+                          className="group relative flex flex-col bg-white border border-gray-100 rounded-2xl p-5 hover:border-gray-300 hover:shadow-md transition-all duration-300"
                         >
-                          <div className="flex items-center gap-3 min-w-0">
-                            <FileText className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-xs font-semibold text-gray-800">
-                                  {milestone?.title ?? "Milestone"}
-                                </span>
-                                <span className="px-1.5 py-0.5 rounded-full bg-gray-900 text-white text-[10px] font-bold">
-                                  v{s.version_number}
-                                </span>
-                                {isLatest && (
-                                  <span className="px-2 py-0.5 rounded-full border border-gray-300 text-gray-500 text-[10px] font-semibold uppercase tracking-wide">
-                                    Latest
-                                  </span>
-                                )}
-                              </div>
-                              <p className="text-[11px] text-gray-400 mt-0.5 truncate">
-                                {s.file_name}&nbsp;·&nbsp;
-                                {new Date(s.created_at).toLocaleDateString("en-GB", {
-                                  day: "numeric",
-                                  month: "short",
-                                  year: "numeric",
-                                })}
-                              </p>
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="w-10 h-10 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center shrink-0 group-hover:bg-gray-900 group-hover:text-white transition-colors duration-300">
+                              <FileText className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors duration-300" />
+                            </div>
+                            {isLatest && (
+                              <span className="px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-md text-[10px] font-bold uppercase tracking-wider">
+                                Latest
+                              </span>
+                            )}
+                          </div>
+                          
+                          <div className="flex-1">
+                            <h4 className="text-sm font-bold text-gray-900 line-clamp-1 mb-1" title={s.file_name}>
+                              {s.file_name}
+                            </h4>
+                            <div className="flex items-center gap-2 mb-3">
+                              <span className="px-2 py-0.5 rounded-md bg-gray-100 text-gray-700 text-[10px] font-bold">
+                                v{s.version_number}
+                              </span>
+                              <p className="text-xs text-gray-500 line-clamp-1">{milestone?.title ?? "Unknown Milestone"}</p>
                             </div>
                           </div>
-                          <a
-                            href={s.file_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold text-gray-500 hover:text-gray-900 transition-colors ml-4"
-                          >
-                            <Download className="w-3 h-3" />
-                            Download
-                          </a>
+
+                          <div className="flex items-center justify-between pt-4 border-t border-gray-50 mt-auto">
+                            <p className="text-[10px] font-medium text-gray-400">
+                              {new Date(s.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                            </p>
+                            <a
+                              href={s.file_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-8 h-8 rounded-full bg-gray-50 text-gray-600 flex items-center justify-center hover:bg-gray-100 hover:text-gray-900 transition-colors"
+                              title="Download"
+                            >
+                              <Download className="w-4 h-4" />
+                            </a>
+                          </div>
                         </div>
                       );
                     })}
@@ -683,84 +711,80 @@ export default function StudentThesisPageClient({
 
           {/* ── Drafts ── */}
           {activeTab === "drafts" && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <p className="text-sm font-semibold text-gray-900">Thesis Drafts</p>
-                  <p className="text-xs text-gray-400 mt-0.5">
+                  <h3 className="text-base font-bold text-gray-900">Thesis Drafts</h3>
+                  <p className="text-xs text-gray-500 mt-1">
                     Upload full thesis draft versions for your supervisor to review.
                   </p>
                 </div>
                 <button
                   onClick={() => setShowDraftModal(true)}
-                  className="inline-flex items-center gap-1.5 bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-xl transition"
+                  className="shrink-0 inline-flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold uppercase tracking-widest px-5 py-2.5 rounded-xl transition-all shadow-sm active:scale-95"
                 >
-                  <Upload className="w-3.5 h-3.5" />
+                  <Upload className="w-4 h-4" />
                   Upload Draft
                 </button>
               </div>
 
               {drafts.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-14 text-center">
-                  <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-3">
-                    <BookOpen className="w-5 h-5 text-gray-400" />
+                <div className="flex flex-col items-center justify-center py-16 text-center border border-dashed border-gray-200 rounded-3xl bg-gray-50/50">
+                  <div className="w-14 h-14 rounded-2xl bg-white border border-gray-100 shadow-sm flex items-center justify-center mx-auto mb-4">
+                    <BookOpen className="w-6 h-6 text-gray-400" />
                   </div>
-                  <p className="text-sm font-medium text-gray-500">No drafts uploaded yet.</p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    Upload your first thesis draft to share with your supervisor.
+                  <h4 className="text-sm font-bold text-gray-700">No drafts uploaded yet</h4>
+                  <p className="text-xs text-gray-500 mt-1.5 max-w-sm mx-auto leading-relaxed">
+                    Upload your first thesis document here. Each upload is versioned automatically, so your supervisor can track your progress.
                   </p>
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   {drafts
                     .slice()
                     .sort((a, b) => b.version_number - a.version_number)
                     .map((d, idx) => (
                       <div
                         key={d.id}
-                        className="rounded-xl border border-gray-100 bg-gray-50 px-5 py-4 hover:border-gray-200 transition-colors"
+                        className="group relative flex flex-col bg-white border border-gray-100 rounded-2xl p-5 hover:border-gray-300 hover:shadow-md transition-all duration-300"
                       >
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex items-start gap-3 min-w-0">
-                            <div className="shrink-0 w-9 h-9 rounded-xl bg-gray-900 text-white flex items-center justify-center text-xs font-bold mt-0.5">
-                              v{d.version_number}
-                            </div>
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-sm font-semibold text-gray-900">
-                                  Version {d.version_number}
-                                </span>
-                                {idx === 0 && (
-                                  <span className="px-2 py-0.5 rounded-full border border-gray-300 text-gray-500 text-[10px] font-semibold uppercase tracking-wide">
-                                    Latest
-                                  </span>
-                                )}
-                              </div>
-                              <p className="text-[11px] text-gray-400 mt-0.5">
-                                {d.file_name}&nbsp;·&nbsp;Uploaded{" "}
-                                {new Date(d.uploaded_at).toLocaleDateString("en-GB", {
-                                  day: "numeric",
-                                  month: "short",
-                                  year: "numeric",
-                                })}
-                              </p>
-                              {d.student_note && (
-                                <div className="mt-2 flex items-start gap-1.5">
-                                  <StickyNote className="w-3 h-3 text-gray-400 shrink-0 mt-0.5" />
-                                  <p className="text-xs text-gray-600 italic leading-snug">
-                                    {d.student_note}
-                                  </p>
-                                </div>
-                              )}
-                            </div>
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="w-12 h-12 rounded-xl bg-gray-900 text-white flex items-center justify-center text-sm font-bold shadow-sm transition-transform group-hover:scale-105">
+                            v{d.version_number}
                           </div>
+                          {idx === 0 && (
+                            <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-md text-[10px] font-bold uppercase tracking-wider">
+                              Latest
+                            </span>
+                          )}
+                        </div>
+                        
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-sm font-bold text-gray-900 mb-1.5 line-clamp-1" title={d.file_name}>
+                            {d.file_name}
+                          </h4>
+                          <p className="text-[11px] font-medium text-gray-400">
+                            Uploaded {new Date(d.uploaded_at).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                          </p>
+                          
+                          {d.student_note && (
+                            <div className="mt-4 flex items-start gap-2 bg-amber-50/50 border border-amber-100/50 rounded-lg p-3">
+                              <StickyNote className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+                              <p className="text-xs text-amber-900 italic leading-relaxed line-clamp-3">
+                                {d.student_note}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="pt-4 mt-4 border-t border-gray-50 flex justify-end">
                           <a
                             href={d.file_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="shrink-0 inline-flex items-center gap-1.5 text-[11px] font-semibold text-gray-500 hover:text-gray-900 border border-gray-200 hover:border-gray-400 px-3 py-1.5 rounded-lg transition"
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-gray-600 bg-gray-50 hover:bg-gray-900 hover:text-white transition-colors"
                           >
-                            <Download className="w-3 h-3" />
+                            <Download className="w-3.5 h-3.5" />
                             Download
                           </a>
                         </div>
@@ -774,21 +798,18 @@ export default function StudentThesisPageClient({
           {/* ── AI Tools ── */}
           {activeTab === "ai" && (
             <div className="max-w-lg">
-              <div className="flex items-start justify-between mb-6">
+              <div className="flex items-start justify-between mb-8">
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">
-                    Coming Soon
-                  </p>
-                  <h2 className="font-semibold text-gray-900">AI Thesis Assistant</h2>
-                  <p className="text-xs text-gray-400 mt-1">
-                    Planned tools to support academic writing and supervision.
+                  <h3 className="text-base font-bold text-gray-900">AI Thesis Assistant</h3>
+                  <p className="text-xs text-gray-500 mt-1.5 leading-relaxed max-w-sm">
+                    Intelligent contextual tools are coming soon to support your academic writing and supervision.
                   </p>
                 </div>
-                <span className="px-2 py-0.5 rounded-full bg-gray-200 text-gray-500 text-[10px] font-semibold uppercase tracking-wide shrink-0">
-                  Disabled
+                <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-500 text-[10px] font-bold uppercase tracking-wider shrink-0 border border-gray-200">
+                  Coming Soon
                 </span>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[
                   { label: "Writing quality feedback", icon: FileText },
                   { label: "Research gap detection", icon: AlertCircle },
@@ -797,10 +818,13 @@ export default function StudentThesisPageClient({
                 ].map(({ label, icon: Icon }) => (
                   <div
                     key={label}
-                    className="flex items-center gap-3 px-4 py-3.5 rounded-xl bg-gray-50 border border-gray-100 opacity-50"
+                    className="flex items-center gap-3 px-5 py-4 rounded-xl bg-white border border-gray-100 opacity-60 hover:opacity-100 hover:shadow-sm hover:border-gray-200 transition-all cursor-not-allowed"
+                    title="Coming soon"
                   >
-                    <Icon className="w-4 h-4 text-gray-400 shrink-0" />
-                    <span className="text-xs text-gray-600 font-medium">{label}</span>
+                    <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center shrink-0">
+                      <Icon className="w-4 h-4 text-gray-500" />
+                    </div>
+                    <span className="text-xs text-gray-700 font-bold">{label}</span>
                   </div>
                 ))}
               </div>

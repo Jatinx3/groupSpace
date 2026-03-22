@@ -137,12 +137,37 @@ function MilestoneStatusBadge({ status }: { status: string }) {
   return <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 text-gray-500 border border-gray-200">{status || "Pending"}</span>;
 }
 
+const AVATAR_COLORS = [
+  "bg-violet-500","bg-blue-500","bg-emerald-500","bg-orange-500",
+  "bg-rose-500","bg-cyan-500","bg-amber-500","bg-fuchsia-500",
+];
+
+function getAvatarColor(userId: string) {
+  let h = 0;
+  for (let i = 0; i < userId.length; i++) h = userId.charCodeAt(i) + ((h << 5) - h);
+  return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length];
+}
+
 function getInitials(firstName?: string | null, lastName?: string | null, email?: string | null) {
   const f = firstName?.trim()[0] ?? "";
   const l = lastName?.trim()[0] ?? "";
   if (f || l) return (f + l).toUpperCase();
   if (email) return email[0].toUpperCase();
-  return "?";
+  return "U";
+}
+
+function formatTime(iso: string) {
+  return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+function formatDateLabel(iso: string) {
+  const d = new Date(iso);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+  if (d.toDateString() === today.toDateString()) return "Today";
+  if (d.toDateString() === yesterday.toDateString()) return "Yesterday";
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
 function resolveDisplayName(firstName?: string | null, lastName?: string | null, email?: string | null, fallback = "Unknown") {
@@ -268,8 +293,24 @@ export default function SupervisorThesisDetailClient({
       }
     } finally {
       setSubmittingComment(false);
+      const ta = document.getElementById("supervisor-chat-input") as HTMLTextAreaElement;
+      if (ta) ta.style.height = "auto";
     }
   }
+
+  const groupedComments: { date: string; messages: Comment[] }[] = [];
+  comments.forEach((msg) => {
+    const label = formatDateLabel(msg.created_at);
+    const last = groupedComments[groupedComments.length - 1];
+    if (!last || last.date !== label) groupedComments.push({ date: label, messages: [msg] });
+    else last.messages.push(msg);
+  });
+
+  const autoResize = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setCommentText(e.target.value);
+    e.target.style.height = "auto";
+    e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
+  };
 
   const tabs: { id: Tab; label: string; icon: typeof FileText; count?: number }[] = [
     { id: "milestones", label: "Milestones", icon: FileText },
@@ -366,199 +407,235 @@ export default function SupervisorThesisDetailClient({
 
       {/* MILESTONES TAB */}
       {activeTab === "milestones" && (
-        <div className="space-y-4">
-          {/* Milestones list card */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-base font-semibold text-gray-900">Milestones</h2>
-              <div className="flex items-center gap-3">
-                <span className="text-xs text-gray-400">{milestones.length} total</span>
-                <button
-                  onClick={() => setShowMilestoneModal(true)}
-                  className="inline-flex items-center gap-1.5 bg-gray-900 hover:bg-gray-800 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  New Milestone
-                </button>
-              </div>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">Project Milestones</h2>
+              <p className="text-sm text-gray-500 mt-1">
+                Track deliverables and grade submissions.
+              </p>
             </div>
+            <button
+              onClick={() => setShowMilestoneModal(true)}
+              className="inline-flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold uppercase tracking-widest px-5 py-2.5 rounded-xl transition-all shadow-sm active:scale-95"
+            >
+              <Plus className="w-4 h-4" />
+              New Milestone
+            </button>
+          </div>
 
-            {milestones.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-3">
-                  <Clock className="w-5 h-5 text-gray-400" />
-                </div>
-                <p className="text-sm font-medium text-gray-500">No milestones defined yet.</p>
-                <p className="text-xs text-gray-400 mt-1">Add a milestone to start tracking progress.</p>
-                <button
-                  onClick={() => setShowMilestoneModal(true)}
-                  className="mt-4 inline-flex items-center gap-1.5 border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm font-medium px-4 py-2 rounded-xl transition"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add first milestone
-                </button>
+          {milestones.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center border border-dashed border-gray-200 rounded-3xl bg-gray-50/50">
+              <div className="w-14 h-14 rounded-2xl bg-white border border-gray-100 shadow-sm flex items-center justify-center mx-auto mb-4">
+                <Clock className="w-6 h-6 text-gray-400" />
               </div>
-            ) : (
-              <div className="space-y-3">
-                {milestones.map((m) => {
-                  const mSubmissions = submissionsByMilestone[m.id] ?? [];
-                  return (
-                    <div key={m.id} className="border border-gray-100 rounded-xl p-4 space-y-3">
-                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                        <div>
-                          <p className="text-sm font-semibold text-gray-900">{m.title}</p>
+              <h4 className="text-sm font-bold text-gray-700">No milestones structured yet</h4>
+              <p className="text-xs text-gray-500 mt-1.5 max-w-sm mx-auto leading-relaxed">
+                Add milestones to help your student plan their thesis work and deliver progress incrementally.
+              </p>
+            </div>
+          ) : (
+            <div className="relative pl-4 space-y-8">
+              <div className="absolute left-[31px] top-4 bottom-4 w-px bg-gray-200" />
+
+              {milestones.map((m, index) => {
+                const mSubmissions = submissionsByMilestone[m.id] ?? [];
+                const latest = mSubmissions[0];
+                const isApproved = m.status === "approved";
+                const isRejected = m.status === "rejected";
+
+                return (
+                  <div key={m.id} className="relative flex gap-6 group">
+                    <div className="shrink-0 mt-1 z-10">
+                      <div
+                        className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-[11px] font-bold bg-white transition-all duration-300 group-hover:scale-110 shadow-sm ${
+                          isApproved
+                            ? "border-emerald-500 text-emerald-600 ring-4 ring-emerald-50"
+                            : isRejected
+                            ? "border-red-400 text-red-500 ring-4 ring-red-50"
+                            : "border-gray-900 text-gray-900 ring-4 ring-gray-50"
+                        }`}
+                      >
+                        {isApproved ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : index + 1}
+                      </div>
+                    </div>
+
+                    <div className="flex-1 min-w-0 bg-white border border-gray-100/80 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow duration-300">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 flex-wrap mb-1.5">
+                            <h3 className="text-base font-bold text-gray-900">{m.title}</h3>
+                            <MilestoneStatusBadge status={m.status} />
+                          </div>
+                          
                           {m.due_date && (
-                            <div className="flex items-center gap-1 text-xs text-gray-400 mt-1">
-                              <Calendar className="w-3 h-3" />
-                              <span>Due {new Date(m.due_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-50 text-[11px] font-semibold text-gray-500 mb-3">
+                              <Calendar className="w-3.5 h-3.5" />
+                              <span>Due {new Date(m.due_date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</span>
+                            </div>
+                          )}
+                          
+                          {m.description && (
+                            <p className="text-sm text-gray-600 leading-relaxed max-w-2xl">{m.description}</p>
+                          )}
+                        </div>
+
+                        {latest && (
+                          <div className="shrink-0">
+                            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-100">
+                              <FileText className="w-3.5 h-3.5" />
+                              Submission Received
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {latest && (
+                        <div className="mt-5 border-t border-gray-100 pt-5">
+                          {/* Review Dock */}
+                          <div className="bg-gray-50/50 border border-gray-200 rounded-xl p-4">
+                            <h4 className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-3">Supervisor Review Dock</h4>
+                            
+                            <div className="flex flex-col md:flex-row gap-4">
+                              <div className="flex-1">
+                                <textarea
+                                  value={feedbackDrafts[m.id] ?? m.supervisor_feedback ?? ""}
+                                  onChange={(e) => setFeedbackDrafts((prev) => ({ ...prev, [m.id]: e.target.value }))}
+                                  rows={2}
+                                  className="w-full text-sm placeholder-gray-400 border border-gray-200 rounded-xl px-4 py-3 resize-none focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white transition-shadow"
+                                  placeholder="Provide actionable feedback or summary of your decision..."
+                                />
+                              </div>
+                              <div className="shrink-0 flex flex-col gap-2 w-full md:w-32">
+                                <button
+                                  onClick={() => handleUpdateMilestoneStatus(m.id, "approved")}
+                                  disabled={savingMilestoneId === m.id}
+                                  className="w-full inline-flex items-center justify-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-colors disabled:opacity-50"
+                                >
+                                  <CheckCircle2 className="w-4 h-4" />
+                                  Approve
+                                </button>
+                                <button
+                                  onClick={() => handleUpdateMilestoneStatus(m.id, "rejected")}
+                                  disabled={savingMilestoneId === m.id}
+                                  className="w-full inline-flex items-center justify-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-xs font-bold px-4 py-2 rounded-xl transition-colors disabled:opacity-50"
+                                >
+                                  <AlertCircle className="w-3.5 h-3.5" />
+                                  Reject
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+
+                          {mSubmissions.length > 0 && (
+                            <div className="mt-4 space-y-2">
+                              {mSubmissions.map((s, idx) => (
+                                <div key={s.id} className="flex items-center justify-between group/sub transition-colors hover:bg-gray-50 rounded-lg px-2 py-1.5 -mx-2">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center shrink-0 group-hover/sub:bg-white transition-colors">
+                                      <FileText className="w-4 h-4 text-gray-400" />
+                                    </div>
+                                    <div className="flex flex-col">
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-xs font-semibold text-gray-900">{s.file_name}</span>
+                                        <span className="text-[10px] font-bold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-md">v{s.version_number}</span>
+                                        {idx === 0 && <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wide">Latest</span>}
+                                      </div>
+                                      <span className="text-[10px] text-gray-400 mt-0.5">Delivered {new Date(s.created_at).toLocaleDateString()}</span>
+                                    </div>
+                                  </div>
+                                  <a href={s.file_url} target="_blank" rel="noopener noreferrer" className="shrink-0 p-2 text-gray-400 hover:text-gray-900 transition-colors tooltip" title="Download Source">
+                                    <Download className="w-4 h-4" />
+                                  </a>
+                                </div>
+                              ))}
                             </div>
                           )}
                         </div>
-                        <div className="flex items-center gap-2">
-                          <MilestoneStatusBadge status={m.status} />
-                          <button
-                            onClick={() => handleUpdateMilestoneStatus(m.id, "approved")}
-                            disabled={savingMilestoneId === m.id}
-                            className="text-[11px] px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition disabled:opacity-60"
-                          >
-                            Approve
-                          </button>
-                          <button
-                            onClick={() => handleUpdateMilestoneStatus(m.id, "rejected")}
-                            disabled={savingMilestoneId === m.id}
-                            className="text-[11px] px-2.5 py-1 rounded-lg bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition disabled:opacity-60"
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      </div>
-
-                      {m.description && (
-                        <p className="text-xs text-gray-500">{m.description}</p>
-                      )}
-
-                      <div className="space-y-1.5">
-                        <label className="text-[11px] font-medium text-gray-400 uppercase tracking-widest">
-                          Supervisor feedback
-                        </label>
-                        <textarea
-                          value={feedbackDrafts[m.id] ?? m.supervisor_feedback ?? ""}
-                          onChange={(e) => setFeedbackDrafts((prev) => ({ ...prev, [m.id]: e.target.value }))}
-                          rows={2}
-                          className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-gray-900"
-                          placeholder="Summarise the decision and next steps."
-                        />
-                      </div>
-
-                      {mSubmissions.length > 0 && (
-                        <div className="border-t border-gray-100 pt-3 space-y-1.5">
-                          <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-widest">
-                            Submission versions
-                          </p>
-                          {mSubmissions.map((s, idx) => (
-                            <div key={s.id} className="flex items-center justify-between text-[11px] text-gray-600">
-                              <div className="flex items-center gap-2">
-                                <span>v{s.version_number} · {s.file_name}</span>
-                                {idx === 0 && (
-                                  <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-medium">
-                                    Latest
-                                  </span>
-                                )}
-                              </div>
-                              <a href={s.file_url} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">
-                                Download
-                              </a>
-                            </div>
-                          ))}
-                        </div>
                       )}
                     </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
       {/* DRAFTS TAB */}
       {activeTab === "drafts" && (
-        <div className="bg-white rounded-2xl border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-5">
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-base font-semibold text-gray-900">Student Drafts</h2>
-              <p className="text-xs text-gray-400 mt-0.5">
+              <h2 className="text-lg font-bold text-gray-900">Student Drafts</h2>
+              <p className="text-sm text-gray-500 mt-1">
                 Full thesis draft versions submitted by the student.
               </p>
             </div>
             {drafts.length > 0 && (
-              <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">
+              <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-3 py-1.5 rounded-full border border-gray-200">
                 {drafts.length} version{drafts.length !== 1 ? "s" : ""}
               </span>
             )}
           </div>
 
           {drafts.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-3">
-                <BookOpen className="w-5 h-5 text-gray-400" />
+            <div className="flex flex-col items-center justify-center py-16 text-center border border-dashed border-gray-200 rounded-3xl bg-gray-50/50">
+              <div className="w-14 h-14 rounded-2xl bg-white border border-gray-100 shadow-sm flex items-center justify-center mx-auto mb-4">
+                <BookOpen className="w-6 h-6 text-gray-400" />
               </div>
-              <p className="text-sm font-medium text-gray-500">No drafts uploaded yet.</p>
-              <p className="text-xs text-gray-400 mt-1">
-                The student hasn&apos;t submitted any thesis drafts yet.
+              <h4 className="text-sm font-bold text-gray-700">No drafts uploaded yet</h4>
+              <p className="text-xs text-gray-500 mt-1.5 max-w-sm mx-auto leading-relaxed">
+                The student hasn&apos;t submitted any thesis drafts yet. When they do, you can review them here.
               </p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {drafts
                 .slice()
                 .sort((a, b) => b.version_number - a.version_number)
                 .map((d, idx) => (
                   <div
                     key={d.id}
-                    className="rounded-xl border border-gray-100 bg-gray-50 px-5 py-4 hover:border-gray-200 transition-colors"
+                    className="group relative flex flex-col bg-white border border-gray-100 rounded-2xl p-5 hover:border-gray-300 hover:shadow-md transition-all duration-300"
                   >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex items-start gap-3 min-w-0">
-                        <div className="shrink-0 w-9 h-9 rounded-xl bg-gray-900 text-white flex items-center justify-center text-xs font-bold mt-0.5">
-                          v{d.version_number}
-                        </div>
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-sm font-semibold text-gray-900">
-                              Version {d.version_number}
-                            </span>
-                            {idx === 0 && (
-                              <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-semibold uppercase tracking-wide">
-                                Latest
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-[11px] text-gray-400 mt-0.5">
-                            {d.file_name}&nbsp;·&nbsp;Uploaded{" "}
-                            {new Date(d.uploaded_at).toLocaleDateString("en-US", {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                            })}
-                          </p>
-                          {d.student_note && (
-                            <div className="mt-2 flex items-start gap-1.5">
-                              <StickyNote className="w-3 h-3 text-gray-400 shrink-0 mt-0.5" />
-                              <p className="text-xs text-gray-600 italic leading-snug">
-                                {d.student_note}
-                              </p>
-                            </div>
-                          )}
-                        </div>
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="w-12 h-12 rounded-xl bg-gray-900 text-white flex items-center justify-center text-sm font-bold shadow-sm transition-transform group-hover:scale-105">
+                        v{d.version_number}
                       </div>
+                      {idx === 0 && (
+                        <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-md text-[10px] font-bold uppercase tracking-wider">
+                          Latest
+                        </span>
+                      )}
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-sm font-bold text-gray-900 mb-1.5 line-clamp-1" title={d.file_name}>
+                        {d.file_name}
+                      </h4>
+                      <p className="text-[11px] font-medium text-gray-400">
+                        Uploaded {new Date(d.uploaded_at).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                      </p>
+                      
+                      {d.student_note && (
+                        <div className="mt-4 flex items-start gap-2 bg-amber-50/50 border border-amber-100/50 rounded-lg p-3">
+                          <StickyNote className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+                          <p className="text-xs text-amber-900 italic leading-relaxed line-clamp-3">
+                            {d.student_note}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="pt-4 mt-4 border-t border-gray-50 flex justify-end">
                       <a
                         href={d.file_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="shrink-0 inline-flex items-center gap-1.5 text-[11px] font-semibold text-gray-500 hover:text-gray-900 border border-gray-200 hover:border-gray-400 px-3 py-1.5 rounded-lg transition"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-gray-600 bg-gray-50 hover:bg-gray-900 hover:text-white transition-colors"
                       >
-                        <Download className="w-3 h-3" />
+                        <Download className="w-3.5 h-3.5" />
                         Download
                       </a>
                     </div>
@@ -571,74 +648,126 @@ export default function SupervisorThesisDetailClient({
 
       {/* THREAD TAB */}
       {activeTab === "thread" && (
-        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
-            <MessageCircle className="w-4 h-4 text-gray-400" />
-            <h2 className="text-sm font-semibold text-gray-900">Supervision Thread</h2>
-          </div>
-
-          <div className="p-6 space-y-3 max-h-[480px] overflow-y-auto">
-            {comments.length === 0 ? (
-              <div className="text-center py-10">
-                <MessageCircle className="w-8 h-8 text-gray-200 mx-auto mb-2" />
-                <p className="text-sm text-gray-400">Use this space for structured supervision notes and clarifications.</p>
-              </div>
-            ) : (
-              comments.map((c) => {
-                const isSupervisor = c.author_role === "supervisor";
-                const authorName = isSupervisor
-                  ? supervisorName
-                  : resolveDisplayName(c.author?.first_name, c.author?.last_name, c.author?.email ?? thesis.student?.email, studentFullName);
-                const initials = isSupervisor
-                  ? supervisorName.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2)
-                  : getInitials(c.author?.first_name, c.author?.last_name, c.author?.email ?? thesis.student?.email);
-
-                return (
-                  <div key={c.id} className={`flex gap-3 ${isSupervisor ? "flex-row-reverse" : ""}`}>
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${isSupervisor ? "bg-gray-900 text-white" : "bg-blue-100 text-blue-700"}`}>
-                      {initials}
+        <div className="flex flex-col h-[600px] max-w-3xl pt-2">
+          
+          {/* Message Feed */}
+          <div className="flex-1 overflow-y-auto pr-2 flex flex-col-reverse">
+            <div className="flex flex-col justify-end pb-4">
+              {comments.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-center gap-3 py-16">
+                  <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-xl">
+                    💬
+                  </div>
+                  <p className="text-gray-500 text-sm font-medium">No messages yet</p>
+                  <p className="text-gray-400 text-xs">Be the first to say something!</p>
+                </div>
+              ) : (
+                groupedComments.map(({ date, messages: dayMsgs }) => (
+                  <div key={date}>
+                    <div className="flex items-center gap-3 my-5">
+                      <div className="flex-1 h-px bg-gray-100" />
+                      <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest shrink-0">
+                        {date}
+                      </span>
+                      <div className="flex-1 h-px bg-gray-100" />
                     </div>
-                    <div className={`max-w-[75%] ${isSupervisor ? "items-end" : "items-start"} flex flex-col gap-1`}>
-                      <div className={`flex items-center gap-2 ${isSupervisor ? "flex-row-reverse" : ""}`}>
-                        <span className="text-xs font-semibold text-gray-700">{authorName}</span>
-                        <span className="text-[10px] text-gray-400">
-                          {new Date(c.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
-                        </span>
-                      </div>
-                      <div className={`px-4 py-2.5 rounded-2xl text-xs leading-relaxed ${isSupervisor ? "bg-gray-900 text-white rounded-tr-sm" : "bg-gray-100 text-gray-800 rounded-tl-sm"}`}>
-                        {c.content}
-                      </div>
+
+                    <div className="space-y-0.5">
+                      {dayMsgs.map((msg, idx) => {
+                        const isOwn = msg.author_role === "supervisor";
+                        const authorName = isOwn
+                          ? supervisorName
+                          : resolveDisplayName(msg.author?.first_name, msg.author?.last_name, msg.author?.email ?? thesis.student?.email, studentFullName);
+                        const prevMsg = dayMsgs[idx - 1];
+                        const isSameSender = prevMsg?.author_role === msg.author_role;
+                        const avatarInitials = isOwn
+                          ? supervisorName.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2)
+                          : getInitials(msg.author?.first_name, msg.author?.last_name, msg.author?.email ?? thesis.student?.email);
+                        const avatarClass = getAvatarColor(msg.author_id);
+
+                        return (
+                          <div 
+                            key={msg.id} 
+                            className={`flex ${isOwn ? "justify-end" : "justify-start"} ${isSameSender ? "mt-0.5" : "mt-4"}`}
+                          >
+                            {!isOwn && (
+                              <div className="flex-shrink-0 mr-3 mt-auto flex flex-col justify-end w-7">
+                                {!isSameSender && (
+                                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-sm ${avatarClass}`}>
+                                    {avatarInitials}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            <div className={`flex flex-col max-w-[70%] ${isOwn ? "items-end" : "items-start"}`}>
+                              {!isSameSender && !isOwn && (
+                                <span className="text-[11px] font-medium text-gray-500 mb-1 ml-1">{authorName}</span>
+                              )}
+
+                              <div className="group relative flex items-end gap-2">
+                                <div
+                                  className={`px-4 py-2.5 text-sm shadow-sm ${
+                                    isOwn 
+                                      ? "bg-gray-900 text-white rounded-2xl rounded-tr-sm" 
+                                      : "bg-white border border-gray-100 text-gray-800 rounded-2xl rounded-tl-sm"
+                                  }`}
+                                  style={{ wordBreak: "break-word" }}
+                                >
+                                  {msg.content}
+                                </div>
+                              </div>
+                              
+                              <span className={`text-[9px] font-medium text-gray-400 mt-1 opacity-0 group-hover:opacity-100 transition-opacity ${isOwn ? "mr-1" : "ml-1"}`}>
+                                {formatTime(msg.created_at)}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
-                );
-              })
-            )}
+                ))
+              )}
+            </div>
           </div>
 
-          <div className="border-t border-gray-100 px-6 py-4">
-            <div className="flex gap-3 items-end">
+          {/* Chat Input */}
+          <div className="mt-4 shrink-0">
+            <div className="flex items-end gap-2 bg-gray-50 border border-gray-200 rounded-2xl px-3 py-2.5 focus-within:border-gray-400 focus-within:bg-white transition-colors">
               <textarea
+                id="supervisor-chat-input"
+                rows={1}
                 value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
+                onChange={autoResize}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
                     handleAddComment();
                   }
                 }}
-                rows={2}
-                placeholder="Add a supervision note or clarification..."
-                className="flex-1 text-sm border border-gray-200 rounded-xl px-4 py-2.5 resize-none focus:outline-none focus:ring-2 focus:ring-gray-200 bg-gray-50 transition"
+                placeholder="Message Thread..."
+                className="flex-1 bg-transparent text-sm resize-none focus:outline-none text-gray-800 placeholder-gray-400 leading-relaxed overflow-y-auto self-center pl-2 my-0.5"
+                style={{ maxHeight: 120 }}
               />
-              <button
-                onClick={handleAddComment}
-                disabled={submittingComment || !commentText.trim()}
-                className="p-2.5 bg-gray-900 hover:bg-gray-800 disabled:opacity-40 text-white rounded-xl transition shrink-0"
-              >
-                {submittingComment ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-              </button>
+
+              <div className="flex-none pb-0.5">
+                <button
+                  onClick={handleAddComment}
+                  disabled={submittingComment || !commentText.trim()}
+                  className="w-8 h-8 flex flex-col items-center justify-center bg-gray-900 hover:bg-gray-800 disabled:opacity-40 text-white rounded-xl transition-colors"
+                >
+                  {submittingComment ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send size={14} className="ml-0.5" />}
+                </button>
+              </div>
+            </div>
+            <div className="flex justify-between items-center mt-2 px-1">
+               <p className="text-[10px] text-gray-400 select-none">
+                 Enter to send · Shift+Enter for new line
+               </p>
             </div>
           </div>
+
         </div>
       )}
 
