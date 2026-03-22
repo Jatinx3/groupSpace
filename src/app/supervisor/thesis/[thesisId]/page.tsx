@@ -118,6 +118,7 @@ export default async function ProfessorThesisDetailPage({
       milestones={milestones ?? []}
       submissions={submissions ?? []}
       comments={normalizedComments}
+      drafts={[]}
     />
   );
 }

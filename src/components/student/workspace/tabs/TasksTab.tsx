@@ -202,7 +202,7 @@ export default function TasksTab({
                         key={a.id}
                         className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full"
                       >
-                        {[a.first_name, a.last_name].filter(Boolean).join(" ") || a.email || "Unknown"}
+                        {[a.first_name, a.last_name].filter(Boolean).join(" ") || (a as any).email || "Unknown"}
                       </span>
                     ))}
                   </div>
