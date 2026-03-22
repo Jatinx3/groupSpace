@@ -24,7 +24,6 @@ export default function Sidebar({
   const navItems = [
     { name: "Dashboard", href: "/student", icon: LayoutDashboard },
     { name: "Courses", href: "/student/courses", icon: BookOpen },
-    { name: "Assignments", href: "/student/assignments", icon: ClipboardList },
     { name: "Teams", href: "/student/teams", icon: Users },
     {
       name: "Thesis Collab",

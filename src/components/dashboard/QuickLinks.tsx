@@ -20,12 +20,6 @@ const links = [
     icon: Users,
   },
   {
-    label: "Assignments",
-    description: "View and manage your tasks",
-    href: "/student/assignments",
-    icon: ClipboardList,
-  },
-  {
     label: "Thesis",
     description: "Track your thesis collaboration",
     href: "/student/thesis",
