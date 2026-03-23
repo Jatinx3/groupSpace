@@ -35,15 +35,15 @@ export default function TaskProgress({ tasks, teams, completionRate }: Props) {
             <CheckCircle className="w-4 h-4" />
           </div>
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 dark:text-zinc-500">
               Progress
             </p>
-            <h2 className="font-semibold text-gray-900 leading-none">Task Completion</h2>
+            <h2 className="font-semibold text-gray-900 dark:text-white leading-none">Task Completion</h2>
           </div>
         </div>
         <div className="text-right">
-          <p className="text-2xl font-extrabold text-gray-900 tabular-nums leading-none">{completionRate}%</p>
-          <p className="text-[10px] uppercase tracking-widest text-gray-400 mt-0.5">Overall</p>
+          <p className="text-2xl font-extrabold text-gray-900 dark:text-white tabular-nums leading-none">{completionRate}%</p>
+          <p className="text-[10px] uppercase tracking-widest text-gray-400 dark:text-zinc-500 mt-0.5">Overall</p>
         </div>
       </div>
 
@@ -55,14 +55,14 @@ export default function TaskProgress({ tasks, teams, completionRate }: Props) {
         {teamStats.map(({ team, total, completed, rate }) => (
           <div key={team.id}>
             <div className="flex items-center justify-between mb-1.5">
-              <p className="text-sm font-medium text-gray-800 truncate">{team.name}</p>
-              <p className="text-xs text-gray-400 tabular-nums shrink-0 ml-2">
+              <p className="text-sm font-medium text-gray-800 dark:text-zinc-300 truncate">{team.name}</p>
+              <p className="text-xs text-gray-400 dark:text-zinc-500 tabular-nums shrink-0 ml-2">
                 {completed}/{total}
               </p>
             </div>
-            <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+            <div className="h-1.5 bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">
               <div
-                className="h-full bg-gray-900 rounded-full transition-all duration-500"
+                className="h-full bg-gray-900 dark:bg-white rounded-full transition-all duration-500"
                 style={{ width: `${rate}%` }}
               />
             </div>

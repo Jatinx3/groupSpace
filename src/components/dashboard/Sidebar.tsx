@@ -8,6 +8,7 @@ import {
   ClipboardList,
   Users,
   GraduationCap,
+  Bot,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -30,13 +31,14 @@ export default function Sidebar({
       href: "/student/thesis",
       icon: GraduationCap,
     },
+    { name: "AI Library", href: "/student/ai-library", icon: Bot },
   ];
 
   return (
     <aside
       className={`
         fixed md:relative z-50 h-full
-        bg-zinc-950 border-r border-white/5
+        bg-white dark:bg-zinc-950 border-r border-gray-100 dark:border-white/5
         transition-all duration-300 ease-in-out
         ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}
         md:translate-x-0
@@ -48,15 +50,15 @@ export default function Sidebar({
       {/* Logo */}
       <div className="mb-8 px-3">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center text-zinc-100 font-bold text-sm shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-gray-900 dark:bg-white/10 dark:border dark:border-white/10 flex items-center justify-center text-white dark:text-zinc-100 font-bold text-sm shrink-0">
             G
           </div>
           {isDesktopOpen && (
             <div>
-              <h1 className="text-sm font-bold text-zinc-100 tracking-tight leading-none">
+              <h1 className="text-sm font-bold text-gray-900 dark:text-zinc-100 tracking-tight leading-none">
                 GroupSpace
               </h1>
-              <p className="text-[10px] text-zinc-500 font-medium mt-0.5 uppercase tracking-widest">
+              <p className="text-[10px] text-gray-500 dark:text-zinc-500 font-medium mt-0.5 uppercase tracking-widest">
                 Student
               </p>
             </div>
@@ -85,8 +87,8 @@ export default function Sidebar({
                 transition-all duration-150
                 ${
                   isActive
-                    ? "bg-white/10 text-white shadow-sm"
-                    : "text-zinc-500 hover:text-zinc-200 hover:bg-white/5"
+                    ? "bg-gray-900 text-white dark:bg-white/10 dark:text-white dark:shadow-sm"
+                    : "text-gray-500 hover:text-gray-900 hover:bg-gray-50 dark:text-zinc-500 dark:hover:text-zinc-200 dark:hover:bg-white/5"
                 }
               `}
             >

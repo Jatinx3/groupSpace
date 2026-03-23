@@ -120,15 +120,15 @@ export default function TasksTab({
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Tasks</h1>
-          <p className="text-gray-500 mt-1">
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Tasks</h1>
+          <p className="text-gray-500 dark:text-zinc-400 mt-1">
             Manage and track project work
           </p>
         </div>
 
         <button
           onClick={() => setOpenAdd(true)}
-          className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-lg"
+          className="flex items-center gap-2 bg-black dark:bg-white text-white dark:text-gray-900 px-4 py-2 rounded-lg"
         >
           <Plus size={16} />
           Add Task
@@ -140,20 +140,20 @@ export default function TasksTab({
         <StatCard label="Total" value={totalTasks} />
         <StatCard label="Completed" value={completed} color="text-green-600" />
         <StatCard label="In Progress" value={inProgress} color="text-blue-600" />
-        <StatCard label="Pending" value={pending} color="text-gray-500" />
+        <StatCard label="Pending" value={pending} color="text-gray-500 dark:text-zinc-500" />
       </div>
 
       {/* Minimal Filter */}
       <div className="flex justify-center">
-        <div className="flex bg-gray-100 p-1 rounded-full">
+        <div className="flex bg-gray-100 dark:bg-[#1A1A1A] p-1 rounded-full">
           {["all", "pending", "in_progress", "completed"].map((value) => (
             <button
               key={value}
               onClick={() => changeFilter(value as any)}
               className={`px-4 py-1.5 text-sm rounded-full transition ${
                 filter === value
-                  ? "bg-white shadow-sm text-black"
-                  : "text-gray-500 hover:text-black"
+                  ? "bg-white dark:bg-[#2A2A2A] shadow-sm text-black dark:text-white"
+                  : "text-gray-500 dark:text-zinc-500 hover:text-black dark:hover:text-white"
               }`}
             >
               {value.replace("_", " ")}
@@ -166,7 +166,7 @@ export default function TasksTab({
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
 
         {paginatedTasks.length === 0 && (
-          <p className="text-gray-500 text-sm col-span-full text-center">
+          <p className="text-gray-500 dark:text-zinc-500 text-sm col-span-full text-center">
             No tasks found.
           </p>
         )}
@@ -174,14 +174,14 @@ export default function TasksTab({
         {paginatedTasks.map((task) => (
           <div
             key={task.id}
-            className="bg-white border border-gray-200 rounded-2xl p-6 hover:shadow-md transition"
+            className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-2xl p-6 hover:shadow-md dark:hover:shadow-white/5 transition"
           >
             <div className="flex justify-between items-start gap-6">
 
               <div className="space-y-3 flex-1">
 
                 <div className="flex items-center gap-3 flex-wrap">
-                  <h3 className="font-medium text-gray-900">
+                  <h3 className="font-medium text-gray-900 dark:text-white">
                     {task.title}
                   </h3>
                   <StatusBadge status={task.status} />
@@ -189,18 +189,18 @@ export default function TasksTab({
                 </div>
 
                 {task.description && (
-                  <p className="text-sm text-gray-500 leading-relaxed">
+                  <p className="text-sm text-gray-500 dark:text-zinc-400 leading-relaxed">
                     {task.description}
                   </p>
                 )}
 
                 {task.assignees && task.assignees.length > 0 && (
                   <div className="flex flex-wrap gap-1 items-center">
-                    <span className="text-xs text-gray-400">Assigned to:</span>
+                    <span className="text-xs text-gray-400 dark:text-zinc-500">Assigned to:</span>
                     {task.assignees.map((a) => (
                       <span
                         key={a.id}
-                        className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full"
+                        className="text-xs bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-zinc-300 px-2 py-0.5 rounded-full"
                       >
                         {[a.first_name, a.last_name].filter(Boolean).join(" ") || (a as any).email || "Unknown"}
                       </span>
@@ -209,7 +209,7 @@ export default function TasksTab({
                 )}
 
                 {task.due_date && (
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-gray-400 dark:text-zinc-500">
                     Due {new Date(task.due_date).toLocaleDateString()}
                   </p>
                 )}
@@ -218,7 +218,7 @@ export default function TasksTab({
               {isLeader && (
                 <button
                   onClick={() => setEditTask(task)}
-                  className="text-sm text-gray-400 hover:text-black"
+                  className="text-sm text-gray-400 dark:text-zinc-500 hover:text-black dark:hover:text-white"
                 >
                   Edit
                 </button>
@@ -241,8 +241,8 @@ export default function TasksTab({
                   onClick={() => setPage(pageNumber)}
                   className={`w-9 h-9 text-sm rounded-full transition ${
                     page === pageNumber
-                      ? "bg-black text-white"
-                      : "text-gray-500 hover:bg-gray-100"
+                      ? "bg-black dark:bg-white text-white dark:text-gray-900"
+                      : "text-gray-500 dark:text-zinc-500 hover:bg-gray-100 dark:hover:bg-[#1A1A1A]"
                   }`}
                 >
                   {pageNumber}
@@ -281,16 +281,16 @@ export default function TasksTab({
 function StatCard({
   label,
   value,
-  color = "text-black",
+  color = "text-black dark:text-white",
 }: {
   label: string;
   value: number;
   color?: string;
 }) {
   return (
-    <div className="bg-white border border-gray-100 rounded-2xl p-6 text-center hover:border-gray-200 hover:shadow-sm transition">
+    <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-white/10 rounded-2xl p-6 text-center hover:border-gray-200 dark:hover:border-white/20 hover:shadow-sm dark:hover:shadow-none transition">
       <p className={`text-3xl font-extrabold tracking-tight tabular-nums leading-none ${color}`}>{value}</p>
-      <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 mt-2">{label}</p>
+      <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-500 mt-2">{label}</p>
     </div>
   );
 }
@@ -298,10 +298,10 @@ function StatCard({
 function StatusBadge({ status }: { status: string }) {
   const styles =
     status === "completed"
-      ? "bg-gray-900 text-white"
+      ? "bg-gray-900 dark:bg-white text-white dark:text-gray-900"
       : status === "in_progress"
-      ? "bg-gray-800 text-white"
-      : "bg-gray-100 text-gray-600";
+      ? "bg-gray-800 dark:bg-[#2A2A2A] text-white dark:text-gray-200"
+      : "bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-zinc-300";
 
   return (
     <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${styles}`}>
@@ -315,10 +315,10 @@ function PriorityBadge({ priority }: { priority?: string | null }) {
 
   const styles =
     value === "high"
-      ? "text-gray-900 font-bold"
+      ? "text-gray-900 dark:text-white font-bold"
       : value === "medium"
-      ? "text-gray-600 font-semibold"
-      : "text-gray-400";
+      ? "text-gray-600 dark:text-zinc-300 font-semibold"
+      : "text-gray-400 dark:text-zinc-500";
 
   return (
     <span className={`text-xs ${styles}`}>

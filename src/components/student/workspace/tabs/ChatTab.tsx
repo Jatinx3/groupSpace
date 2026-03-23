@@ -278,17 +278,17 @@ export default function ChatTab({ teamId, initialMessages, currentUserId, member
   });
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+    <div className="flex flex-col h-full bg-white dark:bg-[#111111] rounded-2xl border border-gray-200 dark:border-white/10 overflow-hidden shadow-sm">
 
       {/* ── Header ── */}
-      <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100 shrink-0 bg-white">
+      <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100 dark:border-white/10 shrink-0 bg-white dark:bg-[#111111]">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-gray-900 flex items-center justify-center shrink-0">
-            <span className="text-white font-bold text-sm leading-none">#</span>
+          <div className="w-8 h-8 rounded-xl bg-gray-900 dark:bg-white flex items-center justify-center shrink-0">
+            <span className="text-white dark:text-gray-900 font-bold text-sm leading-none">#</span>
           </div>
           <div>
-            <p className="font-semibold text-gray-900 text-sm leading-tight">Team Chat</p>
-            <p className="text-[11px] text-gray-400">{members.length} member{members.length !== 1 ? "s" : ""}</p>
+            <p className="font-semibold text-gray-900 dark:text-white text-sm leading-tight">Team Chat</p>
+            <p className="text-[11px] text-gray-400 dark:text-zinc-500">{members.length} member{members.length !== 1 ? "s" : ""}</p>
           </div>
         </div>
 
@@ -296,7 +296,7 @@ export default function ChatTab({ teamId, initialMessages, currentUserId, member
           {/* Search toggle */}
           <button
             onClick={() => { setSearchOpen((v) => !v); if (searchOpen) setSearchQuery(""); }}
-            className={`p-2 rounded-lg transition ${searchOpen ? "bg-gray-100 text-gray-900" : "text-gray-400 hover:bg-gray-100 hover:text-gray-700"}`}
+            className={`p-2 rounded-lg transition ${searchOpen ? "bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white" : "text-gray-400 dark:text-zinc-500 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-gray-700 dark:hover:text-white"}`}
           >
             <Search size={15} />
           </button>
@@ -305,7 +305,7 @@ export default function ChatTab({ teamId, initialMessages, currentUserId, member
           <div className="relative" ref={menuRef}>
             <button
               onClick={() => setMenuOpen((v) => !v)}
-              className={`p-2 rounded-lg transition ${menuOpen ? "bg-gray-100 text-gray-900" : "text-gray-400 hover:bg-gray-100 hover:text-gray-700"}`}
+              className={`p-2 rounded-lg transition ${menuOpen ? "bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white" : "text-gray-400 dark:text-zinc-500 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-gray-700 dark:hover:text-white"}`}
             >
               <MoreHorizontal size={15} />
             </button>
@@ -317,20 +317,20 @@ export default function ChatTab({ teamId, initialMessages, currentUserId, member
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: -4 }}
                   transition={{ duration: 0.12 }}
-                  className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-50 py-1 overflow-hidden"
+                  className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-white/10 rounded-xl shadow-lg z-50 py-1 overflow-hidden"
                 >
                   <button
                     onClick={() => { setShowMembersPanel((v) => !v); setMenuOpen(false); }}
-                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition text-left"
+                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-white/5 transition text-left"
                   >
-                    <Users size={14} className="text-gray-400" />
+                    <Users size={14} className="text-gray-400 dark:text-zinc-500" />
                     {showMembersPanel ? "Hide Members" : "View Members"}
                   </button>
                   <button
                     onClick={() => { scrollToBottom(); setMenuOpen(false); }}
-                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition text-left"
+                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-white/5 transition text-left"
                   >
-                    <ArrowDown size={14} className="text-gray-400" />
+                    <ArrowDown size={14} className="text-gray-400 dark:text-zinc-500" />
                     Jump to Latest
                   </button>
                 </motion.div>
@@ -348,24 +348,24 @@ export default function ChatTab({ teamId, initialMessages, currentUserId, member
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="border-b border-gray-100 shrink-0 overflow-hidden"
+            className="border-b border-gray-100 dark:border-white/10 shrink-0 overflow-hidden"
           >
-            <div className="flex items-center gap-2 px-4 py-2.5 bg-gray-50">
-              <Search size={14} className="text-gray-400 shrink-0" />
+            <div className="flex items-center gap-2 px-4 py-2.5 bg-gray-50 dark:bg-[#1A1A1A]">
+              <Search size={14} className="text-gray-400 dark:text-zinc-500 shrink-0" />
               <input
                 ref={searchInputRef}
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search messages..."
-                className="flex-1 bg-transparent text-sm focus:outline-none text-gray-800 placeholder-gray-400"
+                className="flex-1 bg-transparent text-sm focus:outline-none text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-zinc-600"
               />
               {searchQuery && (
-                <button onClick={() => setSearchQuery("")} className="text-gray-400 hover:text-gray-700">
+                <button onClick={() => setSearchQuery("")} className="text-gray-400 dark:text-zinc-500 hover:text-gray-700 dark:hover:text-white">
                   <X size={14} />
                 </button>
               )}
-              <span className="text-[11px] text-gray-400 shrink-0">
+              <span className="text-[11px] text-gray-400 dark:text-zinc-500 shrink-0">
                 {filteredMessages.length} result{filteredMessages.length !== 1 ? "s" : ""}
               </span>
             </div>
@@ -381,19 +381,19 @@ export default function ChatTab({ teamId, initialMessages, currentUserId, member
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="border-b border-gray-100 shrink-0 overflow-hidden"
+            className="border-b border-gray-100 dark:border-white/10 shrink-0 overflow-hidden"
           >
-            <div className="px-5 py-3 bg-gray-50">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-2">Members</p>
+            <div className="px-5 py-3 bg-gray-50 dark:bg-[#1A1A1A]">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500 mb-2">Members</p>
               <div className="flex flex-wrap gap-2">
                 {members.map((m) => (
-                  <div key={m.id} className="flex items-center gap-1.5 bg-white border border-gray-200 rounded-lg px-2.5 py-1">
+                  <div key={m.id} className="flex items-center gap-1.5 bg-white dark:bg-[#2A2A2A] border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1">
                     <div className={`w-5 h-5 rounded-full flex items-center justify-center text-white text-[9px] font-bold ${getAvatarColor(m.id)}`}>
                       {getInitials(`${m.first_name} ${m.last_name}`)}
                     </div>
-                    <span className="text-xs text-gray-700">{m.first_name} {m.last_name}</span>
+                    <span className="text-xs text-gray-700 dark:text-zinc-300">{m.first_name} {m.last_name}</span>
                     {m.role === "LEADER" && (
-                      <span className="text-[9px] bg-gray-900 text-white rounded px-1 py-0.5 font-semibold">Lead</span>
+                      <span className="text-[9px] bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded px-1 py-0.5 font-semibold">Lead</span>
                     )}
                   </div>
                 ))}
@@ -404,16 +404,16 @@ export default function ChatTab({ teamId, initialMessages, currentUserId, member
       </AnimatePresence>
 
       {/* ── Messages ── */}
-      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto px-5 py-4 bg-gray-50">
+      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto px-5 py-4 bg-gray-50 dark:bg-[#111111]">
         {filteredMessages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center text-xl">
+            <div className="w-12 h-12 rounded-2xl bg-gray-100 dark:bg-white/5 flex items-center justify-center text-xl">
               {searchQuery ? "🔍" : "💬"}
             </div>
-            <p className="text-gray-500 text-sm font-medium">
+            <p className="text-gray-500 dark:text-zinc-400 text-sm font-medium">
               {searchQuery ? `No results for "${searchQuery}"` : "No messages yet"}
             </p>
-            {!searchQuery && <p className="text-gray-400 text-xs">Be the first to say something!</p>}
+            {!searchQuery && <p className="text-gray-400 dark:text-zinc-500 text-xs">Be the first to say something!</p>}
           </div>
         )}
 
@@ -421,11 +421,11 @@ export default function ChatTab({ teamId, initialMessages, currentUserId, member
           <div key={date}>
             {/* Date divider */}
             <div className="flex items-center gap-3 my-5">
-              <div className="flex-1 h-px bg-gray-200" />
-              <span className="text-[11px] font-semibold text-gray-400 bg-gray-50 px-3 py-1 rounded-full border border-gray-200 shrink-0">
+              <div className="flex-1 h-px bg-gray-200 dark:bg-white/10" />
+              <span className="text-[11px] font-semibold text-gray-400 dark:text-zinc-500 bg-gray-50 dark:bg-[#111111] px-3 py-1 rounded-full border border-gray-200 dark:border-white/10 shrink-0">
                 {date}
               </span>
-              <div className="flex-1 h-px bg-gray-200" />
+              <div className="flex-1 h-px bg-gray-200 dark:bg-white/10" />
             </div>
 
             <div className="space-y-0.5">
@@ -448,7 +448,7 @@ export default function ChatTab({ teamId, initialMessages, currentUserId, member
                     {/* Avatar — always occupies space so bubbles stay aligned */}
                     <div className="shrink-0 w-8">
                       {showMeta && (
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold ${isOwn ? "bg-gray-900" : getAvatarColor(msg.user_id)}`}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white dark:text-gray-900 text-xs font-bold ${isOwn ? "bg-gray-900 dark:bg-white" : getAvatarColor(msg.user_id).replace("text-white","text-white/90")}`}>
                           {isOwn ? "YO" : getInitials(name)}
                         </div>
                       )}
@@ -458,8 +458,8 @@ export default function ChatTab({ teamId, initialMessages, currentUserId, member
                     <div className={`flex flex-col max-w-[70%] ${isOwn ? "items-end" : "items-start"}`}>
                       {showMeta && (
                         <div className={`flex items-baseline gap-2 mb-1 ${isOwn ? "flex-row-reverse" : "flex-row"}`}>
-                          <span className="text-xs font-semibold text-gray-700">{isOwn ? "You" : name}</span>
-                          <span className="text-[10px] text-gray-400">{formatTime(msg.created_at)}</span>
+                          <span className="text-xs font-semibold text-gray-700 dark:text-zinc-300">{isOwn ? "You" : name}</span>
+                          <span className="text-[10px] text-gray-400 dark:text-zinc-500">{formatTime(msg.created_at)}</span>
                         </div>
                       )}
 
@@ -467,8 +467,8 @@ export default function ChatTab({ teamId, initialMessages, currentUserId, member
                       {textLines.length > 0 && (
                         <div className={`px-3.5 py-2 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap break-words ${
                           isOwn
-                            ? "bg-gray-900 text-white rounded-tr-sm"
-                            : "bg-white border border-gray-200 text-gray-800 rounded-tl-sm shadow-sm"
+                            ? "bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-tr-sm"
+                            : "bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-white/10 text-gray-800 dark:text-white rounded-tl-sm shadow-sm"
                         }`}>
                           {searchQuery ? (
                             textLines.map((line, i) => <HighlightText key={i} text={line} query={searchQuery} />)
@@ -487,7 +487,7 @@ export default function ChatTab({ teamId, initialMessages, currentUserId, member
 
                       {/* Timestamp on consecutive messages */}
                       {!showMeta && (
-                        <span className="text-[10px] text-gray-400 mt-0.5 px-1">{formatTime(msg.created_at)}</span>
+                        <span className="text-[10px] text-gray-400 dark:text-zinc-500 mt-0.5 px-1">{formatTime(msg.created_at)}</span>
                       )}
                     </div>
                   </motion.div>
@@ -499,7 +499,7 @@ export default function ChatTab({ teamId, initialMessages, currentUserId, member
       </div>
 
       {/* ── Input bar ── */}
-      <div className="shrink-0 border-t border-gray-100 bg-white px-4 pt-3 pb-2 relative">
+      <div className="shrink-0 border-t border-gray-100 dark:border-white/10 bg-white dark:bg-[#111111] px-4 pt-3 pb-2 relative">
 
         {/* Selected file chip */}
         <AnimatePresence>
@@ -508,14 +508,14 @@ export default function ChatTab({ teamId, initialMessages, currentUserId, member
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="flex items-center justify-between bg-gray-100 border border-gray-200 rounded-xl px-3 py-2 mb-2 text-sm overflow-hidden"
+              className="flex items-center justify-between bg-gray-100 dark:bg-[#1A1A1A] border border-gray-200 dark:border-white/10 rounded-xl px-3 py-2 mb-2 text-sm overflow-hidden"
             >
               <div className="flex items-center gap-2 min-w-0">
-                <Paperclip size={13} className="text-gray-500 shrink-0" />
-                <span className="truncate text-gray-700 text-xs">{selectedFile.name}</span>
-                <span className="text-gray-400 text-[11px] shrink-0">({(selectedFile.size / 1024).toFixed(0)} KB)</span>
+                <Paperclip size={13} className="text-gray-500 dark:text-zinc-400 shrink-0" />
+                <span className="truncate text-gray-700 dark:text-zinc-200 text-xs">{selectedFile.name}</span>
+                <span className="text-gray-400 dark:text-zinc-500 text-[11px] shrink-0">({(selectedFile.size / 1024).toFixed(0)} KB)</span>
               </div>
-              <button onClick={() => setSelectedFile(null)} className="ml-2 text-gray-400 hover:text-red-500 shrink-0 p-0.5">
+              <button onClick={() => setSelectedFile(null)} className="ml-2 text-gray-400 dark:text-zinc-500 hover:text-red-500 dark:hover:text-red-400 shrink-0 p-0.5">
                 <X size={13} />
               </button>
             </motion.div>
@@ -531,13 +531,13 @@ export default function ChatTab({ teamId, initialMessages, currentUserId, member
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 6 }}
               transition={{ duration: 0.12 }}
-              className="absolute bottom-full left-4 mb-2 bg-white border border-gray-200 rounded-2xl shadow-xl p-3 grid grid-cols-8 gap-0.5 z-50"
+              className="absolute bottom-full left-4 mb-2 bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-white/10 rounded-2xl shadow-xl p-3 grid grid-cols-8 gap-0.5 z-50"
             >
               {EMOJIS.map((e) => (
                 <button
                   key={e}
                   onClick={() => { setNewMessage((p) => p + e); textareaRef.current?.focus(); setShowEmoji(false); }}
-                  className="text-xl p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="text-xl p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
                 >
                   {e}
                 </button>
@@ -547,10 +547,10 @@ export default function ChatTab({ teamId, initialMessages, currentUserId, member
         </AnimatePresence>
 
         {/* Input row */}
-        <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-2xl px-3 py-2 focus-within:border-gray-400 focus-within:bg-white transition">
+        <div className="flex items-center gap-2 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-white/10 rounded-2xl px-3 py-2 focus-within:border-gray-400 dark:focus-within:border-white/30 focus-within:bg-white dark:focus-within:bg-[#1A1A1A] transition">
 
           {/* Attachment button */}
-          <label className="flex-none cursor-pointer w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-200 transition">
+          <label className="flex-none cursor-pointer w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 dark:text-zinc-500 hover:text-gray-700 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-[#2A2A2A] transition">
             <Paperclip size={16} />
             <input type="file" hidden onChange={(e) => e.target.files && handleFileChange(e.target.files[0])} />
           </label>
@@ -563,7 +563,7 @@ export default function ChatTab({ teamId, initialMessages, currentUserId, member
             onChange={autoResize}
             onKeyDown={handleKeyDown}
             placeholder="Send a message..."
-            className="flex-1 bg-transparent text-sm resize-none focus:outline-none text-gray-800 placeholder-gray-400 leading-relaxed overflow-y-auto self-center"
+            className="flex-1 bg-transparent text-sm resize-none focus:outline-none text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-zinc-600 leading-relaxed overflow-y-auto self-center"
             style={{ maxHeight: 120 }}
           />
 
@@ -571,21 +571,21 @@ export default function ChatTab({ teamId, initialMessages, currentUserId, member
           <div className="flex-none flex items-center gap-1">
             <button
               onClick={() => setShowEmoji((v) => !v)}
-              className={`w-7 h-7 flex items-center justify-center rounded-lg transition ${showEmoji ? "bg-gray-200 text-gray-700" : "text-gray-400 hover:bg-gray-200 hover:text-gray-700"}`}
+              className={`w-7 h-7 flex items-center justify-center rounded-lg transition ${showEmoji ? "bg-gray-200 dark:bg-[#2A2A2A] text-gray-700 dark:text-white" : "text-gray-400 dark:text-zinc-500 hover:bg-gray-200 dark:hover:bg-[#2A2A2A] hover:text-gray-700 dark:hover:text-white"}`}
             >
               <Smile size={16} />
             </button>
             <button
               onClick={sendMessage}
               disabled={sending || (!newMessage.trim() && !selectedFile)}
-              className="w-8 h-8 flex items-center justify-center bg-gray-900 hover:bg-gray-700 disabled:opacity-40 text-white rounded-xl transition"
+              className="w-8 h-8 flex items-center justify-center bg-gray-900 dark:bg-white hover:bg-gray-700 dark:hover:bg-gray-200 disabled:opacity-40 text-white dark:text-gray-900 rounded-xl transition"
             >
               <Send size={14} />
             </button>
           </div>
         </div>
 
-        <p className="text-[10px] text-gray-400 mt-1.5 text-center select-none">
+        <p className="text-[10px] text-gray-400 dark:text-zinc-500 mt-1.5 text-center select-none">
           Enter to send · Shift+Enter for new line
         </p>
       </div>
@@ -601,7 +601,7 @@ function HighlightText({ text, query }: { text: string; query: string }) {
     <p>
       {parts.map((part, i) =>
         part.toLowerCase() === query.toLowerCase()
-          ? <mark key={i} className="bg-yellow-200 text-gray-900 rounded px-0.5">{part}</mark>
+          ? <mark key={i} className="bg-yellow-200 dark:bg-yellow-500/30 text-gray-900 dark:text-yellow-200 rounded px-0.5">{part}</mark>
           : part
       )}
     </p>
@@ -636,7 +636,7 @@ function FilePreview({
 
   if (error) {
     return (
-      <div className="flex items-center gap-2 text-xs text-gray-400 px-2 py-1">
+      <div className="flex items-center gap-2 text-xs text-gray-400 dark:text-zinc-500 px-2 py-1">
         <Paperclip size={12} />
         <span className="truncate">{cleanName}</span>
         <span>(unavailable)</span>
@@ -646,7 +646,7 @@ function FilePreview({
 
   if (!url) {
     return (
-      <div className={`flex items-center gap-2 text-xs px-3 py-2 rounded-xl border animate-pulse ${isOwn ? "border-white/20 bg-gray-800 text-white/60" : "border-gray-200 bg-gray-100 text-gray-400"}`}>
+      <div className={`flex items-center gap-2 text-xs px-3 py-2 rounded-xl border animate-pulse ${isOwn ? "border-white/20 bg-gray-800 dark:bg-white/20 text-white/60 dark:text-gray-200" : "border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-[#1A1A1A] text-gray-400 dark:text-zinc-500"}`}>
         <Paperclip size={12} />
         <span>Loading...</span>
       </div>
@@ -655,7 +655,7 @@ function FilePreview({
 
   if (isImage && !imgError) {
     return (
-      <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-gray-100">
+      <div className="rounded-xl overflow-hidden border border-gray-200 dark:border-white/10 shadow-sm bg-gray-100 dark:bg-[#1A1A1A]">
         <img
           src={url}
           alt={cleanName}
@@ -663,8 +663,8 @@ function FilePreview({
           style={{ maxHeight: 220 }}
           onError={() => setImgError(true)}
         />
-        <div className="px-2 py-1 bg-white/90 border-t border-gray-100">
-          <a href={url} target="_blank" rel="noreferrer" className="text-[11px] text-gray-500 hover:underline truncate block">{cleanName}</a>
+        <div className="px-2 py-1 bg-white/90 dark:bg-black/90 border-t border-gray-100 dark:border-white/10">
+          <a href={url} target="_blank" rel="noreferrer" className="text-[11px] text-gray-500 dark:text-zinc-400 hover:underline truncate block">{cleanName}</a>
         </div>
       </div>
     );
@@ -672,7 +672,7 @@ function FilePreview({
 
   if (isVideo) {
     return (
-      <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm">
+      <div className="rounded-xl overflow-hidden border border-gray-200 dark:border-white/10 shadow-sm">
         <video src={url} controls className="block w-full" style={{ maxHeight: 220 }} />
       </div>
     );
@@ -692,13 +692,13 @@ function FilePreview({
       target="_blank"
       rel="noreferrer"
       className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border transition hover:opacity-80 ${
-        isOwn ? "border-white/20 bg-gray-800 text-white" : "border-gray-200 bg-white text-gray-700 shadow-sm"
+        isOwn ? "border-white/20 bg-gray-800 dark:bg-white dark:text-gray-900 text-white" : "border-gray-200 dark:border-white/10 bg-white dark:bg-[#1A1A1A] text-gray-700 dark:text-zinc-300 shadow-sm"
       }`}
     >
       <span className="text-lg leading-none">{icon}</span>
       <div className="min-w-0">
         <p className="text-xs font-medium truncate max-w-[180px]">{cleanName}</p>
-        <p className={`text-[10px] mt-0.5 ${isOwn ? "text-white/60" : "text-gray-400"}`}>{ext.toUpperCase()} file · tap to download</p>
+        <p className={`text-[10px] mt-0.5 ${isOwn ? "text-white/60 dark:text-black/60" : "text-gray-400 dark:text-zinc-500"}`}>{ext.toUpperCase()} file · tap to download</p>
       </div>
     </a>
   );

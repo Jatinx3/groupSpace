@@ -12,9 +12,9 @@ interface Props {
 }
 
 const STATUS_OPTIONS = [
-  { value: "pending", label: "Pending", color: "bg-gray-100 text-gray-600" },
-  { value: "in_progress", label: "In Progress", color: "bg-gray-800 text-white" },
-  { value: "completed", label: "Completed", color: "bg-gray-900 text-white" },
+  { value: "pending", label: "Pending", color: "bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-zinc-300" },
+  { value: "in_progress", label: "In Progress", color: "bg-gray-800 dark:bg-[#2A2A2A] text-white dark:text-gray-200" },
+  { value: "completed", label: "Completed", color: "bg-gray-900 dark:bg-white text-white dark:text-gray-900" },
 ];
 
 const PRIORITY_OPTIONS = [
@@ -47,17 +47,17 @@ export default function AddTaskModal({ teamId, members, onClose, onSuccess }: Pr
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 bg-black/50 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-[#111111] dark:border dark:border-white/10 w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden">
         {/* Header */}
-        <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+        <div className="px-6 py-5 border-b border-gray-100 dark:border-white/10 flex items-center justify-between">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">New</p>
-            <h2 className="text-base font-bold text-gray-900 mt-0.5">Create Task</h2>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 dark:text-zinc-500">New</p>
+            <h2 className="text-base font-bold text-gray-900 dark:text-white mt-0.5">Create Task</h2>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-gray-100 text-gray-400 hover:text-gray-900 transition text-sm"
+            className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 text-gray-400 dark:text-zinc-500 hover:text-gray-900 dark:hover:text-white transition text-sm"
           >
             ✕
           </button>
@@ -68,33 +68,33 @@ export default function AddTaskModal({ teamId, members, onClose, onSuccess }: Pr
 
           {/* Title */}
           <div>
-            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1.5">
+            <label className="text-xs font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wider block mb-1.5">
               Title
             </label>
             <input
               name="title"
               required
               placeholder="Task title"
-              className="w-full bg-gray-50 rounded-xl px-4 py-2.5 text-sm border border-gray-200 focus:outline-none focus:border-gray-400 focus:bg-white transition"
+              className="w-full bg-gray-50 dark:bg-[#1A1A1A] text-gray-900 dark:text-white rounded-xl px-4 py-2.5 text-sm border border-gray-200 dark:border-white/10 focus:outline-none focus:border-gray-400 dark:focus:border-white/30 focus:bg-white dark:focus:bg-[#1A1A1A] transition"
             />
           </div>
 
           {/* Description */}
           <div>
-            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1.5">
+            <label className="text-xs font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wider block mb-1.5">
               Description
             </label>
             <textarea
               name="description"
               rows={3}
               placeholder="Optional description"
-              className="w-full bg-gray-50 rounded-xl px-4 py-2.5 text-sm border border-gray-200 focus:outline-none focus:border-gray-400 focus:bg-white transition resize-none"
+              className="w-full bg-gray-50 dark:bg-[#1A1A1A] text-gray-900 dark:text-white rounded-xl px-4 py-2.5 text-sm border border-gray-200 dark:border-white/10 focus:outline-none focus:border-gray-400 dark:focus:border-white/30 focus:bg-white dark:focus:bg-[#1A1A1A] transition resize-none"
             />
           </div>
 
           {/* Status */}
           <div>
-            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-2">
+            <label className="text-xs font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wider block mb-2">
               Status
             </label>
             <div className="flex gap-2">
@@ -106,7 +106,7 @@ export default function AddTaskModal({ teamId, members, onClose, onSuccess }: Pr
                   className={`flex-1 py-2 rounded-xl text-xs font-semibold border transition ${
                     selectedStatus === opt.value
                       ? opt.color + " border-transparent"
-                      : "bg-white border-gray-200 text-gray-500 hover:border-gray-300"
+                      : "bg-white dark:bg-[#1A1A1A] border-gray-200 dark:border-white/10 text-gray-500 dark:text-zinc-500 hover:border-gray-300 dark:hover:border-white/30"
                   }`}
                 >
                   {opt.label}
@@ -118,14 +118,14 @@ export default function AddTaskModal({ teamId, members, onClose, onSuccess }: Pr
           {/* Priority + Due Date */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1.5">
+              <label className="text-xs font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wider block mb-1.5">
                 Priority
               </label>
               <select
                 name="priority"
                 value={selectedPriority}
                 onChange={(e) => setSelectedPriority(e.target.value)}
-                className="w-full bg-gray-50 rounded-xl px-3 py-2.5 text-sm border border-gray-200 focus:outline-none focus:border-gray-400 focus:bg-white transition"
+                className="w-full bg-gray-50 dark:bg-[#1A1A1A] text-gray-900 dark:text-white rounded-xl px-3 py-2.5 text-sm border border-gray-200 dark:border-white/10 focus:outline-none focus:border-gray-400 dark:focus:border-white/30 focus:bg-white dark:focus:bg-[#1A1A1A] transition"
               >
                 {PRIORITY_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -133,14 +133,14 @@ export default function AddTaskModal({ teamId, members, onClose, onSuccess }: Pr
               </select>
             </div>
             <div>
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1.5">
+              <label className="text-xs font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wider block mb-1.5">
                 Due Date
               </label>
               <input
                 type="date"
                 name="due_date"
                 required
-                className="w-full bg-gray-50 rounded-xl px-3 py-2.5 text-sm border border-gray-200 focus:outline-none focus:border-gray-400 focus:bg-white transition"
+                className="w-full bg-gray-50 dark:bg-[#1A1A1A] text-gray-900 dark:text-white rounded-xl px-3 py-2.5 text-sm border border-gray-200 dark:border-white/10 focus:outline-none focus:border-gray-400 dark:focus:border-white/30 focus:bg-white dark:focus:bg-[#1A1A1A] transition"
               />
             </div>
           </div>
@@ -148,7 +148,7 @@ export default function AddTaskModal({ teamId, members, onClose, onSuccess }: Pr
           {/* Members */}
           {members.length > 0 && (
             <div>
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-2">
+              <label className="text-xs font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wider block mb-2">
                 Assign Members
               </label>
               <div className="flex flex-wrap gap-2">
@@ -161,11 +161,11 @@ export default function AddTaskModal({ teamId, members, onClose, onSuccess }: Pr
                       onClick={() => toggleMember(member.id)}
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition ${
                         active
-                          ? "bg-gray-900 text-white border-gray-900"
-                          : "bg-gray-50 text-gray-600 border-gray-200 hover:border-gray-400"
+                          ? "bg-gray-900 dark:bg-white text-white dark:text-gray-900 border-gray-900 dark:border-white"
+                          : "bg-gray-50 dark:bg-[#1A1A1A] text-gray-600 dark:text-zinc-400 border-gray-200 dark:border-white/10 hover:border-gray-400 dark:hover:border-white/30"
                       }`}
                     >
-                      <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${active ? "bg-white/20" : "bg-gray-200"}`}>
+                      <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${active ? "bg-white/20 dark:bg-black/10" : "bg-gray-200 dark:bg-white/10"}`}>
                         {member.first_name[0]}
                       </span>
                       {member.first_name} {member.last_name}
@@ -177,18 +177,18 @@ export default function AddTaskModal({ teamId, members, onClose, onSuccess }: Pr
           )}
 
           {/* Actions */}
-          <div className="flex justify-end gap-2 pt-4 border-t border-gray-100">
+          <div className="flex justify-end gap-2 pt-4 border-t border-gray-100 dark:border-white/10">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm border border-gray-200 rounded-xl hover:bg-gray-50 transition font-medium"
+              className="px-4 py-2 text-sm border border-gray-200 dark:border-white/10 rounded-xl hover:bg-gray-50 dark:hover:bg-white/10 text-gray-900 dark:text-white transition font-medium"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isPending}
-              className="px-4 py-2 text-sm bg-gray-900 hover:bg-gray-800 text-white rounded-xl font-semibold disabled:opacity-50 transition"
+              className="px-4 py-2 text-sm bg-gray-900 dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-200 text-white dark:text-gray-900 rounded-xl font-semibold disabled:opacity-50 transition"
             >
               {isPending ? "Creating..." : "Create Task"}
             </button>

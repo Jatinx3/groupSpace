@@ -11,11 +11,17 @@ import {
   Bell,
   LogOut,
   User,
+  MessageSquare,
+  Calendar,
+  Flag,
+  CheckSquare,
 } from "lucide-react";
 import { createClientSupabase } from "../../lib/supabase-client";
 import { playChime } from "../../lib/chime";
 import Avatar from "../ui/Avatar";
 import Footer from "../layout/Footer";
+import ThemeToggle from "../ui/ThemeToggle";
+import AnnouncementHandler from "../announcements/AnnouncementHandler";
 
 interface ProfessorLayoutClientProps {
   children: React.ReactNode;
@@ -41,6 +47,36 @@ export default function ProfessorLayoutClient({
   const [profileOpen, setProfileOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
+
+  const formatRelativeTime = (dateString: string) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (diffInSeconds < 60) return "just now";
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    if (diffInMinutes < 60) return `${diffInMinutes}m`;
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours}h`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays}d`;
+  };
+
+  const getNotificationIcon = (type: string) => {
+    switch (type?.toLowerCase()) {
+      case "chat":
+        return <MessageSquare className="w-4 h-4 text-blue-500" />;
+      case "meeting":
+        return <Calendar className="w-4 h-4 text-emerald-500" />;
+      case "milestone":
+        return <Flag className="w-4 h-4 text-purple-500" />;
+      case "task":
+        return <CheckSquare className="w-4 h-4 text-amber-500" />;
+      default:
+        return <Bell className="w-4 h-4 text-gray-500" />;
+    }
+  };
   const [unreadCount, setUnreadCount] = useState(0);
   const pathname = usePathname();
   const router = useRouter();
@@ -163,6 +199,8 @@ export default function ProfessorLayoutClient({
         />
       )}
 
+      <AnnouncementHandler />
+
       {/* Sidebar */}
       <aside
         className={`
@@ -249,6 +287,7 @@ export default function ProfessorLayoutClient({
           </div>
 
           <div className="flex items-center gap-4">
+            <ThemeToggle />
             {/* Notifications */}
             <div className="relative">
               <button
@@ -298,20 +337,40 @@ export default function ProfessorLayoutClient({
                         No notifications yet.
                       </p>
                     )}
-                    {notifications.map((n) => (
-                      <div
-                        key={n.id}
-                        onClick={() => { if (!n.read) markAsRead(n.id); }}
-                        className={`px-4 py-3 cursor-pointer transition border-b border-gray-50 last:border-0 ${
-                          n.read
-                            ? "hover:bg-gray-50"
-                            : "bg-gray-50 hover:bg-gray-100 border-l-2 border-l-gray-900"
-                        }`}
-                      >
-                        <p className="text-sm font-medium text-gray-800">{n.title}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">{n.message}</p>
-                      </div>
-                    ))}
+                    {notifications.map((n) => {
+                      const IconNode = getNotificationIcon(n.type);
+                      return (
+                        <div
+                          key={n.id}
+                          onClick={() => { if (!n.read) markAsRead(n.id); }}
+                          className={`px-4 py-3 cursor-pointer transition flex gap-3 items-start border-b border-gray-50 dark:border-white/5 last:border-0 ${
+                            n.read
+                              ? "hover:bg-gray-50 dark:hover:bg-white/5"
+                              : "bg-blue-50/40 dark:bg-blue-500/5 hover:bg-blue-50/60 dark:hover:bg-blue-500/10"
+                          }`}
+                        >
+                          <div className={`p-2 rounded-xl shrink-0 ${n.read ? 'bg-gray-100 dark:bg-white/5' : 'bg-blue-100/80 dark:bg-blue-500/10'}`}>
+                            {IconNode}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex justify-between items-baseline gap-2">
+                              <p className={`text-sm font-semibold truncate ${n.read ? 'text-gray-900 dark:text-zinc-100' : 'text-blue-900 dark:text-blue-400'}`}>
+                                {n.title}
+                              </p>
+                              <span className="text-[10px] text-gray-400 dark:text-zinc-500 shrink-0">
+                                {formatRelativeTime(n.created_at)}
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5 line-clamp-2">
+                              {n.message}
+                            </p>
+                          </div>
+                          {!n.read && (
+                            <div className="w-2 h-2 rounded-full bg-blue-600 dark:bg-blue-500 shrink-0 self-center" />
+                          )}
+                        </div>
+                      )
+                    })}
                   </div>
                 </div>
               )}

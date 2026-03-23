@@ -52,10 +52,14 @@ export default async function StudentThesisPage({
     .single();
 
   // 🔄 Normalize supervisor relation
+  const toSingle = (val: any) => {
+    if (!val) return null;
+    return Array.isArray(val) ? (val[0] ?? null) : val;
+  };
   const normalizedThesis = thesis
     ? {
         ...thesis,
-        supervisor: thesis.supervisor?.[0] ?? null,
+        supervisor: toSingle(thesis.supervisor),
       }
     : null;
 
@@ -113,6 +117,19 @@ export default async function StudentThesisPage({
     .eq("thesis_id", normalizedThesis?.id ?? "")
     .order("version_number", { ascending: false });
 
+  // 📹 Meetings (fetch gracefully ignoring table missing error optionally)
+  const { data: meetingsResponse, error: meetingsError } = await supabase
+    .from("thesis_meetings")
+    .select("id, thesis_id, requester_id, professor_id, meeting_date, meeting_time, agenda, message, status, proposed_date, proposed_time, created_at")
+    .eq("thesis_id", normalizedThesis?.id ?? "")
+    .order("meeting_date", { ascending: true });
+    
+  let meetings = meetingsResponse || [];
+  if (meetingsError && meetingsError.code === "42P01") {
+    console.warn("thesis_meetings table is missing, please run the SQL migration.");
+    meetings = [];
+  }
+
   return (
     <StudentThesisPageClient
       studentName={profile.first_name}
@@ -121,6 +138,7 @@ export default async function StudentThesisPage({
       submissions={submissions ?? []}
       comments={normalizedComments}
       drafts={drafts ?? []}
+      meetings={meetings}
     />
   );
 }

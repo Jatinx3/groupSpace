@@ -215,17 +215,17 @@ export default function StructureTab({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         {/* ===== FILE EXPLORER ===== */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm">
+        <div className="lg:col-span-2 bg-white dark:bg-[#111111] rounded-2xl border border-gray-100 dark:border-white/10 shadow-sm">
 
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-            <h2 className="text-lg font-semibold text-gray-800">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-white/10">
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
               File Explorer
             </h2>
 
             <div className="flex gap-2">
               <button
                 onClick={() => openCreateFolder(null)}
-                className="flex items-center gap-2 text-sm px-3 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition"
+                className="flex items-center gap-2 text-sm px-3 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition"
               >
                 <FolderPlus size={16} />
                 New Folder
@@ -233,7 +233,7 @@ export default function StructureTab({
 
               <button
                 onClick={handleDownloadZip}
-                className="flex items-center gap-2 text-sm px-3 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition"
+                className="flex items-center gap-2 text-sm px-3 py-2 border border-gray-200 dark:border-white/20 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 text-gray-900 dark:text-white transition"
               >
                 <Download size={16} />
                 Download Project
@@ -262,8 +262,8 @@ export default function StructureTab({
         {/* ===== RIGHT PANEL ===== */}
         <div className="space-y-6">
 
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-            <h3 className="text-sm font-semibold text-gray-700 mb-4">
+          <div className="bg-white dark:bg-[#111111] rounded-2xl border border-gray-100 dark:border-white/10 shadow-sm p-6">
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-white mb-4">
               File Type Distribution
             </h3>
 
@@ -271,7 +271,7 @@ export default function StructureTab({
               {Object.entries(fileTypes).map(([type, count]) => (
                 <div
                   key={type}
-                  className="flex justify-between text-sm text-gray-600"
+                  className="flex justify-between text-sm text-gray-600 dark:text-zinc-400"
                 >
                   <span>{type.toUpperCase()}</span>
                   <span>{count} files</span>
@@ -280,8 +280,8 @@ export default function StructureTab({
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-            <h3 className="text-sm font-semibold text-gray-700 mb-4">
+          <div className="bg-white dark:bg-[#111111] rounded-2xl border border-gray-100 dark:border-white/10 shadow-sm p-6">
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-white mb-4">
               Recent Files
             </h3>
 
@@ -289,7 +289,7 @@ export default function StructureTab({
               {files.slice(0, 5).map((file) => (
                 <div
                   key={file.id}
-                  className="flex items-center gap-2 text-sm text-gray-600"
+                  className="flex items-center gap-2 text-sm text-gray-600 dark:text-zinc-400"
                 >
                   <File size={14} />
                   {file.file_name}
@@ -303,9 +303,9 @@ export default function StructureTab({
 
       {/* ===== MODAL ===== */}
       {modalOpen && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
-            <h3 className="text-lg font-semibold">
+        <div className="fixed inset-0 bg-black/40 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-[#111111] dark:border dark:border-white/10 rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
               {modalType === "folder" ? "Create Folder" : "Create File"}
             </h3>
 
@@ -317,20 +317,20 @@ export default function StructureTab({
                   ? "Folder name"
                   : "example.txt"
               }
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="w-full border border-gray-200 dark:border-white/10 bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-white/20"
             />
 
             <div className="flex justify-end gap-2 pt-2">
               <button
                 onClick={() => setModalOpen(false)}
-                className="px-4 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50"
+                className="px-4 py-2 text-sm border border-gray-200 dark:border-white/20 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 text-gray-900 dark:text-white transition"
               >
                 Cancel
               </button>
 
               <button
                 onClick={handleModalSubmit}
-                className="px-4 py-2 text-sm bg-gray-900 text-white rounded-lg hover:bg-gray-800"
+                className="px-4 py-2 text-sm bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition"
               >
                 Create
               </button>
@@ -363,13 +363,13 @@ function TreeNode({
   return (
     <div>
       <div
-        className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-gray-50 transition group"
+        className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition group"
         style={{ paddingLeft: `${level * 20}px` }}
       >
         {isFolder ? (
           <button
             onClick={() => toggle(node.id)}
-            className="text-gray-400 hover:text-gray-700"
+            className="text-gray-400 dark:text-zinc-500 hover:text-gray-700 dark:hover:text-white transition"
           >
             {isOpen ? (
               <ChevronDown size={16} />
@@ -384,22 +384,22 @@ function TreeNode({
         {isFolder ? (
           <>
             <Folder size={18} className="text-yellow-500" />
-            <span className="flex-1 text-sm font-medium text-gray-700">
+            <span className="flex-1 text-sm font-medium text-gray-700 dark:text-zinc-200">
               {node.name}
             </span>
 
             <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
                 <FolderPlus
                   size={15}
-                  className="text-gray-500 hover:text-gray-800 cursor-pointer"
+                  className="text-gray-500 dark:text-zinc-500 hover:text-gray-800 dark:hover:text-white cursor-pointer transition"
                   onClick={() => openCreateFolder(node.id)}
                 />
                 <FilePlus
                   size={15}
-                  className="text-gray-500 hover:text-gray-800 cursor-pointer"
+                  className="text-gray-500 dark:text-zinc-500 hover:text-gray-800 dark:hover:text-white cursor-pointer transition"
                   onClick={() => openCreateFile(node.id)}
                 />
-                <label className="cursor-pointer text-gray-500 hover:text-gray-800">
+                <label className="cursor-pointer text-gray-500 dark:text-zinc-500 hover:text-gray-800 dark:hover:text-white transition">
                   <Upload size={15} />
                   <input
                     type="file"
@@ -412,15 +412,15 @@ function TreeNode({
                 </label>
                 <Trash2
                   size={15}
-                  className="text-red-400 hover:text-red-600 cursor-pointer"
+                  className="text-red-400 dark:text-red-500/80 hover:text-red-600 dark:hover:text-red-500 cursor-pointer transition"
                   onClick={() => onDeleteFolder(node)}
                 />
               </div>
           </>
         ) : (
           <>
-            <File size={18} className="text-gray-400" />
-            <span className="text-sm text-gray-600">
+            <File size={18} className="text-gray-400 dark:text-zinc-500" />
+            <span className="text-sm text-gray-600 dark:text-zinc-400">
               {node.file_name}
             </span>
           </>
@@ -449,11 +449,11 @@ function TreeNode({
 
 function StatCard({ title, value }: { title: string; value: any }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-      <div className="text-2xl font-semibold text-gray-800">
+    <div className="bg-white dark:bg-[#111111] rounded-2xl border border-gray-100 dark:border-white/10 shadow-sm p-6">
+      <div className="text-2xl font-semibold text-gray-800 dark:text-white">
         {value}
       </div>
-      <div className="text-sm text-gray-500 mt-1">
+      <div className="text-sm text-gray-500 dark:text-zinc-400 mt-1">
         {title}
       </div>
     </div>

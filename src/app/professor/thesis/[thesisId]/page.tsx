@@ -129,6 +129,19 @@ export default async function ProfessorThesisDetailPage({
     .eq("thesis_id", thesisId)
     .order("version_number", { ascending: false });
 
+  // 📹 Meetings (gracefully fall back if table is missing)
+  const { data: meetingsResponse, error: meetingsError } = await supabase
+    .from("thesis_meetings")
+    .select("id, thesis_id, requester_id, professor_id, meeting_date, meeting_time, agenda, message, status, proposed_date, proposed_time, created_at")
+    .eq("thesis_id", thesisId)
+    .order("meeting_date", { ascending: true });
+    
+  let meetings = meetingsResponse || [];
+  if (meetingsError && meetingsError.code === "42P01") {
+    // If the table hasn't been created yet, just act as if it's empty
+    meetings = [];
+  }
+
   return (
     <SupervisorThesisDetailClient
       supervisorName={profile.first_name}
@@ -137,6 +150,7 @@ export default async function ProfessorThesisDetailPage({
       submissions={submissions ?? []}
       comments={normalizedComments}
       drafts={drafts ?? []}
+      meetings={meetings}
     />
   );
 }

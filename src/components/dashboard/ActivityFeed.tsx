@@ -68,18 +68,18 @@ export default function ActivityFeed({ tasks, teams }: Props) {
     .slice(0, 5);
 
   return (
-    <div className="bg-[#111111] border border-white/10 rounded-2xl p-6 h-full flex flex-col relative overflow-hidden">
-      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/5 to-transparent" />
+    <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-white/10 rounded-2xl p-6 flex flex-col relative overflow-hidden transition-colors">
+      <div className="hidden dark:block absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/5 to-transparent" />
 
       <div className="flex items-center gap-4 mb-6 relative z-10">
-        <div className="p-2.5 rounded-xl bg-white/5 border border-white/5 text-zinc-300">
+        <div className="p-2.5 rounded-xl bg-gray-900 dark:bg-white/5 border border-transparent dark:border-white/5 text-white dark:text-zinc-300">
           <Activity className="w-4 h-4" />
         </div>
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 dark:text-zinc-500">
             Feed
           </p>
-          <h2 className="font-semibold text-zinc-100 leading-none mt-1">
+          <h2 className="font-semibold text-gray-900 dark:text-zinc-100 leading-none mt-1">
             Recent Activity
           </h2>
         </div>
@@ -87,7 +87,7 @@ export default function ActivityFeed({ tasks, teams }: Props) {
 
       <div className="relative z-10 flex-1">
         {recent.length === 0 && (
-          <p className="text-zinc-500 text-sm py-8 text-center border border-dashed border-white/5 rounded-xl">
+          <p className="text-gray-400 dark:text-zinc-500 text-sm py-8 text-center border border-dashed border-gray-200 dark:border-white/5 rounded-xl transition-colors">
             No recent activity yet.
           </p>
         )}
@@ -96,14 +96,14 @@ export default function ActivityFeed({ tasks, teams }: Props) {
           {recent.map((item, index) => (
             <div
               key={item.id}
-              className="group flex flex-col bg-white/5 px-4 py-3 border border-white/0 hover:border-white/5 hover:bg-white/10 transition-all cursor-default first:rounded-t-xl last:rounded-b-xl"
+              className="group flex flex-col bg-gray-50/50 dark:bg-white/5 px-4 py-3 border border-transparent hover:border-gray-200 dark:hover:border-white/5 hover:bg-gray-50 dark:hover:bg-white/10 transition-all cursor-default first:rounded-t-xl last:rounded-b-xl"
             >
               <div className="flex items-start justify-between gap-3">
-                <p className="text-sm font-medium text-zinc-300 leading-snug group-hover:text-zinc-100 transition-colors">
+                <p className="text-sm font-medium text-gray-700 dark:text-zinc-300 leading-snug group-hover:text-gray-900 dark:group-hover:text-zinc-100 transition-colors">
                   {item.text}
                 </p>
                 <div className="shrink-0 flex items-center pt-0.5">
-                  <span className="text-[10px] text-zinc-500 font-medium whitespace-nowrap">
+                  <span className="text-[10px] text-gray-400 dark:text-zinc-500 font-medium whitespace-nowrap">
                     {item.time}
                   </span>
                 </div>

@@ -104,8 +104,8 @@ function InviteModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col sm:flex-row">
+    <div className="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-[#111111] w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col sm:flex-row dark:border dark:border-white/10">
 
         {/* LEFT — dark code panel */}
         <div className="bg-gray-900 sm:w-[52%] px-8 py-8 flex flex-col justify-between relative">
@@ -190,8 +190,8 @@ function InviteModal({
           <div>
             <div className="flex items-center justify-between mb-1">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Or invite directly</p>
-                <h2 className="text-base font-bold text-gray-900 mt-0.5">Add by email</h2>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-zinc-500">Or invite directly</p>
+                <h2 className="text-base font-bold text-gray-900 dark:text-white mt-0.5">Add by email</h2>
               </div>
               <button
                 onClick={onClose}
@@ -201,51 +201,51 @@ function InviteModal({
               </button>
             </div>
 
-            <p className="text-sm text-gray-400 mt-3 mb-6 leading-relaxed">
+            <p className="text-sm text-gray-400 dark:text-zinc-400 mt-3 mb-6 leading-relaxed">
               Enter a teammate's email address and they'll be added to the team instantly.
             </p>
 
             {/* Email input */}
             <div className="space-y-3">
-              <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 focus-within:border-gray-900 focus-within:bg-white transition">
-                <Mail className="w-4 h-4 text-gray-400 shrink-0" />
+              <div className="flex items-center gap-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-3 focus-within:border-gray-900 dark:focus-within:border-white/30 focus-within:bg-white dark:focus-within:bg-[#1A1A1A] transition">
+                <Mail className="w-4 h-4 text-gray-400 dark:text-zinc-500 shrink-0" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSend()}
                   placeholder="teammate@university.edu"
-                  className="flex-1 py-3 text-sm bg-transparent focus:outline-none text-gray-900 placeholder-gray-400"
+                  className="flex-1 py-3 text-sm bg-transparent focus:outline-none text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-600"
                 />
               </div>
 
               <button
                 onClick={handleSend}
                 disabled={isPending || !email.trim()}
-                className="w-full flex items-center justify-center gap-2 py-3 bg-gray-900 hover:bg-gray-800 disabled:opacity-40 text-white rounded-xl text-sm font-bold transition"
+                className="w-full flex items-center justify-center gap-2 py-3 bg-gray-900 dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-40 text-white dark:text-gray-900 rounded-xl text-sm font-bold transition"
               >
                 <Send className="w-3.5 h-3.5" />
                 {isPending ? "Sending..." : "Send Invite"}
               </button>
 
               {status === "success" && (
-                <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5">
-                  <Check className="w-4 h-4 text-gray-700 shrink-0" />
-                  <p className="text-sm font-medium text-gray-700">Member added successfully!</p>
+                <div className="flex items-center gap-2 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-white/10 rounded-xl px-3 py-2.5">
+                  <Check className="w-4 h-4 text-gray-700 dark:text-zinc-300 shrink-0" />
+                  <p className="text-sm font-medium text-gray-700 dark:text-zinc-300">Member added successfully!</p>
                 </div>
               )}
               {status === "error" && (
-                <div className="bg-red-50 border border-red-100 rounded-xl px-3 py-2.5">
-                  <p className="text-sm text-red-600">{errorMsg}</p>
+                <div className="bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 rounded-xl px-3 py-2.5">
+                  <p className="text-sm text-red-600 dark:text-red-400">{errorMsg}</p>
                 </div>
               )}
             </div>
           </div>
 
           {/* Bottom tip */}
-          <div className="mt-8 flex items-start gap-2 bg-gray-50 border border-gray-100 rounded-xl px-4 py-3">
-            <div className="w-1.5 h-1.5 rounded-full bg-gray-400 mt-1.5 shrink-0" />
-            <p className="text-xs text-gray-500 leading-relaxed">
+          <div className="mt-8 flex items-start gap-2 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-xl px-4 py-3">
+            <div className="w-1.5 h-1.5 rounded-full bg-gray-400 dark:bg-zinc-600 mt-1.5 shrink-0" />
+            <p className="text-xs text-gray-500 dark:text-zinc-400 leading-relaxed">
               Only share the invite code with people you trust. Anyone with the code can request to join.
             </p>
           </div>
@@ -322,18 +322,18 @@ export default function TeamWorkspace({
         {/* HEADER */}
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-extrabold tracking-tight text-gray-900">
+            <h1 className="text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white">
               {teamName}
             </h1>
             {courseName && (
-              <p className="text-sm text-gray-500 mt-0.5">{courseName}</p>
+              <p className="text-sm text-gray-500 dark:text-zinc-400 mt-0.5">{courseName}</p>
             )}
           </div>
 
           {isLeader && (
             <button
               onClick={() => setShowInvite(true)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-gray-900 hover:bg-gray-800 text-white text-sm font-semibold rounded-xl transition shrink-0"
+              className="flex items-center gap-2 px-4 py-2.5 bg-gray-900 dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-200 text-white dark:text-gray-900 text-sm font-semibold rounded-xl transition shrink-0"
             >
               <UserPlus className="w-4 h-4" />
               Invite Members
@@ -342,7 +342,7 @@ export default function TeamWorkspace({
         </div>
 
         {/* TABS */}
-        <div className="flex gap-1 border-b border-gray-100 pb-0 overflow-x-auto">
+        <div className="flex gap-1 border-b border-gray-100 dark:border-white/10 pb-0 overflow-x-auto">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const active = activeTab === tab.key;
@@ -353,8 +353,8 @@ export default function TeamWorkspace({
                 onClick={() => handleTabClick(tab.key)}
                 className={`relative flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-sm font-medium transition whitespace-nowrap border-b-2 -mb-px ${
                   active
-                    ? "border-gray-900 text-gray-900 bg-white"
-                    : "border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+                    ? "border-gray-900 dark:border-white text-gray-900 dark:text-white bg-white dark:bg-[#111111]"
+                    : "border-transparent text-gray-500 dark:text-zinc-500 hover:text-gray-900 dark:hover:text-zinc-300 hover:bg-gray-50 dark:hover:bg-[#151515]"
                 }`}
               >
                 <Icon className="w-4 h-4 shrink-0" />

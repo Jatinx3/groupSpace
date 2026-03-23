@@ -17,8 +17,8 @@ type Tab = "profile" | "security";
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="flex items-center gap-3 text-base font-semibold text-slate-900">
-      <span className="w-1 h-5 bg-slate-900 rounded-full shrink-0" />
+    <h2 className="flex items-center gap-3 text-base font-semibold text-gray-900 dark:text-white">
+      <span className="w-1 h-5 bg-gray-900 dark:bg-white rounded-full shrink-0" />
       {children}
     </h2>
   );
@@ -26,7 +26,7 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-1.5">
+    <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 dark:text-zinc-500 mb-1.5">
       {children}
     </p>
   );
@@ -52,10 +52,10 @@ function UnderlineInput({
       onChange={(e) => onChange?.(e.target.value)}
       disabled={disabled}
       placeholder={placeholder}
-      className={`w-full bg-transparent border-b py-2 text-sm text-slate-900 placeholder:text-slate-300 focus:outline-none transition-colors ${
+      className={`w-full bg-transparent border-b py-2 text-sm text-gray-900 dark:text-white placeholder:text-gray-300 dark:placeholder:text-zinc-600 focus:outline-none transition-colors ${
         disabled
-          ? "border-slate-100 text-slate-400 cursor-not-allowed"
-          : "border-slate-200 focus:border-slate-900"
+          ? "border-gray-100 dark:border-white/5 text-gray-400 dark:text-zinc-600 cursor-not-allowed"
+          : "border-gray-200 dark:border-white/10 focus:border-gray-900 dark:focus:border-white/40"
       }`}
     />
   );
@@ -139,16 +139,16 @@ export default function ProfessorProfileClient({ profile }: { profile: Profile }
   return (
     <div className="space-y-0">
       {/* Hero Header */}
-      <div className="flex items-center gap-6 pb-6 border-b border-slate-100">
+      <div className="flex items-center gap-6 pb-6 border-b border-gray-100 dark:border-white/5">
         <div className="relative shrink-0">
           <div
             onClick={handleAvatarClick}
-            className="w-20 h-20 rounded-2xl overflow-hidden bg-slate-900 flex items-center justify-center cursor-pointer group relative"
+            className="w-20 h-20 rounded-2xl overflow-hidden bg-gray-900 dark:bg-white flex items-center justify-center cursor-pointer group relative"
           >
             {avatarUrl ? (
               <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
             ) : (
-              <span className="text-3xl font-bold text-white">{initials}</span>
+              <span className="text-3xl font-bold text-white dark:text-gray-900">{initials}</span>
             )}
             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-2xl">
               {avatarLoading ? (
@@ -163,20 +163,20 @@ export default function ProfessorProfileClient({ profile }: { profile: Profile }
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-2xl font-bold text-slate-900">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
               {firstName} {lastName}
             </h1>
-            <span className="text-xs font-semibold px-2.5 py-1 border border-slate-300 text-slate-600 rounded-md">
+            <span className="text-xs font-semibold px-2.5 py-1 border border-gray-300 dark:border-white/20 text-gray-600 dark:text-zinc-400 rounded-md">
               Professor
             </span>
           </div>
           <div className="flex items-center gap-4 mt-1.5 flex-wrap">
-            <span className="flex items-center gap-1.5 text-sm text-slate-500">
+            <span className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-zinc-500">
               <Mail className="w-3.5 h-3.5" />
               {profile.email}
             </span>
-            <span className="flex items-center gap-1.5 text-sm text-slate-400">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+            <span className="flex items-center gap-1.5 text-sm text-gray-400 dark:text-zinc-500">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
               Verified
             </span>
           </div>
@@ -185,10 +185,10 @@ export default function ProfessorProfileClient({ profile }: { profile: Profile }
         <button
           onClick={handleSaveAll}
           disabled={saving || pwSaving}
-          className="shrink-0 flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition disabled:opacity-60"
+          className="shrink-0 flex items-center gap-2 bg-gray-900 dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-200 text-white dark:text-gray-900 text-sm font-semibold px-5 py-2.5 rounded-xl transition disabled:opacity-60"
         >
           {saving || pwSaving ? (
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <div className="w-4 h-4 border-2 border-white dark:border-gray-900 border-t-transparent rounded-full animate-spin" />
           ) : null}
           Save All
         </button>
@@ -196,21 +196,21 @@ export default function ProfessorProfileClient({ profile }: { profile: Profile }
 
       {/* Save message */}
       {saveMsg && (
-        <div className={`text-xs px-4 py-2 rounded-lg ${saveMsg.type === "success" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-600"}`}>
+        <div className={`text-xs px-4 py-2 rounded-lg mt-4 ${saveMsg.type === "success" ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400" : "bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400"}`}>
           {saveMsg.text}
         </div>
       )}
 
       {/* Tabs */}
-      <div className="flex border-b border-slate-100">
+      <div className="flex border-b border-gray-100 dark:border-white/5 mt-6">
         {tabs.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
             className={`flex items-center gap-2 px-1 py-3 mr-8 text-sm font-medium border-b-2 transition-colors -mb-px ${
               activeTab === tab.key
-                ? "border-slate-900 text-slate-900"
-                : "border-transparent text-slate-400 hover:text-slate-600"
+                ? "border-gray-900 dark:border-white text-gray-900 dark:text-white"
+                : "border-transparent text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300"
             }`}
           >
             {tab.icon}
@@ -263,7 +263,7 @@ export default function ProfessorProfileClient({ profile }: { profile: Profile }
             </div>
 
             {pwMsg && (
-              <p className={`text-xs ${pwMsg.type === "success" ? "text-emerald-600" : "text-red-500"}`}>
+              <p className={`text-xs ${pwMsg.type === "success" ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
                 {pwMsg.text}
               </p>
             )}
@@ -271,7 +271,7 @@ export default function ProfessorProfileClient({ profile }: { profile: Profile }
             <button
               onClick={handleSavePassword}
               disabled={pwSaving}
-              className="flex items-center gap-2 border border-slate-200 text-slate-700 text-sm font-medium px-4 py-2.5 rounded-xl hover:bg-slate-50 transition disabled:opacity-60"
+              className="flex items-center gap-2 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-zinc-300 text-sm font-medium px-4 py-2.5 rounded-xl hover:bg-gray-50 dark:hover:bg-white/5 transition disabled:opacity-60"
             >
               <Lock className="w-3.5 h-3.5" />
               {pwSaving ? "Updating..." : "Update Password"}

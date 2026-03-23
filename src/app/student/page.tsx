@@ -5,6 +5,8 @@ import Greeting from "../../components/dashboard/Greeting";
 import StatsGrid from "../../components/dashboard/StatsGrid";
 import DeadlineList from "../../components/dashboard/DeadlineList";
 import ActivityFeed from "../../components/dashboard/ActivityFeed";
+import MiniCalendar from "../../components/dashboard/MiniCalendar";
+import TaskProgress from "../../components/dashboard/TaskProgress";
 import { Plus, UploadCloud, Users } from "lucide-react";
 
 export default async function StudentDashboard() {
@@ -144,22 +146,6 @@ export default async function StudentDashboard() {
         <div className="flex-1">
           <Greeting greeting={greeting} name={firstName} />
         </div>
-        
-        {/* Quick Actions */}
-        <div className="flex items-center gap-3 shrink-0">
-          <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition text-sm font-medium text-zinc-300">
-            <Plus className="w-4 h-4 text-zinc-400" />
-            Create Task
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition text-sm font-medium text-zinc-300">
-            <UploadCloud className="w-4 h-4 text-zinc-400" />
-            Upload File
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition text-sm font-medium text-zinc-300">
-            <Users className="w-4 h-4 text-zinc-400" />
-            Join Team
-          </button>
-        </div>
       </div>
 
       <StatsGrid
@@ -170,11 +156,13 @@ export default async function StudentDashboard() {
       />
 
       <section className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div className="xl:col-span-2">
+        <div className="xl:col-span-2 space-y-6">
           <DeadlineList tasks={upcomingTasks} teams={teams} />
+          <TaskProgress tasks={safeTasks} teams={teams} completionRate={completionRate} />
         </div>
 
-        <div>
+        <div className="space-y-6">
+          <MiniCalendar tasks={safeTasks} />
           <ActivityFeed tasks={safeTasks} teams={teams} />
         </div>
       </section>

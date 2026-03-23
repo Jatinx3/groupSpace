@@ -91,16 +91,16 @@ export default function FilesTab({
       {/* HEADER */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-lg font-semibold">Project Files</h1>
-          <p className="text-xs text-gray-500">
+          <h1 className="text-lg font-semibold text-gray-900 dark:text-white">Project Files</h1>
+          <p className="text-xs text-gray-500 dark:text-zinc-400">
             {safeFiles.length} files • {formatFileSize(totalSize)}
           </p>
         </div>
       </div>
 
       {/* UPLOAD CARD */}
-      <div className="flex justify-between items-center bg-white border border-gray-200 rounded-lg px-4 py-3">
-  <label className="flex items-center gap-2 cursor-pointer text-sm font-medium">
+      <div className="flex justify-between items-center bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-lg px-4 py-3">
+  <label className="flex items-center gap-2 cursor-pointer text-sm font-medium text-gray-900 dark:text-white">
     <Upload size={16} />
     Upload file
     <input
@@ -112,7 +112,7 @@ export default function FilesTab({
       }}
     />
   </label>
-<span className="text-xs text-gray-400">
+<span className="text-xs text-gray-400 dark:text-zinc-500">
     Max 20MB
   </span>
         {isUploading && uploadingFile && (
@@ -125,9 +125,9 @@ export default function FilesTab({
       </div>
 
       {/* FILE LIST */}
-<div className="bg-white rounded-xl shadow-sm">
+<div className="bg-white dark:bg-[#111111] rounded-xl shadow-sm border border-transparent dark:border-white/10 dark:overflow-hidden">
         {safeFiles.length === 0 && (
-          <div className="p-4 text-sm text-gray-500">
+          <div className="p-4 text-sm text-gray-500 dark:text-zinc-400">
             No files uploaded yet.
           </div>
         )}
@@ -140,7 +140,7 @@ export default function FilesTab({
           return (
             <div
               key={file.id}
-              className="flex justify-between items-center px-5 py-4 hover:bg-gray-50/60 transition border-b last:border-none"
+              className="flex justify-between items-center px-5 py-4 hover:bg-gray-50/60 dark:hover:bg-white/5 transition border-b dark:border-white/10 last:border-none"
             >
               <div
                 className="flex items-center gap-3 cursor-pointer"
@@ -150,7 +150,7 @@ export default function FilesTab({
 
                 <div>
                   <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
                       {file.file_name}
                     </p>
                     <span
@@ -160,7 +160,7 @@ export default function FilesTab({
                     </span>
                   </div>
 
-                  <div className="text-xs text-gray-500 flex gap-2">
+                  <div className="text-xs text-gray-500 dark:text-zinc-400 flex gap-2">
                     <span>{formatFileSize(file.file_size ?? 0)}</span>
                     <span>•</span>
                     <span>{getRelativeTime(file.created_at)}</span>
@@ -187,7 +187,7 @@ export default function FilesTab({
                     setDownloadingId(file.id);
                     setTimeout(() => setDownloadingId(null), 1500);
                   }}
-                  className="text-gray-600 hover:text-black text-sm"
+                  className="text-gray-600 dark:text-zinc-400 hover:text-black dark:hover:text-white text-sm"
                 >
                   {downloadingId === file.id
                     ? "Downloading..."
@@ -198,7 +198,7 @@ export default function FilesTab({
                 {isLeader && (
                   <button
                     onClick={() => setDeleteTarget(file)}
-                    className="text-gray-600 hover:text-red-600"
+                    className="text-gray-600 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-500"
                   >
                     <Trash2 size={16} />
                   </button>
@@ -211,17 +211,17 @@ export default function FilesTab({
 
       {/* PREVIEW MODAL */}
       {previewFile && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-white w-full max-w-3xl rounded-lg p-6 relative">
+        <div className="fixed inset-0 bg-black/60 dark:bg-black/80 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-[#111111] dark:border dark:border-white/10 w-full max-w-3xl rounded-lg p-6 relative">
 
             <button
               onClick={() => setPreviewFile(null)}
-              className="absolute top-4 right-4"
+              className="absolute top-4 right-4 text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
             >
               <X size={18} />
             </button>
 
-            <h2 className="font-semibold mb-4">
+            <h2 className="font-semibold mb-4 text-gray-900 dark:text-white">
               {previewFile.file_name}
             </h2>
 
@@ -235,8 +235,8 @@ export default function FilesTab({
                 src={`/api/files/${previewFile.id}`}
                 className="w-full h-[500px]"
               />
-            ) : (
-              <div className="text-center text-gray-500">
+              ) : (
+              <div className="text-center text-gray-500 dark:text-zinc-500">
                 Preview not available.
               </div>
             )}
@@ -246,23 +246,23 @@ export default function FilesTab({
 
       {/* DELETE CONFIRM MODAL */}
       {deleteTarget && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-5 w-[320px]">
-            <p className="text-sm mb-4">
+        <div className="fixed inset-0 bg-black/50 dark:bg-black/80 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-[#111111] dark:border dark:border-white/10 rounded-lg p-5 w-[320px]">
+            <p className="text-sm mb-4 text-gray-900 dark:text-white">
               Delete "{deleteTarget.file_name}"?
             </p>
 
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setDeleteTarget(null)}
-                className="text-sm text-gray-500"
+                className="text-sm text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white transition"
               >
                 Cancel
               </button>
 
               <button
                 onClick={() => handleDelete(deleteTarget.id)}
-                className="text-sm text-red-600"
+                className="text-sm text-red-600 dark:text-red-500 hover:opacity-80 transition"
               >
                 {isDeleting ? "Deleting..." : "Delete"}
               </button>
@@ -323,10 +323,10 @@ function getFileIcon(ext: string) {
 
 function getBadgeColor(ext: string) {
   if (ext === "pdf")
-    return "bg-red-100 text-red-600";
+    return "bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400";
   if (["doc", "docx"].includes(ext))
-    return "bg-blue-100 text-blue-600";
+    return "bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400";
   if (["png", "jpg", "jpeg", "gif"].includes(ext))
-    return "bg-emerald-100 text-emerald-600";
-  return "bg-gray-100 text-gray-600";
+    return "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400";
+  return "bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-zinc-300";
 }

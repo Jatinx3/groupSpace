@@ -1,11 +1,13 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import MeetingsTab, { Meeting } from "./MeetingsTab";
 import {
   Calendar,
   Clock,
   FileText,
   MessageCircle,
+  Video,
   AlertCircle,
   CheckCircle2,
   Loader2,
@@ -118,6 +120,7 @@ interface Props {
   submissions: Submission[];
   comments: Comment[];
   drafts: Draft[];
+  meetings: Meeting[];
 }
 
 export default function StudentThesisPageClient({
@@ -127,12 +130,13 @@ export default function StudentThesisPageClient({
   submissions,
   comments,
   drafts,
+  meetings,
 }: Props) {
   const router = useRouter();
   const [uploading, setUploading] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [submittingComment, setSubmittingComment] = useState(false);
-  const [activeTab, setActiveTab] = useState<"milestones" | "submissions" | "discussion" | "drafts" | "ai">("milestones");
+  const [activeTab, setActiveTab] = useState<"milestones" | "submissions" | "discussion" | "drafts" | "meetings" | "ai">("milestones");
 
   const [showDraftModal, setShowDraftModal] = useState(false);
   const [draftFile, setDraftFile] = useState<File | null>(null);
@@ -255,23 +259,23 @@ export default function StudentThesisPageClient({
   if (!thesis) {
     return (
       <div className="space-y-6">
-        <section className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
+        <section className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-white/10 rounded-2xl overflow-hidden transition-colors">
           <div className="px-8 py-7">
             <div className="flex items-center gap-2 mb-2">
-              <GraduationCap className="w-4 h-4 text-gray-400" />
-              <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">
+              <GraduationCap className="w-4 h-4 text-gray-400 dark:text-zinc-500" />
+              <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 dark:text-zinc-500">
                 Thesis Collab
               </p>
             </div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">
+            <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">
               No thesis assigned yet
             </h1>
-            <p className="mt-2 text-sm text-gray-400 font-medium max-w-lg">
+            <p className="mt-2 text-sm text-gray-400 dark:text-zinc-400 font-medium max-w-lg">
               Once your supervisor creates a thesis project for you, milestones,
               submissions and feedback will appear here.
             </p>
           </div>
-          <div className="h-1 bg-gradient-to-r from-gray-900 via-gray-600 to-gray-200" />
+          <div className="h-1 bg-gradient-to-r from-gray-900 via-gray-600 to-gray-200 dark:from-white/20 dark:via-white/10 dark:to-transparent" />
         </section>
       </div>
     );
@@ -280,33 +284,33 @@ export default function StudentThesisPageClient({
   return (
     <div className="space-y-6">
       {/* ── Header ── */}
-      <section className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
+      <section className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-white/10 rounded-2xl overflow-hidden transition-colors">
         <div className="px-8 py-7 flex flex-col md:flex-row md:items-start md:justify-between gap-6">
           <div className="space-y-3 flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <GraduationCap className="w-4 h-4 text-gray-400" />
-              <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">
+              <GraduationCap className="w-4 h-4 text-gray-400 dark:text-zinc-500" />
+              <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 dark:text-zinc-500">
                 Thesis Collab
               </p>
             </div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 leading-tight">
+            <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white leading-tight">
               {thesis.title || "Untitled Thesis"}
             </h1>
             {thesis.description && (
-              <p className="text-sm text-gray-400 font-medium max-w-2xl leading-relaxed">
+              <p className="text-sm text-gray-400 dark:text-zinc-400 font-medium max-w-2xl leading-relaxed">
                 {thesis.description}
               </p>
             )}
             <div className="flex flex-wrap items-center gap-2 pt-1">
               {thesis.supervisor && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-[11px] font-semibold uppercase tracking-wide">
-                  <span className="w-1.5 h-1.5 rounded-full bg-gray-900" />
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-zinc-300 text-[11px] font-semibold uppercase tracking-wide">
+                  <span className="w-1.5 h-1.5 rounded-full bg-gray-900 dark:bg-white" />
                   {thesis.supervisor.first_name} {thesis.supervisor.last_name}
                 </span>
               )}
               <StatusBadge status={thesis.status} />
               {thesis.deadline && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-[11px] font-semibold uppercase tracking-wide">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-zinc-300 text-[11px] font-semibold uppercase tracking-wide">
                   <Clock className="w-3 h-3" />
                   Deadline:{" "}
                   {new Date(thesis.deadline).toLocaleDateString("en-GB", {
@@ -321,50 +325,51 @@ export default function StudentThesisPageClient({
 
           {/* Progress */}
           <div className="w-full md:w-56 shrink-0">
-            <div className="bg-gray-50 border border-gray-100 rounded-2xl px-5 py-4 space-y-3">
+            <div className="bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-2xl px-5 py-4 space-y-3">
               <div className="flex items-center justify-between">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-zinc-500">
                   Progress
                 </p>
-                <p className="text-xl font-extrabold tabular-nums text-gray-900">
+                <p className="text-xl font-extrabold tabular-nums text-gray-900 dark:text-white">
                   {progress}%
                 </p>
               </div>
-              <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+              <div className="h-1.5 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gray-900 rounded-full transition-all duration-500"
+                  className="h-full bg-gray-900 dark:bg-white rounded-full transition-all duration-500"
                   style={{ width: `${progress}%` }}
                 />
               </div>
-              <p className="text-[11px] text-gray-400 font-medium">
+              <p className="text-[11px] text-gray-400 dark:text-zinc-400 font-medium">
                 {completedMilestones} of {milestones.length} milestones approved
               </p>
             </div>
           </div>
         </div>
-        <div className="h-1 bg-gradient-to-r from-gray-900 via-gray-600 to-gray-200" />
+        <div className="h-1 bg-gradient-to-r from-gray-900 via-gray-600 to-gray-200 dark:from-white/20 dark:via-white/10 dark:to-transparent" />
       </section>
 
       {/* ── Tabs ── */}
-      <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
+      <div className="bg-white dark:bg-[#111111] border border-gray-100 dark:border-white/10 rounded-2xl overflow-hidden transition-colors">
         {/* Tab bar */}
-        <div className="flex items-center gap-1 px-6 pt-4 border-b border-gray-100">
+        <div className="flex items-center gap-1 px-6 pt-4 border-b border-gray-100 dark:border-white/5 transition-colors">
           {(
             [
               { key: "milestones", label: "Milestones", icon: Calendar, count: milestones.length },
               { key: "submissions", label: "Submissions", icon: FileText, count: submissions.length },
               { key: "drafts", label: "Drafts", icon: BookOpen, count: drafts.length },
               { key: "discussion", label: "Discussion", icon: MessageCircle, count: comments.length },
+              { key: "meetings", label: "Meetings", icon: Video, count: meetings.length },
               { key: "ai", label: "AI Tools", icon: Sparkles, count: null },
             ] as const
           ).map(({ key, label, icon: Icon, count }) => (
             <button
               key={key}
               onClick={() => setActiveTab(key)}
-              className={`relative flex items-center gap-2 px-4 py-2.5 text-xs font-bold uppercase tracking-widest transition-colors rounded-t-xl ${
+              className={`relative flex items-center gap-2 px-4 py-2.5 text-xs font-bold uppercase tracking-widest transition-colors rounded-t-xl border border-transparent ${
                 activeTab === key
-                  ? "text-gray-900 bg-gray-50 border border-b-0 border-gray-100"
-                  : "text-gray-400 hover:text-gray-600"
+                  ? "text-gray-900 dark:text-white bg-gray-50 dark:bg-white/5 !border-gray-100 dark:!border-white/5 border-b-0"
+                  : "text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300"
               }`}
             >
               <Icon className="w-3.5 h-3.5" />
@@ -373,8 +378,8 @@ export default function StudentThesisPageClient({
                 <span
                   className={`text-[10px] font-bold tabular-nums px-1.5 py-0.5 rounded-full ${
                     activeTab === key
-                      ? "bg-gray-900 text-white"
-                      : "bg-gray-100 text-gray-500"
+                      ? "bg-gray-900 dark:bg-white text-white dark:text-gray-900"
+                      : "bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-zinc-400"
                   }`}
                 >
                   {count}
@@ -392,16 +397,16 @@ export default function StudentThesisPageClient({
             <>
               {milestones.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
-                  <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center mx-auto mb-4">
-                    <Calendar className="w-6 h-6 text-gray-400" />
+                  <div className="w-12 h-12 rounded-2xl bg-gray-50 dark:bg-white/5 flex items-center justify-center mx-auto mb-4">
+                    <Calendar className="w-6 h-6 text-gray-400 dark:text-zinc-500" />
                   </div>
-                  <p className="text-sm font-medium text-gray-500">No milestones yet.</p>
-                  <p className="text-xs text-gray-400 mt-1">Your supervisor hasn't assigned any milestones.</p>
+                  <p className="text-sm font-medium text-gray-500 dark:text-zinc-400">No milestones yet.</p>
+                  <p className="text-xs text-gray-400 dark:text-zinc-500 mt-1">Your supervisor hasn't assigned any milestones.</p>
                 </div>
               ) : (
                 <div className="relative pl-4 space-y-8">
                   {/* Vertical Line */}
-                  <div className="absolute left-[31px] top-4 bottom-4 w-px bg-gray-200" />
+                  <div className="absolute left-[31px] top-4 bottom-4 w-px bg-gray-200 dark:bg-white/10" />
 
                   {milestones.map((m, index) => {
                     const mSubmissions = submissionsByMilestone[m.id] ?? [];
@@ -414,42 +419,42 @@ export default function StudentThesisPageClient({
                         {/* Timeline Node */}
                         <div className="shrink-0 mt-1 z-10">
                           <div
-                            className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-[11px] font-bold bg-white transition-all duration-300 group-hover:scale-110 shadow-sm ${
+                            className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-[11px] font-bold bg-white dark:bg-[#111111] transition-all duration-300 group-hover:scale-110 shadow-sm ${
                               isApproved
-                                ? "border-emerald-500 text-emerald-600 ring-4 ring-emerald-50"
+                                ? "border-emerald-500 text-emerald-600 dark:text-emerald-400 ring-4 ring-emerald-50 dark:ring-emerald-500/10"
                                 : isRejected
-                                ? "border-red-400 text-red-500 ring-4 ring-red-50"
-                                : "border-gray-900 text-gray-900 ring-4 ring-gray-50"
+                                ? "border-red-400 text-red-500 dark:text-red-400 ring-4 ring-red-50 dark:ring-red-500/10"
+                                : "border-gray-900 dark:border-white text-gray-900 dark:text-white ring-4 ring-gray-50 dark:ring-white/5"
                             }`}
                           >
-                            {isApproved ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : index + 1}
+                            {isApproved ? <CheckCircle2 className="w-4 h-4 text-emerald-500 dark:text-emerald-400" /> : index + 1}
                           </div>
                         </div>
 
                         {/* Card Content */}
-                        <div className="flex-1 min-w-0 bg-white border border-gray-100/80 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow duration-300">
+                        <div className="flex-1 min-w-0 bg-white dark:bg-white/5 border border-gray-100/80 dark:border-white/5 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow duration-300">
                           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                             <div className="flex-1">
                               <div className="flex items-center gap-3 flex-wrap mb-1.5">
-                                <h3 className="text-base font-bold text-gray-900">{m.title}</h3>
+                                <h3 className="text-base font-bold text-gray-900 dark:text-zinc-100">{m.title}</h3>
                                 <StatusBadge status={m.status} />
                               </div>
                               
                               {m.due_date && (
-                                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-50 text-[11px] font-semibold text-gray-500 mb-3">
+                                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-50 dark:bg-[#0A0A0A]/50 text-[11px] font-semibold text-gray-500 dark:text-zinc-400 mb-3">
                                   <Calendar className="w-3.5 h-3.5" />
                                   <span>Due {new Date(m.due_date).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</span>
                                 </div>
                               )}
                               
                               {m.description && (
-                                <p className="text-sm text-gray-600 leading-relaxed max-w-2xl">{m.description}</p>
+                                <p className="text-sm text-gray-600 dark:text-zinc-400 leading-relaxed max-w-2xl">{m.description}</p>
                               )}
                             </div>
 
                             {/* Actions / Upload */}
                             <div className="shrink-0">
-                              <label className="group/btn relative cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-xl text-xs font-bold uppercase tracking-wide transition-all duration-300 shadow-sm hover:shadow-md active:scale-95">
+                              <label className="group/btn relative cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-100 dark:text-gray-900 text-white rounded-xl text-xs font-bold uppercase tracking-wide transition-all duration-300 shadow-sm hover:shadow-md active:scale-95">
                                 <Upload className="w-4 h-4 transition-transform group-hover/btn:-translate-y-0.5" />
                                 {latest ? "Update Version" : "Upload Delivery"}
                                 <input
@@ -466,33 +471,33 @@ export default function StudentThesisPageClient({
                           </div>
 
                           {m.supervisor_feedback && (
-                            <div className="mt-5 flex gap-3 bg-amber-50/50 border border-amber-100 rounded-xl p-4">
-                              <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                            <div className="mt-5 flex gap-3 bg-amber-50 border border-amber-200/50 dark:bg-amber-500/10 dark:border-amber-500/20 rounded-xl p-4">
+                              <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-500 shrink-0 mt-0.5" />
                               <div>
-                                <h4 className="text-[10px] font-extrabold uppercase tracking-widest text-amber-800 mb-1.5">
+                                <h4 className="text-[10px] font-extrabold uppercase tracking-widest text-amber-900 dark:text-amber-500 mb-1.5">
                                   Supervisor Feedback
                                 </h4>
-                                <p className="text-sm text-amber-900 leading-relaxed">{m.supervisor_feedback}</p>
+                                <p className="text-sm text-amber-950 dark:text-amber-200/80 leading-relaxed">{m.supervisor_feedback}</p>
                               </div>
                             </div>
                           )}
 
                           {latest && (
-                            <div className="mt-4 flex items-center justify-between bg-gray-50/80 border border-gray-100 rounded-xl px-4 py-3 group/sub transition-colors hover:bg-gray-50 hover:border-gray-200">
+                            <div className="mt-4 flex items-center justify-between bg-gray-50/80 dark:bg-[#0A0A0A]/40 border border-gray-100 dark:border-white/5 rounded-xl px-4 py-3 group/sub transition-colors hover:bg-gray-50 dark:hover:bg-[#0A0A0A]/80 hover:border-gray-200 dark:hover:border-white/10">
                               <div className="flex items-center gap-3 min-w-0">
-                                <div className="w-8 h-8 rounded-lg bg-white border border-gray-200 flex items-center justify-center shrink-0">
-                                  <FileText className="w-4 h-4 text-gray-400" />
+                                <div className="w-8 h-8 rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-transparent flex items-center justify-center shrink-0">
+                                  <FileText className="w-4 h-4 text-gray-400 dark:text-zinc-500" />
                                 </div>
                                 <div className="min-w-0">
                                   <div className="flex items-center gap-2">
-                                    <span className="text-xs font-semibold text-gray-900 truncate">
+                                    <span className="text-xs font-semibold text-gray-900 dark:text-zinc-200 truncate">
                                       {latest.file_name}
                                     </span>
-                                    <span className="shrink-0 px-2 py-0.5 rounded-full bg-gray-900 text-white text-[10px] font-bold">
+                                    <span className="shrink-0 px-2 py-0.5 rounded-full bg-gray-900 dark:bg-white/20 text-white dark:text-white text-[10px] font-bold">
                                       v{latest.version_number}
                                     </span>
                                   </div>
-                                  <span className="text-[10px] text-gray-400 mt-0.5 block">
+                                  <span className="text-[10px] text-gray-400 dark:text-zinc-500 mt-0.5 block">
                                     Delivered {new Date(latest.created_at).toLocaleDateString()}
                                   </span>
                                 </div>
@@ -501,7 +506,7 @@ export default function StudentThesisPageClient({
                                 href={latest.file_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-gray-500 hover:text-gray-900 hover:bg-white border border-transparent hover:border-gray-200 transition-all opacity-0 group-hover/sub:opacity-100"
+                                className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white hover:bg-white dark:hover:bg-white/10 border border-transparent hover:border-gray-200 dark:hover:border-white/10 transition-all opacity-0 group-hover/sub:opacity-100"
                               >
                                 <Download className="w-3.5 h-3.5" />
                                 Download
@@ -522,11 +527,11 @@ export default function StudentThesisPageClient({
             <>
               {submissions.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
-                  <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center mx-auto mb-4">
-                    <FileText className="w-6 h-6 text-gray-400" />
+                  <div className="w-12 h-12 rounded-2xl bg-gray-50 dark:bg-white/5 flex items-center justify-center mx-auto mb-4">
+                    <FileText className="w-6 h-6 text-gray-400 dark:text-zinc-500" />
                   </div>
-                  <p className="text-sm font-medium text-gray-500">No submissions found.</p>
-                  <p className="text-xs text-gray-400 mt-1">Upload files on your milestones to see them here.</p>
+                  <p className="text-sm font-medium text-gray-500 dark:text-zinc-400">No submissions found.</p>
+                  <p className="text-xs text-gray-400 dark:text-zinc-500 mt-1">Upload files on your milestones to see them here.</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -544,40 +549,40 @@ export default function StudentThesisPageClient({
                       return (
                         <div
                           key={s.id}
-                          className="group relative flex flex-col bg-white border border-gray-100 rounded-2xl p-5 hover:border-gray-300 hover:shadow-md transition-all duration-300"
+                          className="group relative flex flex-col bg-white dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-2xl p-5 hover:border-gray-300 dark:hover:border-white/10 hover:shadow-md transition-all duration-300"
                         >
                           <div className="flex items-start justify-between mb-4">
-                            <div className="w-10 h-10 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center shrink-0 group-hover:bg-gray-900 group-hover:text-white transition-colors duration-300">
-                              <FileText className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors duration-300" />
+                            <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-[#111111] border border-gray-100 dark:border-white/5 flex items-center justify-center shrink-0 group-hover:bg-gray-900 dark:group-hover:bg-white/10 group-hover:text-white transition-colors duration-300">
+                              <FileText className="w-5 h-5 text-gray-400 dark:text-zinc-500 group-hover:text-white transition-colors duration-300" />
                             </div>
                             {isLatest && (
-                              <span className="px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-md text-[10px] font-bold uppercase tracking-wider">
+                              <span className="px-2 py-1 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-500/20 rounded-md text-[10px] font-bold uppercase tracking-wider">
                                 Latest
                               </span>
                             )}
                           </div>
                           
                           <div className="flex-1">
-                            <h4 className="text-sm font-bold text-gray-900 line-clamp-1 mb-1" title={s.file_name}>
+                            <h4 className="text-sm font-bold text-gray-900 dark:text-zinc-100 line-clamp-1 mb-1" title={s.file_name}>
                               {s.file_name}
                             </h4>
                             <div className="flex items-center gap-2 mb-3">
-                              <span className="px-2 py-0.5 rounded-md bg-gray-100 text-gray-700 text-[10px] font-bold">
+                              <span className="px-2 py-0.5 rounded-md bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-zinc-300 text-[10px] font-bold">
                                 v{s.version_number}
                               </span>
-                              <p className="text-xs text-gray-500 line-clamp-1">{milestone?.title ?? "Unknown Milestone"}</p>
+                              <p className="text-xs text-gray-500 dark:text-zinc-500 line-clamp-1">{milestone?.title ?? "Unknown Milestone"}</p>
                             </div>
                           </div>
 
-                          <div className="flex items-center justify-between pt-4 border-t border-gray-50 mt-auto">
-                            <p className="text-[10px] font-medium text-gray-400">
+                          <div className="flex items-center justify-between pt-4 border-t border-gray-50 dark:border-white/5 mt-auto">
+                            <p className="text-[10px] font-medium text-gray-400 dark:text-zinc-500">
                               {new Date(s.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
                             </p>
                             <a
                               href={s.file_url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="w-8 h-8 rounded-full bg-gray-50 text-gray-600 flex items-center justify-center hover:bg-gray-100 hover:text-gray-900 transition-colors"
+                              className="w-8 h-8 rounded-full bg-gray-50 dark:bg-white/5 text-gray-600 dark:text-zinc-400 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white transition-colors"
                               title="Download"
                             >
                               <Download className="w-4 h-4" />
@@ -600,21 +605,21 @@ export default function StudentThesisPageClient({
                 <div className="flex flex-col justify-end pb-4">
                   {comments.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full text-center gap-3 py-16">
-                      <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-xl">
+                      <div className="w-12 h-12 rounded-2xl bg-gray-50 dark:bg-white/5 flex items-center justify-center text-xl">
                         💬
                       </div>
-                      <p className="text-gray-500 text-sm font-medium">No messages yet</p>
-                      <p className="text-gray-400 text-xs">Be the first to say something!</p>
+                      <p className="text-gray-500 dark:text-zinc-400 text-sm font-medium">No messages yet</p>
+                      <p className="text-gray-400 dark:text-zinc-500 text-xs">Be the first to say something!</p>
                     </div>
                   ) : (
                     groupedComments.map(({ date, messages: dayMsgs }) => (
                       <div key={date}>
                         <div className="flex items-center gap-3 my-5">
-                          <div className="flex-1 h-px bg-gray-100" />
-                          <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest shrink-0">
+                          <div className="flex-1 h-px bg-gray-100 dark:bg-white/10" />
+                          <span className="text-[10px] font-semibold text-gray-400 dark:text-zinc-500 uppercase tracking-widest shrink-0">
                             {date}
                           </span>
-                          <div className="flex-1 h-px bg-gray-100" />
+                          <div className="flex-1 h-px bg-gray-100 dark:bg-white/10" />
                         </div>
 
                         <div className="space-y-0.5">
@@ -637,7 +642,7 @@ export default function StudentThesisPageClient({
                               >
                                 <div className="shrink-0 w-8">
                                   {showMeta && (
-                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold ${isOwn ? "bg-gray-900" : getAvatarColor(msg.author_id)}`}>
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold ${isOwn ? "bg-gray-900 dark:bg-white dark:text-gray-900" : getAvatarColor(msg.author_id)}`}>
                                       {isOwn ? getInitials(studentName) : getInitials(authorName)}
                                     </div>
                                   )}
@@ -646,23 +651,23 @@ export default function StudentThesisPageClient({
                                 <div className={`flex flex-col max-w-[80%] ${isOwn ? "items-end" : "items-start"}`}>
                                   {showMeta && (
                                     <div className={`flex items-baseline gap-2 mb-1 ${isOwn ? "flex-row-reverse" : "flex-row"}`}>
-                                      <span className="text-xs font-semibold text-gray-800">{isOwn ? "You" : authorName}</span>
-                                      <span className="text-[10px] text-gray-400">{formatTime(msg.created_at)}</span>
+                                      <span className="text-xs font-semibold text-gray-800 dark:text-zinc-200">{isOwn ? "You" : authorName}</span>
+                                      <span className="text-[10px] text-gray-400 dark:text-zinc-500">{formatTime(msg.created_at)}</span>
                                     </div>
                                   )}
 
                                   {textLines.length > 0 && (
                                     <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap break-words ${
                                       isOwn
-                                        ? "bg-gray-900 text-white rounded-tr-sm"
-                                        : "bg-gray-50 border border-gray-100 text-gray-800 rounded-tl-sm"
+                                        ? "bg-gray-900 text-white dark:bg-white/10 dark:text-zinc-100 rounded-tr-sm"
+                                        : "bg-gray-50 border border-gray-100 dark:border-white/5 dark:bg-white/5 text-gray-800 dark:text-zinc-200 rounded-tl-sm"
                                     }`}>
                                       {textLines.map((line, i) => <p key={i}>{line}</p>)}
                                     </div>
                                   )}
 
                                   {!showMeta && (
-                                    <span className="text-[10px] text-gray-400 mt-0.5 px-1">{formatTime(msg.created_at)}</span>
+                                    <span className="text-[10px] text-gray-400 dark:text-zinc-500 mt-0.5 px-1">{formatTime(msg.created_at)}</span>
                                   )}
                                 </div>
                               </div>
@@ -676,8 +681,8 @@ export default function StudentThesisPageClient({
               </div>
 
               {/* Input Area */}
-              <div className="shrink-0 pt-4 mt-2 border-t border-gray-100">
-                <div className="flex items-end gap-2 bg-gray-50 border border-gray-200 rounded-2xl px-3 py-2.5 focus-within:border-gray-400 focus-within:bg-white transition-colors">
+              <div className="shrink-0 pt-4 mt-2 border-t border-gray-100 dark:border-white/10">
+                <div className="flex items-center gap-2 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-white/10 rounded-2xl px-3 py-2 focus-within:border-gray-400 dark:focus-within:border-white/30 focus-within:bg-white dark:focus-within:bg-[#1A1A1A] transition">
                   <textarea
                     ref={textareaRef}
                     rows={1}
@@ -685,22 +690,22 @@ export default function StudentThesisPageClient({
                     onChange={autoResize}
                     onKeyDown={handleKeyDown}
                     placeholder="Ask a question or respond to feedback..."
-                    className="flex-1 bg-transparent text-sm resize-none focus:outline-none text-gray-800 placeholder-gray-400 leading-relaxed overflow-y-auto self-center pl-2 my-0.5"
+                    className="flex-1 bg-transparent text-sm resize-none focus:outline-none text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-zinc-600 leading-relaxed overflow-y-auto self-center pl-2"
                     style={{ maxHeight: 120 }}
                   />
 
-                  <div className="flex-none pb-0.5">
+                  <div className="flex-none flex items-center gap-1">
                     <button
                       onClick={handleAddComment}
                       disabled={submittingComment || !commentText.trim()}
-                      className="w-8 h-8 flex flex-col items-center justify-center bg-gray-900 hover:bg-gray-800 disabled:opacity-40 text-white rounded-xl transition-colors"
+                      className="w-8 h-8 flex items-center justify-center bg-gray-900 dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-40 text-white dark:text-gray-900 rounded-xl transition"
                     >
                       {submittingComment ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send size={14} className="ml-0.5" />}
                     </button>
                   </div>
                 </div>
                 <div className="flex justify-between items-center mt-2 px-1">
-                   <p className="text-[10px] text-gray-400 select-none">
+                   <p className="text-[10px] text-gray-400 dark:text-zinc-600 select-none">
                      Enter to send · Shift+Enter for new line
                    </p>
                 </div>
@@ -714,14 +719,14 @@ export default function StudentThesisPageClient({
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <h3 className="text-base font-bold text-gray-900">Thesis Drafts</h3>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <h3 className="text-base font-bold text-gray-900 dark:text-zinc-100">Thesis Drafts</h3>
+                  <p className="text-xs text-gray-500 dark:text-zinc-400 mt-1">
                     Upload full thesis draft versions for your supervisor to review.
                   </p>
                 </div>
                 <button
                   onClick={() => setShowDraftModal(true)}
-                  className="shrink-0 inline-flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold uppercase tracking-widest px-5 py-2.5 rounded-xl transition-all shadow-sm active:scale-95"
+                  className="shrink-0 inline-flex items-center gap-2 bg-gray-900 hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-200 text-white dark:text-gray-900 text-xs font-bold uppercase tracking-widest px-5 py-2.5 rounded-xl transition-all shadow-sm active:scale-95"
                 >
                   <Upload className="w-4 h-4" />
                   Upload Draft
@@ -729,12 +734,12 @@ export default function StudentThesisPageClient({
               </div>
 
               {drafts.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 text-center border border-dashed border-gray-200 rounded-3xl bg-gray-50/50">
-                  <div className="w-14 h-14 rounded-2xl bg-white border border-gray-100 shadow-sm flex items-center justify-center mx-auto mb-4">
-                    <BookOpen className="w-6 h-6 text-gray-400" />
+                <div className="flex flex-col items-center justify-center py-16 text-center border border-dashed border-gray-200 dark:border-white/10 rounded-3xl bg-gray-50/50 dark:bg-white/5">
+                  <div className="w-14 h-14 rounded-2xl bg-white dark:bg-[#111111] border border-gray-100 dark:border-white/5 shadow-sm flex items-center justify-center mx-auto mb-4">
+                    <BookOpen className="w-6 h-6 text-gray-400 dark:text-zinc-500" />
                   </div>
-                  <h4 className="text-sm font-bold text-gray-700">No drafts uploaded yet</h4>
-                  <p className="text-xs text-gray-500 mt-1.5 max-w-sm mx-auto leading-relaxed">
+                  <h4 className="text-sm font-bold text-gray-700 dark:text-zinc-300">No drafts uploaded yet</h4>
+                  <p className="text-xs text-gray-500 dark:text-zinc-500 mt-1.5 max-w-sm mx-auto leading-relaxed">
                     Upload your first thesis document here. Each upload is versioned automatically, so your supervisor can track your progress.
                   </p>
                 </div>
@@ -746,43 +751,43 @@ export default function StudentThesisPageClient({
                     .map((d, idx) => (
                       <div
                         key={d.id}
-                        className="group relative flex flex-col bg-white border border-gray-100 rounded-2xl p-5 hover:border-gray-300 hover:shadow-md transition-all duration-300"
+                        className="group relative flex flex-col bg-white dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-2xl p-5 hover:border-gray-300 dark:hover:border-white/10 hover:shadow-md transition-all duration-300"
                       >
                         <div className="flex items-start justify-between mb-4">
-                          <div className="w-12 h-12 rounded-xl bg-gray-900 text-white flex items-center justify-center text-sm font-bold shadow-sm transition-transform group-hover:scale-105">
+                          <div className="w-12 h-12 rounded-xl bg-gray-900 dark:bg-[#111111] text-white flex items-center justify-center text-sm font-bold shadow-sm transition-transform group-hover:scale-105">
                             v{d.version_number}
                           </div>
                           {idx === 0 && (
-                            <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-md text-[10px] font-bold uppercase tracking-wider">
+                            <span className="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-500/20 rounded-md text-[10px] font-bold uppercase tracking-wider">
                               Latest
                             </span>
                           )}
                         </div>
                         
                         <div className="flex-1 min-w-0">
-                          <h4 className="text-sm font-bold text-gray-900 mb-1.5 line-clamp-1" title={d.file_name}>
+                          <h4 className="text-sm font-bold text-gray-900 dark:text-zinc-100 mb-1.5 line-clamp-1" title={d.file_name}>
                             {d.file_name}
                           </h4>
-                          <p className="text-[11px] font-medium text-gray-400">
+                          <p className="text-[11px] font-medium text-gray-400 dark:text-zinc-500">
                             Uploaded {new Date(d.uploaded_at).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                           </p>
                           
                           {d.student_note && (
-                            <div className="mt-4 flex items-start gap-2 bg-amber-50/50 border border-amber-100/50 rounded-lg p-3">
+                            <div className="mt-4 flex items-start gap-2 bg-amber-50/50 dark:bg-amber-500/10 border border-amber-100/50 dark:border-amber-500/20 rounded-lg p-3">
                               <StickyNote className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
-                              <p className="text-xs text-amber-900 italic leading-relaxed line-clamp-3">
+                              <p className="text-xs text-amber-900 dark:text-amber-200 italic leading-relaxed line-clamp-3">
                                 {d.student_note}
                               </p>
                             </div>
                           )}
                         </div>
 
-                        <div className="pt-4 mt-4 border-t border-gray-50 flex justify-end">
+                        <div className="pt-4 mt-4 border-t border-gray-50 dark:border-white/5 flex justify-end">
                           <a
                             href={d.file_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-gray-600 bg-gray-50 hover:bg-gray-900 hover:text-white transition-colors"
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-gray-600 dark:text-zinc-300 bg-gray-50 dark:bg-white/5 hover:bg-gray-900 hover:text-white dark:hover:bg-white/10 dark:hover:text-white transition-colors"
                           >
                             <Download className="w-3.5 h-3.5" />
                             Download
@@ -795,17 +800,28 @@ export default function StudentThesisPageClient({
             </div>
           )}
 
+          {/* ── Meetings ── */}
+          {activeTab === "meetings" && thesis?.supervisor && (
+            <MeetingsTab 
+              role="student" 
+              thesisId={thesis.id} 
+              meetings={meetings} 
+              professorId={thesis.supervisor_id}
+              participantName={`${thesis.supervisor.first_name} ${thesis.supervisor.last_name}`}
+            />
+          )}
+
           {/* ── AI Tools ── */}
           {activeTab === "ai" && (
             <div className="max-w-lg">
               <div className="flex items-start justify-between mb-8">
                 <div>
-                  <h3 className="text-base font-bold text-gray-900">AI Thesis Assistant</h3>
-                  <p className="text-xs text-gray-500 mt-1.5 leading-relaxed max-w-sm">
+                  <h3 className="text-base font-bold text-gray-900 dark:text-zinc-100">AI Thesis Assistant</h3>
+                  <p className="text-xs text-gray-500 dark:text-zinc-400 mt-1.5 leading-relaxed max-w-sm">
                     Intelligent contextual tools are coming soon to support your academic writing and supervision.
                   </p>
                 </div>
-                <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-500 text-[10px] font-bold uppercase tracking-wider shrink-0 border border-gray-200">
+                <span className="px-3 py-1 rounded-full bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-zinc-400 text-[10px] font-bold uppercase tracking-wider shrink-0 border border-gray-200 dark:border-white/10">
                   Coming Soon
                 </span>
               </div>
@@ -818,13 +834,13 @@ export default function StudentThesisPageClient({
                 ].map(({ label, icon: Icon }) => (
                   <div
                     key={label}
-                    className="flex items-center gap-3 px-5 py-4 rounded-xl bg-white border border-gray-100 opacity-60 hover:opacity-100 hover:shadow-sm hover:border-gray-200 transition-all cursor-not-allowed"
+                    className="flex items-center gap-3 px-5 py-4 rounded-xl bg-white dark:bg-white/5 border border-gray-100 dark:border-white/5 opacity-60 hover:opacity-100 hover:shadow-sm hover:border-gray-200 dark:hover:border-white/10 transition-all cursor-not-allowed"
                     title="Coming soon"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center shrink-0">
-                      <Icon className="w-4 h-4 text-gray-500" />
+                    <div className="w-8 h-8 rounded-lg bg-gray-50 dark:bg-[#111111] border border-transparent dark:border-white/5 flex items-center justify-center shrink-0">
+                      <Icon className="w-4 h-4 text-gray-500 dark:text-zinc-500" />
                     </div>
-                    <span className="text-xs text-gray-700 font-bold">{label}</span>
+                    <span className="text-xs text-gray-700 dark:text-zinc-300 font-bold">{label}</span>
                   </div>
                 ))}
               </div>
@@ -837,17 +853,17 @@ export default function StudentThesisPageClient({
       {/* ── Draft Upload Modal ── */}
       {showDraftModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={closeDraftModal} />
-          <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+          <div className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm" onClick={closeDraftModal} />
+          <div className="relative w-full max-w-md bg-white dark:bg-[#111111] rounded-2xl shadow-2xl border border-gray-200 dark:border-white/10 overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 dark:border-white/5">
               <div>
-                <h2 className="text-base font-semibold text-gray-900">Upload Thesis Draft</h2>
-                <p className="text-xs text-gray-500 mt-0.5">PDF or DOCX · Each upload becomes a new version</p>
+                <h2 className="text-base font-semibold text-gray-900 dark:text-white">Upload Thesis Draft</h2>
+                <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">PDF or DOCX · Each upload becomes a new version</p>
               </div>
               <button
                 onClick={closeDraftModal}
                 disabled={uploadingDraft}
-                className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition disabled:opacity-40"
+                className="p-1.5 rounded-lg text-gray-400 dark:text-zinc-500 hover:text-gray-700 dark:hover:text-zinc-300 hover:bg-gray-100 dark:hover:bg-white/10 transition disabled:opacity-40"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -855,29 +871,29 @@ export default function StudentThesisPageClient({
 
             <div className="px-6 py-5 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">
-                  File <span className="text-red-500">*</span>
+                <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-2 uppercase tracking-wide">
+                  File <span className="text-red-500 dark:text-red-400">*</span>
                 </label>
                 <div
                   onClick={() => draftFileRef.current?.click()}
                   className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-xl px-4 py-7 cursor-pointer transition-colors ${
                     draftFile
-                      ? "border-gray-900 bg-gray-50"
-                      : "border-gray-200 hover:border-gray-400 hover:bg-gray-50"
+                      ? "border-gray-900 bg-gray-50 dark:border-white/20 dark:bg-white/5"
+                      : "border-gray-200 dark:border-white/10 hover:border-gray-400 dark:hover:border-white/20 hover:bg-gray-50 dark:hover:bg-white/5"
                   }`}
                 >
                   {draftFile ? (
                     <>
-                      <FileText className="w-6 h-6 text-gray-700" />
-                      <span className="text-sm font-medium text-gray-800 text-center break-all">
+                      <FileText className="w-6 h-6 text-gray-700 dark:text-zinc-300" />
+                      <span className="text-sm font-medium text-gray-800 dark:text-zinc-200 text-center break-all">
                         {draftFile.name}
                       </span>
-                      <span className="text-xs text-gray-400">Click to change file</span>
+                      <span className="text-xs text-gray-400 dark:text-zinc-500">Click to change file</span>
                     </>
                   ) : (
                     <>
-                      <Upload className="w-6 h-6 text-gray-400" />
-                      <span className="text-sm text-gray-500">Click to select PDF or DOCX</span>
+                      <Upload className="w-6 h-6 text-gray-400 dark:text-zinc-500" />
+                      <span className="text-sm text-gray-500 dark:text-zinc-400">Click to select PDF or DOCX</span>
                     </>
                   )}
                 </div>
@@ -894,9 +910,9 @@ export default function StudentThesisPageClient({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">
+                <label className="block text-xs font-semibold text-gray-700 dark:text-zinc-300 mb-1.5 uppercase tracking-wide">
                   Note{" "}
-                  <span className="text-gray-400 font-normal normal-case tracking-normal">
+                  <span className="text-gray-400 dark:text-zinc-500 font-normal normal-case tracking-normal">
                     (optional)
                   </span>
                 </label>
@@ -905,12 +921,12 @@ export default function StudentThesisPageClient({
                   onChange={(e) => setDraftNote(e.target.value)}
                   rows={3}
                   placeholder="e.g. Added methodology section, revised introduction…"
-                  className="w-full text-sm border border-gray-200 rounded-xl px-3.5 py-2.5 resize-none focus:outline-none focus:ring-2 focus:ring-gray-900 bg-gray-50 transition"
+                  className="w-full text-sm border border-gray-200 dark:border-white/10 rounded-xl px-3.5 py-2.5 resize-none focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-white/20 bg-gray-50 dark:bg-[#0A0A0A] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-600 transition"
                 />
               </div>
 
               {draftError && (
-                <p className="text-xs text-red-500 flex items-center gap-1.5">
+                <p className="text-xs text-red-500 dark:text-red-400 flex items-center gap-1.5">
                   <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                   {draftError}
                 </p>
@@ -921,14 +937,14 @@ export default function StudentThesisPageClient({
                   type="button"
                   onClick={closeDraftModal}
                   disabled={uploadingDraft}
-                  className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 border border-gray-200 rounded-xl hover:bg-gray-50 transition disabled:opacity-40"
+                  className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-zinc-300 border border-gray-200 dark:border-white/10 rounded-xl hover:bg-gray-50 dark:hover:bg-white/5 transition disabled:opacity-40"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleDraftUpload}
                   disabled={uploadingDraft || !draftFile}
-                  className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gray-900 text-white text-sm font-medium disabled:opacity-50 hover:bg-gray-800 transition"
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-medium disabled:opacity-50 hover:bg-gray-800 dark:hover:bg-gray-200 transition"
                 >
                   {uploadingDraft && <Loader2 className="w-4 h-4 animate-spin" />}
                   {uploadingDraft ? "Uploading…" : "Upload Draft"}
@@ -947,7 +963,7 @@ function StatusBadge({ status }: { status: string }) {
 
   if (normalized === "approved" || normalized === "completed") {
     return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-900 text-white text-[10px] font-bold uppercase tracking-wide">
+      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-[10px] font-bold uppercase tracking-wide">
         <CheckCircle2 className="w-3 h-3" />
         {normalized === "approved" ? "Approved" : "Completed"}
       </span>
@@ -956,7 +972,7 @@ function StatusBadge({ status }: { status: string }) {
 
   if (normalized === "rejected") {
     return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-gray-500 border border-gray-200 text-[10px] font-bold uppercase tracking-wide">
+      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-500/20 text-[10px] font-bold uppercase tracking-wide">
         <AlertCircle className="w-3 h-3" />
         Rejected
       </span>
@@ -964,7 +980,7 @@ function StatusBadge({ status }: { status: string }) {
   }
 
   return (
-    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 text-[10px] font-bold uppercase tracking-wide">
+    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-zinc-300 text-[10px] font-bold uppercase tracking-wide">
       <Clock className="w-3 h-3" />
       {status || "Pending"}
     </span>

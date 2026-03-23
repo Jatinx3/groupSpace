@@ -1,4 +1,6 @@
 import "./globals.css";
+import { ThemeProvider } from "../components/providers/ThemeProvider";
+import CookieBanner from "../components/layout/CookieBanner";
 
 export const metadata = {
   title: "Groupspace",
@@ -17,8 +19,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className={inter.variable}>{children}</body>
+    <html lang="en" suppressHydrationWarning>
+      <body className={inter.variable}>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+          {children}
+          <CookieBanner />
+        </ThemeProvider>
+      </body>
     </html>
   );
 }

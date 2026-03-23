@@ -156,8 +156,8 @@ function InviteModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col sm:flex-row">
+    <div className="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-[#111111] dark:border dark:border-white/10 w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col sm:flex-row">
 
         {/* LEFT — dark code panel */}
         <div className="bg-gray-900 sm:w-[52%] px-8 py-8 flex flex-col justify-between relative">
@@ -236,8 +236,8 @@ function InviteModal({
           <div>
             <div className="flex items-center justify-between mb-1">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Or invite directly</p>
-                <h2 className="text-base font-bold text-gray-900 mt-0.5">Add by email</h2>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-zinc-500">Or invite directly</p>
+                <h2 className="text-base font-bold text-gray-900 dark:text-white mt-0.5">Add by email</h2>
               </div>
               <button
                 onClick={onClose}
@@ -247,49 +247,49 @@ function InviteModal({
               </button>
             </div>
 
-            <p className="text-sm text-gray-400 mt-3 mb-6 leading-relaxed">
+            <p className="text-sm text-gray-400 dark:text-zinc-400 mt-3 mb-6 leading-relaxed">
               Enter a student's email address and they'll be added to the team instantly.
             </p>
 
             <div className="space-y-3">
-              <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 focus-within:border-gray-900 focus-within:bg-white transition">
-                <Mail className="w-4 h-4 text-gray-400 shrink-0" />
+              <div className="flex items-center gap-2 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-white/10 rounded-xl px-3 focus-within:border-gray-900 dark:focus-within:border-white/30 focus-within:bg-white dark:focus-within:bg-[#1A1A1A] transition">
+                <Mail className="w-4 h-4 text-gray-400 dark:text-zinc-500 shrink-0" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleEmailInvite()}
                   placeholder="student@university.edu"
-                  className="flex-1 py-3 text-sm bg-transparent focus:outline-none text-gray-900 placeholder-gray-400"
+                  className="flex-1 py-3 text-sm bg-transparent focus:outline-none text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-600"
                 />
               </div>
 
               <button
                 onClick={handleEmailInvite}
                 disabled={isPending || !email.trim()}
-                className="w-full flex items-center justify-center gap-2 py-3 bg-gray-900 hover:bg-gray-800 disabled:opacity-40 text-white rounded-xl text-sm font-bold transition"
+                className="w-full flex items-center justify-center gap-2 py-3 bg-gray-900 dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-40 text-white dark:text-gray-900 rounded-xl text-sm font-bold transition"
               >
                 <Send className="w-3.5 h-3.5" />
                 {isPending ? "Sending..." : "Send Invite"}
               </button>
 
               {emailStatus === "success" && (
-                <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5">
-                  <Check className="w-4 h-4 text-gray-700 shrink-0" />
-                  <p className="text-sm font-medium text-gray-700">Student added successfully!</p>
+                <div className="flex items-center gap-2 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-white/10 rounded-xl px-3 py-2.5">
+                  <Check className="w-4 h-4 text-gray-700 dark:text-zinc-300 shrink-0" />
+                  <p className="text-sm font-medium text-gray-700 dark:text-zinc-300">Student added successfully!</p>
                 </div>
               )}
               {emailStatus === "error" && (
-                <div className="bg-red-50 border border-red-100 rounded-xl px-3 py-2.5">
-                  <p className="text-sm text-red-600">{errorMsg}</p>
+                <div className="bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 rounded-xl px-3 py-2.5">
+                  <p className="text-sm text-red-600 dark:text-red-400">{errorMsg}</p>
                 </div>
               )}
             </div>
           </div>
 
-          <div className="mt-8 flex items-start gap-2 bg-gray-50 border border-gray-100 rounded-xl px-4 py-3">
-            <div className="w-1.5 h-1.5 rounded-full bg-gray-400 mt-1.5 shrink-0" />
-            <p className="text-xs text-gray-500 leading-relaxed">
+          <div className="mt-8 flex items-start gap-2 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-xl px-4 py-3">
+            <div className="w-1.5 h-1.5 rounded-full bg-gray-400 dark:bg-zinc-600 mt-1.5 shrink-0" />
+            <p className="text-xs text-gray-500 dark:text-zinc-400 leading-relaxed">
               Only share the invite code with enrolled students. Anyone with the code can request to join.
             </p>
           </div>
@@ -335,30 +335,30 @@ export default function ProfessorTeamWorkspaceClient({
       <div className="flex items-center gap-2">
         <Link
           href={`/professor/courses/${courseId}`}
-          className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 transition"
+          className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-200 transition"
         >
           <ArrowLeft className="w-4 h-4" />
           {courseName}
         </Link>
-        <span className="text-gray-300">/</span>
-        <span className="text-sm text-gray-700 font-medium">{teamName}</span>
+        <span className="text-gray-300 dark:text-zinc-600">/</span>
+        <span className="text-sm text-gray-700 dark:text-zinc-300 font-medium">{teamName}</span>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 p-6">
+      <div className="bg-white dark:bg-[#111111] rounded-2xl border border-gray-100 dark:border-white/10 p-6 transition-colors">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-gray-900 flex items-center justify-center shrink-0">
-              <Users className="w-5 h-5 text-white" />
+            <div className="w-12 h-12 rounded-2xl bg-gray-900 dark:bg-white flex items-center justify-center shrink-0">
+              <Users className="w-5 h-5 text-white dark:text-gray-900" />
             </div>
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Team Workspace</p>
-              <h1 className="text-xl font-bold text-gray-900 tracking-tight mt-0.5">{teamName}</h1>
-              <p className="text-sm text-gray-400 mt-0.5">{courseName} · {members.length} member{members.length !== 1 ? "s" : ""}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 dark:text-zinc-500">Team Workspace</p>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight mt-0.5">{teamName}</h1>
+              <p className="text-sm text-gray-400 dark:text-zinc-400 mt-0.5">{courseName} · {members.length} member{members.length !== 1 ? "s" : ""}</p>
             </div>
           </div>
           <button
             onClick={() => setShowInviteModal(true)}
-            className="flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition shrink-0"
+            className="flex items-center gap-2 bg-gray-900 dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-200 text-white dark:text-gray-900 px-4 py-2.5 rounded-xl text-sm font-semibold transition shrink-0"
           >
             <UserPlus className="w-4 h-4" />
             Invite Members
@@ -366,22 +366,22 @@ export default function ProfessorTeamWorkspaceClient({
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-        <div className="flex border-b border-gray-100 overflow-x-auto">
+      <div className="bg-white dark:bg-[#111111] rounded-2xl border border-gray-100 dark:border-white/10 overflow-hidden transition-colors">
+        <div className="flex border-b border-gray-100 dark:border-white/10 overflow-x-auto">
           {tabs.map(({ key, label, icon: Icon, count }) => (
             <button
               key={key}
               onClick={() => setActiveTab(key)}
               className={`flex items-center gap-2 px-5 py-4 text-sm font-semibold whitespace-nowrap transition border-b-2 -mb-px shrink-0 ${
                 activeTab === key
-                  ? "border-gray-900 text-gray-900 bg-gray-50"
-                  : "border-transparent text-gray-400 hover:text-gray-600"
+                  ? "border-gray-900 dark:border-white text-gray-900 dark:text-white bg-gray-50 dark:bg-white/5"
+                  : "border-transparent text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300 hover:bg-gray-50 dark:hover:bg-white/5"
               }`}
             >
               <Icon className="w-4 h-4" />
               {label}
               {count !== undefined && count > 0 && (
-                <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${activeTab === key ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-500"}`}>
+                <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${activeTab === key ? "bg-gray-900 dark:bg-white text-white dark:text-gray-900" : "bg-gray-100 dark:bg-[#1A1A1A] text-gray-500 dark:text-zinc-400"}`}>
                   {count}
                 </span>
               )}
@@ -391,37 +391,37 @@ export default function ProfessorTeamWorkspaceClient({
 
         {activeTab === "info" && (
           <div className="p-6">
-            <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-4">
+            <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-zinc-500 mb-4">
               Members · {members.length}
             </p>
             <div className="space-y-2">
               {members.map((member) => (
-                <div key={member.id} className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 hover:bg-gray-50 transition">
+                <div key={member.id} className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/5 transition">
                   <LocalAvatar name={`${member.firstName} ${member.lastName}`} size={38} />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-semibold text-gray-900">{member.firstName} {member.lastName}</p>
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white">{member.firstName} {member.lastName}</p>
                       {member.role === "LEADER" && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-gray-900 bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded-full">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-gray-900 dark:text-gray-900 bg-gray-100 dark:bg-white border border-gray-200 dark:border-white/10 px-1.5 py-0.5 rounded-full">
                           <Crown className="w-2.5 h-2.5" />
                           Leader
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-gray-400 truncate">{member.email}</p>
+                    <p className="text-xs text-gray-400 dark:text-zinc-400 truncate">{member.email}</p>
                   </div>
-                  <span className="text-[10px] font-medium text-gray-400 bg-gray-50 border border-gray-100 px-2 py-1 rounded-full shrink-0">
+                  <span className="text-[10px] font-medium text-gray-400 dark:text-zinc-300 bg-gray-50 dark:bg-white/10 border border-gray-100 dark:border-white/10 px-2 py-1 rounded-full shrink-0">
                     {member.role === "LEADER" ? "Leader" : "Member"}
                   </span>
                 </div>
               ))}
               {members.length === 0 && (
                 <div className="text-center py-10">
-                  <Users className="w-8 h-8 text-gray-200 mx-auto mb-2" />
-                  <p className="text-sm text-gray-400">No members yet.</p>
+                  <Users className="w-8 h-8 text-gray-200 dark:text-zinc-700 mx-auto mb-2" />
+                  <p className="text-sm text-gray-400 dark:text-zinc-500">No members yet.</p>
                   <button
                     onClick={() => setShowInviteModal(true)}
-                    className="mt-3 text-sm text-gray-900 font-medium underline underline-offset-2"
+                    className="mt-3 text-sm text-gray-900 dark:text-white font-medium underline underline-offset-2"
                   >
                     Invite the first member
                   </button>
@@ -499,21 +499,21 @@ function ReadOnlyStructureTab({
           { label: "Folders", value: folders.length },
           { label: "File Types", value: Object.keys(fileTypes).length },
         ].map(({ label, value }) => (
-          <div key={label} className="bg-gray-50 rounded-xl p-4 text-center">
-            <p className="text-2xl font-extrabold text-gray-900 tabular-nums">{value}</p>
-            <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 mt-1">{label}</p>
+          <div key={label} className="bg-gray-50 dark:bg-white/5 rounded-xl p-4 text-center">
+            <p className="text-2xl font-extrabold text-gray-900 dark:text-white tabular-nums">{value}</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-500 mt-1">{label}</p>
           </div>
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* File Explorer */}
-        <div className="lg:col-span-2 border border-gray-100 rounded-2xl overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-            <h2 className="text-sm font-bold text-gray-800">File Explorer</h2>
+        <div className="lg:col-span-2 border border-gray-100 dark:border-white/10 rounded-2xl overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-white/10">
+            <h2 className="text-sm font-bold text-gray-800 dark:text-zinc-200">File Explorer</h2>
             <a
               href={`/api/teams/${teamId}/download`}
-              className="flex items-center gap-1.5 text-xs font-semibold border border-gray-200 hover:bg-gray-50 px-3 py-1.5 rounded-lg transition"
+              className="flex items-center gap-1.5 text-xs font-semibold border border-gray-200 dark:border-white/10 text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-white/5 px-3 py-1.5 rounded-lg transition"
             >
               <Download className="w-3.5 h-3.5" />
               Download Project
@@ -523,8 +523,8 @@ function ReadOnlyStructureTab({
           <div className="p-4 space-y-0.5 max-h-[480px] overflow-auto">
             {tree.length === 0 && rootFiles.length === 0 ? (
               <div className="text-center py-12">
-                <Folder className="w-8 h-8 text-gray-200 mx-auto mb-2" />
-                <p className="text-sm text-gray-400">No files or folders yet</p>
+                <Folder className="w-8 h-8 text-gray-200 dark:text-zinc-700 mx-auto mb-2" />
+                <p className="text-sm text-gray-400 dark:text-zinc-500">No files or folders yet</p>
               </div>
             ) : (
               <>
@@ -541,37 +541,37 @@ function ReadOnlyStructureTab({
 
         {/* Right panel */}
         <div className="space-y-4">
-          <div className="border border-gray-100 rounded-2xl p-5">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-4">File Types</h3>
+          <div className="border border-gray-100 dark:border-white/10 rounded-2xl p-5">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-500 mb-4">File Types</h3>
             {Object.keys(fileTypes).length === 0 ? (
-              <p className="text-xs text-gray-400">No files yet</p>
+              <p className="text-xs text-gray-400 dark:text-zinc-500">No files yet</p>
             ) : (
               <div className="space-y-2.5">
                 {Object.entries(fileTypes).map(([type, count]) => (
                   <div key={type} className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-gray-900" />
-                      <span className="text-xs font-semibold text-gray-700 uppercase">{type}</span>
+                      <div className="w-1.5 h-1.5 rounded-full bg-gray-900 dark:bg-white" />
+                      <span className="text-xs font-semibold text-gray-700 dark:text-zinc-300 uppercase">{type}</span>
                     </div>
-                    <span className="text-xs text-gray-400">{count} file{count !== 1 ? "s" : ""}</span>
+                    <span className="text-xs text-gray-400 dark:text-zinc-500">{count} file{count !== 1 ? "s" : ""}</span>
                   </div>
                 ))}
               </div>
             )}
           </div>
 
-          <div className="border border-gray-100 rounded-2xl p-5">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-4">Recent Files</h3>
+          <div className="border border-gray-100 dark:border-white/10 rounded-2xl p-5">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-500 mb-4">Recent Files</h3>
             {files.length === 0 ? (
-              <p className="text-xs text-gray-400">No files yet</p>
+              <p className="text-xs text-gray-400 dark:text-zinc-500">No files yet</p>
             ) : (
               <div className="space-y-2.5">
                 {files.slice(0, 6).map((file) => (
                   <div key={file.id} className="flex items-center gap-2">
-                    <File className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                    <p className="text-xs text-gray-600 truncate flex-1">{file.fileName}</p>
+                    <File className="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500 shrink-0" />
+                    <p className="text-xs text-gray-600 dark:text-zinc-400 truncate flex-1">{file.fileName}</p>
                     <a href={`/api/files/${file.id}`} target="_blank" rel="noopener noreferrer">
-                      <Download className="w-3 h-3 text-gray-400 hover:text-gray-900 transition" />
+                      <Download className="w-3 h-3 text-gray-400 dark:text-zinc-500 hover:text-gray-900 dark:hover:text-white transition" />
                     </a>
                   </div>
                 ))}
@@ -593,16 +593,16 @@ function ReadOnlyTreeNode({ node, expanded, toggle, level }: { node: any; expand
   return (
     <div>
       <div
-        className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-gray-50 transition group cursor-pointer"
+        className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition group cursor-pointer"
         style={{ paddingLeft: `${8 + level * 20}px` }}
         onClick={() => toggle(node.id)}
       >
-        <button className="text-gray-400 shrink-0">
+        <button className="text-gray-400 dark:text-zinc-500 shrink-0">
           {isOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
         </button>
-        <Folder className="w-4 h-4 text-yellow-500 shrink-0" />
-        <span className="flex-1 text-sm font-medium text-gray-700">{node.name}</span>
-        <span className="text-[10px] text-gray-400 opacity-0 group-hover:opacity-100 transition">
+        <Folder className="w-4 h-4 text-yellow-500 dark:text-yellow-600 shrink-0" />
+        <span className="flex-1 text-sm font-medium text-gray-700 dark:text-zinc-300">{node.name}</span>
+        <span className="text-[10px] text-gray-400 dark:text-zinc-500 opacity-0 group-hover:opacity-100 transition">
           {node.children.length} item{node.children.length !== 1 ? "s" : ""}
         </span>
       </div>
@@ -616,13 +616,13 @@ function ReadOnlyTreeNode({ node, expanded, toggle, level }: { node: any; expand
 function ReadOnlyFileRow({ file, level }: { file: any; level: number }) {
   return (
     <div
-      className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-gray-50 transition group"
+      className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition group"
       style={{ paddingLeft: `${28 + level * 20}px` }}
     >
-      <File className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-      <span className="flex-1 text-sm text-gray-700 truncate">{file.fileName ?? file.file_name}</span>
+      <File className="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500 shrink-0" />
+      <span className="flex-1 text-sm text-gray-700 dark:text-zinc-300 truncate">{file.fileName ?? file.file_name}</span>
       {file.fileSize && (
-        <span className="text-[10px] text-gray-400 shrink-0">{formatSize(file.fileSize)}</span>
+        <span className="text-[10px] text-gray-400 dark:text-zinc-500 shrink-0">{formatSize(file.fileSize)}</span>
       )}
       <a
         href={`/api/files/${file.id}`}
@@ -631,7 +631,7 @@ function ReadOnlyFileRow({ file, level }: { file: any; level: number }) {
         className="opacity-0 group-hover:opacity-100 transition"
         onClick={(e) => e.stopPropagation()}
       >
-        <Download className="w-3.5 h-3.5 text-gray-500 hover:text-gray-900 transition" />
+        <Download className="w-3.5 h-3.5 text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white transition" />
       </a>
     </div>
   );
@@ -700,22 +700,22 @@ function ScheduleTab({ teamName, members }: { teamName: string; members: Member[
     <div className="p-6 space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Calendar */}
-        <div className="lg:col-span-2 border border-gray-100 rounded-2xl overflow-hidden">
+        <div className="lg:col-span-2 border border-gray-100 dark:border-white/10 rounded-2xl overflow-hidden">
           {/* Month nav */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-            <button onClick={prevMonth} className="p-1.5 rounded-lg hover:bg-gray-100 transition">
-              <ChevronRight className="w-4 h-4 rotate-180 text-gray-500" />
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-white/10">
+            <button onClick={prevMonth} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 transition">
+              <ChevronRight className="w-4 h-4 rotate-180 text-gray-500 dark:text-zinc-500" />
             </button>
-            <p className="text-sm font-bold text-gray-900">{monthName} {viewYear}</p>
-            <button onClick={nextMonth} className="p-1.5 rounded-lg hover:bg-gray-100 transition">
-              <ChevronRight className="w-4 h-4 text-gray-500" />
+            <p className="text-sm font-bold text-gray-900 dark:text-white">{monthName} {viewYear}</p>
+            <button onClick={nextMonth} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 transition">
+              <ChevronRight className="w-4 h-4 text-gray-500 dark:text-zinc-500" />
             </button>
           </div>
 
           {/* Day headers */}
-          <div className="grid grid-cols-7 border-b border-gray-50">
+          <div className="grid grid-cols-7 border-b border-gray-50 dark:border-white/5">
             {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((d) => (
-              <div key={d} className="py-2 text-center text-[11px] font-bold uppercase tracking-wider text-gray-400">{d}</div>
+              <div key={d} className="py-2 text-center text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-600">{d}</div>
             ))}
           </div>
 
@@ -733,15 +733,15 @@ function ScheduleTab({ teamName, members }: { teamName: string; members: Member[
                 <button
                   key={day}
                   onClick={() => { setSelectedDate(key); setShowForm(false); }}
-                  className={`py-3 flex flex-col items-center gap-0.5 transition rounded-none hover:bg-gray-50 ${isSelected ? "bg-gray-900 hover:bg-gray-900" : ""}`}
+                  className={`py-3 flex flex-col items-center gap-0.5 transition rounded-none hover:bg-gray-50 dark:hover:bg-white/5 ${isSelected ? "bg-gray-900 dark:bg-white hover:bg-gray-900 dark:hover:bg-white" : ""}`}
                 >
                   <span className={`text-sm font-semibold w-7 h-7 flex items-center justify-center rounded-full ${
-                    isSelected ? "text-white" : isToday ? "bg-gray-100 text-gray-900" : "text-gray-700"
+                    isSelected ? "text-white dark:text-gray-900" : isToday ? "bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white" : "text-gray-700 dark:text-zinc-300"
                   }`}>
                     {day}
                   </span>
                   {hasMeeting && (
-                    <span className={`w-1 h-1 rounded-full ${isSelected ? "bg-white" : "bg-gray-900"}`} />
+                    <span className={`w-1 h-1 rounded-full ${isSelected ? "bg-white dark:bg-gray-900" : "bg-gray-900 dark:bg-white"}`} />
                   )}
                 </button>
               );
@@ -752,20 +752,20 @@ function ScheduleTab({ teamName, members }: { teamName: string; members: Member[
         {/* Right panel */}
         <div className="space-y-4">
           {/* Selected day panel */}
-          <div className="border border-gray-100 rounded-2xl overflow-hidden">
-            <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+          <div className="border border-gray-100 dark:border-white/10 rounded-2xl overflow-hidden">
+            <div className="px-5 py-4 border-b border-gray-100 dark:border-white/10 flex items-center justify-between">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-zinc-500">
                   {selectedDate ? new Date(selectedDate + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" }) : "Select a date"}
                 </p>
-                <p className="text-sm font-bold text-gray-900 mt-0.5">
+                <p className="text-sm font-bold text-gray-900 dark:text-white mt-0.5">
                   {selectedMeetings.length === 0 ? "No calls scheduled" : `${selectedMeetings.length} call${selectedMeetings.length !== 1 ? "s" : ""}`}
                 </p>
               </div>
               {selectedDate && (
                 <button
                   onClick={() => setShowForm(!showForm)}
-                  className="p-2 rounded-xl bg-gray-900 hover:bg-gray-800 text-white transition"
+                  className="p-2 rounded-xl bg-gray-900 dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-200 text-white dark:text-gray-900 transition"
                 >
                   <Plus className="w-4 h-4" />
                 </button>
@@ -773,30 +773,30 @@ function ScheduleTab({ teamName, members }: { teamName: string; members: Member[
             </div>
 
             {showForm && (
-              <div className="px-5 py-4 border-b border-gray-100 space-y-3 bg-gray-50">
+              <div className="px-5 py-4 border-b border-gray-100 dark:border-white/10 space-y-3 bg-gray-50 dark:bg-[#111]">
                 <input
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Meeting title"
-                  className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 bg-white focus:outline-none focus:border-gray-900 transition"
+                  className="w-full text-sm border border-gray-200 dark:border-white/10 rounded-xl px-3 py-2.5 bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-zinc-100 placeholder-gray-400 dark:placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-white/20 transition"
                 />
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1">Time</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500 mb-1">Time</p>
                     <input
                       type="time"
                       value={time}
                       onChange={(e) => setTime(e.target.value)}
-                      className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2 bg-white focus:outline-none focus:border-gray-900 transition"
+                      className="w-full text-sm border border-gray-200 dark:border-white/10 rounded-xl px-3 py-2 bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-white/20 transition dark:[color-scheme:dark]"
                     />
                   </div>
                   <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1">Meeting Link</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500 mb-1">Meeting Link</p>
                     <input
                       value={link}
                       onChange={(e) => setLink(e.target.value)}
                       placeholder="https://..."
-                      className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2 bg-white focus:outline-none focus:border-gray-900 transition"
+                      className="w-full text-sm border border-gray-200 dark:border-white/10 rounded-xl px-3 py-2 bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-zinc-100 placeholder-gray-400 dark:placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-white/20 transition"
                     />
                   </div>
                 </div>

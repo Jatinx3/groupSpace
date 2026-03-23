@@ -41,17 +41,17 @@ export default function TeamsDashboard({ teams, courses }: Props) {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight">
+          <h1 className="text-3xl font-semibold tracking-tight text-gray-900 dark:text-white">
             My Teams
           </h1>
-          <p className="text-gray-500 mt-1 text-sm">
+          <p className="text-gray-500 dark:text-zinc-400 mt-1 text-sm">
             Organize your collaborations and projects
           </p>
         </div>
 
         <button
           onClick={() => setOpen(true)}
-          className="bg-black text-white px-5 py-2.5 rounded-xl hover:opacity-90 transition text-sm"
+          className="bg-black dark:bg-white text-white dark:text-gray-900 px-5 py-2.5 rounded-xl hover:opacity-90 transition text-sm font-semibold"
         >
           + Create Team
         </button>
@@ -59,7 +59,7 @@ export default function TeamsDashboard({ teams, courses }: Props) {
 
       {/* Personal Workspace */}
       <section className="space-y-6">
-        <h2 className="text-lg font-semibold">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
           🚀 Personal Workspace
         </h2>
 
@@ -77,7 +77,7 @@ export default function TeamsDashboard({ teams, courses }: Props) {
       {/* Academic Courses */}
       {academicTeams.map(([courseName, teams]: any) => (
         <section key={courseName} className="space-y-6">
-          <h2 className="text-lg font-semibold">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
             📚 {courseName}
           </h2>
 
@@ -101,7 +101,7 @@ export default function TeamsDashboard({ teams, courses }: Props) {
 
 function EmptyState({ text }: { text: string }) {
   return (
-    <div className="border border-dashed border-gray-300 rounded-2xl p-8 text-center text-gray-400 text-sm bg-gray-50">
+    <div className="border border-dashed border-gray-300 dark:border-white/20 rounded-2xl p-8 text-center text-gray-400 dark:text-zinc-500 text-sm bg-gray-50 dark:bg-white/5">
       {text}
     </div>
   );
