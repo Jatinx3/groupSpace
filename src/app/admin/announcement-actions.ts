@@ -1,8 +1,16 @@
 "use server";
 
 import { z } from "zod";
-import { createAdminSupabase } from "@/src/lib/supabase-server";
+import { createAdminSupabase, createServerSupabase } from "@/src/lib/supabase-server";
 import { revalidatePath } from "next/cache";
+
+async function requireAdmin() {
+  const userSupabase = await createServerSupabase();
+  const { data: { user } } = await userSupabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+  const { data: profile } = await userSupabase.from("profiles").select("role").eq("id", user.id).single();
+  if (!profile || profile.role !== "admin") throw new Error("Forbidden: requires admin role");
+}
 
 const AnnouncementSchema = z.object({
   title: z.string().min(1, "Title is required").max(100),
@@ -14,6 +22,7 @@ const AnnouncementSchema = z.object({
 });
 
 export async function createAnnouncement(data: any) {
+  await requireAdmin();
   const parsedData = AnnouncementSchema.parse(data);
   const supabase = createAdminSupabase();
   const { error } = await supabase.from("announcements").insert([parsedData]);
@@ -22,6 +31,7 @@ export async function createAnnouncement(data: any) {
 }
 
 export async function deleteAnnouncement(id: string) {
+  await requireAdmin();
   const supabase = createAdminSupabase();
   const { error } = await supabase.from("announcements").delete().eq("id", id);
   if (error) throw new Error(error.message);
@@ -29,6 +39,7 @@ export async function deleteAnnouncement(id: string) {
 }
 
 export async function toggleAnnouncementStatus(id: string, currentStatus: string) {
+  await requireAdmin();
   const supabase = createAdminSupabase();
   const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
   const { error } = await supabase.from("announcements").update({ status: newStatus }).eq("id", id);
