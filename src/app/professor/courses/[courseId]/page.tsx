@@ -22,7 +22,7 @@ export default async function ProfessorCourseDetailPage({
     .eq("id", user.id)
     .single();
 
-  if (!profile || profile.role !== "professor") redirect("/dashboard");
+  if (!profile || profile.role !== "professor") redirect("/");
 
   const { data: course } = await supabase
     .from("courses")

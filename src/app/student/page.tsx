@@ -28,7 +28,7 @@ export default async function StudentDashboard() {
     .single();
 
   if (!profile || profile.role !== "student") {
-    redirect("/dashboard");
+    redirect("/");
   }
 
   /* =========================

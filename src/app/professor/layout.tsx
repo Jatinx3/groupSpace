@@ -22,7 +22,7 @@ export default async function ProfessorLayout({
     .single();
 
   if (!profile || profile.role !== "professor") {
-    redirect("/dashboard");
+    redirect("/");
   }
 
   return (

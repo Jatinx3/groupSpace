@@ -17,7 +17,7 @@ export default async function ProfessorCoursesPage() {
     .eq("id", user.id)
     .single();
 
-  if (!profile || profile.role !== "professor") redirect("/dashboard");
+  if (!profile || profile.role !== "professor") redirect("/");
 
   const { data: courses } = await supabase
     .from("courses")

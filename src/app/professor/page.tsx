@@ -63,7 +63,7 @@ export default async function ProfessorPage() {
     .single();
 
   if (!profile || profile.role !== "professor") {
-    redirect("/dashboard");
+    redirect("/");
   }
 
   const firstName = profile.first_name || "Professor";

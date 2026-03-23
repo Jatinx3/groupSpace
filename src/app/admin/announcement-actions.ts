@@ -1,21 +1,22 @@
 "use server";
 
+import { z } from "zod";
 import { createAdminSupabase } from "@/src/lib/supabase-server";
 import { revalidatePath } from "next/cache";
 
-export async function createAnnouncement(data: {
-  title: string;
-  content: string;
-  audience_type: string;
-  audience_id?: string | null;
-  priority: string;
-  display_type: string;
-  is_dismissible?: boolean;
-  is_sticky?: boolean;
-  expires_at?: string | null;
-}) {
+const AnnouncementSchema = z.object({
+  title: z.string().min(1, "Title is required").max(100),
+  content: z.string().min(1, "Content is required"),
+  audience_type: z.enum(["all", "students", "professors", "course", "team"]),
+  audience_id: z.string().nullable().optional(),
+  priority: z.enum(["normal", "important", "urgent"]),
+  display_type: z.enum(["banner", "popup", "feed"]),
+});
+
+export async function createAnnouncement(data: any) {
+  const parsedData = AnnouncementSchema.parse(data);
   const supabase = createAdminSupabase();
-  const { error } = await supabase.from("announcements").insert([data]);
+  const { error } = await supabase.from("announcements").insert([parsedData]);
   if (error) throw new Error(error.message);
   revalidatePath("/admin");
 }

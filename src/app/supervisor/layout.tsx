@@ -21,7 +21,7 @@ export default async function SupervisorLayout({
     .single();
 
   if (!profile || profile.role !== "professor") {
-    redirect("/dashboard");
+    redirect("/");
   }
 
   return (
