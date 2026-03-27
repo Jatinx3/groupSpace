@@ -1,11 +1,13 @@
 import "./globals.css";
 import { ThemeProvider } from "../components/providers/ThemeProvider";
+import { PHProvider } from "../components/providers/PostHogProvider";
 import CookieBanner from "../components/layout/CookieBanner";
 
 export const metadata = {
   title: "Collably",
   description: "A collaborative platform for students and supervisors to manage group projects, thesis workflows, and communicate effectively.",
 };
+
 import { Inter } from "next/font/google";
 
 const inter = Inter({
@@ -21,11 +23,14 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.variable}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
-          {children}
-          <CookieBanner />
-        </ThemeProvider>
+        <PHProvider>
+          <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+            {children}
+            <CookieBanner />
+          </ThemeProvider>
+        </PHProvider>
       </body>
     </html>
   );
 }
+
