@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Mail, ShieldCheck, Bell, Users, Moon, Globe, Lock, Smartphone, Camera } from "lucide-react";
+import { useTheme } from "next-themes";
 import { createClientSupabase } from "../../../lib/supabase-client";
 
 interface Profile {
@@ -88,6 +89,8 @@ function UnderlineInput({
 export default function StudentProfileClient({ profile }: { profile: Profile }) {
   const supabase = createClientSupabase();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
   const [activeTab, setActiveTab] = useState<Tab>("profile");
 
@@ -121,6 +124,7 @@ export default function StudentProfileClient({ profile }: { profile: Profile }) 
   const [pwMsg, setPwMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   useEffect(() => {
+    setMounted(true);
     const prefs = localStorage.getItem("gs_student_prefs");
     if (prefs) {
       try {
@@ -474,7 +478,15 @@ export default function StudentProfileClient({ profile }: { profile: Profile }) 
                     <p className="text-xs text-gray-400 dark:text-zinc-500">Toggle dark theme</p>
                   </div>
                 </div>
-                <Toggle checked={darkMode} onChange={(v) => { setDarkMode(v); savePrefs({ darkMode: v }); }} />
+                <Toggle 
+                  checked={mounted ? theme === "dark" : false} 
+                  onChange={(v) => { 
+                    const newTheme = v ? "dark" : "light";
+                    setTheme(newTheme);
+                    setDarkMode(v); 
+                    savePrefs({ darkMode: v }); 
+                  }} 
+                />
               </div>
 
               <div className="flex items-center justify-between py-4">
