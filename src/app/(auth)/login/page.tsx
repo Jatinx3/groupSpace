@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClientSupabase } from "../../../lib/supabase-client";
 import Logo from "../../../components/ui/Logo";
 import { isApprovedEmail, getAllowedDomainsLabel } from "../../../lib/auth-domains";
@@ -9,6 +9,8 @@ import { Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const justSignedUp = searchParams.get("welcome") === "1";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -43,19 +45,10 @@ export default function LoginPage() {
       });
 
    if (loginError) {
-  console.log("Supabase login error:", loginError);
-  // Surface a clear message for unverified emails
-  if (
-    loginError.message?.toLowerCase().includes("email not confirmed") ||
-    loginError.message?.toLowerCase().includes("email_not_confirmed")
-  ) {
-    setError("Please verify your university email before signing in. Check your inbox for the confirmation link.");
-  } else {
-    setError(loginError.message);
-  }
-  setLoading(false);
-  return;
-}
+      setError(loginError.message);
+      setLoading(false);
+      return;
+    }
 
     // Get authenticated user
     const {
@@ -68,13 +61,6 @@ export default function LoginPage() {
       return;
     }
 
-    // Guard: check email is verified
-    if (!user.email_confirmed_at) {
-      await supabase.auth.signOut();
-      setError("Please verify your university email to continue. Check your inbox for the confirmation link.");
-      setLoading(false);
-      return;
-    }
 
     // Check role
     const { data: profile } = await supabase
@@ -107,6 +93,13 @@ export default function LoginPage() {
         <p className="text-xs text-neutral-500 text-center mt-3 mb-8 tracking-[0.18em] uppercase">
           Access your Collably workspace
         </p>
+
+        {/* Welcome Banner from Signup */}
+        {justSignedUp && (
+          <div className="bg-green-50 border border-green-200 text-green-700 text-xs p-3 rounded-lg mb-4 text-center">
+            ✅ Account created! Sign in to access your workspace.
+          </div>
+        )}
 
         <form onSubmit={handleLogin} className="space-y-5">
           <div>

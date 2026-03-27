@@ -115,9 +115,8 @@ export default function SignupPage() {
         return;
       }
 
-      // Success — show email verification screen
-      setVerifiedEmail(data.email);
-      setStage("verify");
+      // Success — redirect straight to login, account is ready
+      router.push("/login?welcome=1");
     } catch {
       setError("A network error occurred. Please try again.");
     } finally {

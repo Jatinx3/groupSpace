@@ -36,30 +36,35 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ── 4. Create user (triggering automated confirmation email) ────────
-    // We use a server-side client with the ANON key to trigger the
-    // normal Supabase signup flow. This is the only reliable way to
-    // get Supabase's built-in mailer to send the "Confirm your email" message.
-    const supabase = await createServerSupabase();
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    // ── 4. Create user via Admin API (email pre-confirmed, no verification needed) ────────
+    // Domain restriction already enforces university emails server-side.
+    // Email verification is temporarily disabled while collably.space builds
+    // domain reputation. Re-enable by switching back to supabase.auth.signUp.
+    const admin = createAdminSupabase();
+
+    // Check if user already exists
+    const { data: existingUsers } = await admin.auth.admin.listUsers();
+    const alreadyExists = existingUsers?.users?.find(
+      (u) => u.email?.toLowerCase() === normalizedEmail
+    );
+    if (alreadyExists) {
+      return NextResponse.json(
+        { error: "An account with this email already exists.", code: "EMAIL_EXISTS" },
+        { status: 409 }
+      );
+    }
+
+    const { data: authData, error: authError } = await admin.auth.admin.createUser({
       email: normalizedEmail,
       password,
-      options: {
-        data: {
-          first_name: firstName,
-          last_name: lastName,
-        },
-        // captchaToken is handled by Supabase automatically if Turnstile is enabled in dashboard
+      email_confirm: true, // Skip verification — domain restriction is the guard
+      user_metadata: {
+        first_name: firstName,
+        last_name: lastName,
       },
     });
 
     if (authError) {
-      if (authError.message?.toLowerCase().includes("already registered")) {
-        return NextResponse.json(
-          { error: "An account with this email already exists.", code: "EMAIL_EXISTS" },
-          { status: 409 }
-        );
-      }
       return NextResponse.json({ error: authError.message }, { status: 400 });
     }
 
@@ -67,8 +72,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Signup failed." }, { status: 500 });
     }
 
-    // ── 5. Create profile row (using Admin client for bypass) ────────────
-    const admin = createAdminSupabase();
+    // ── 5. Create profile row ────────────────────────────────────────────
     const { error: profileError } = await admin.from("profiles").upsert({
       id: authData.user.id,
       first_name: firstName,
@@ -78,7 +82,13 @@ export async function POST(req: NextRequest) {
       phone: phone ? `${countryCode ?? ""}${phone}` : null,
     });
 
-    return NextResponse.json({ ok: true, email: normalizedEmail });
+    if (profileError) {
+      // Clean up the auth user if profile creation fails
+      await admin.auth.admin.deleteUser(authData.user.id);
+      return NextResponse.json({ error: "Failed to create profile." }, { status: 500 });
+    }
+
+    return NextResponse.json({ ok: true, email: normalizedEmail, verified: true });
   } catch (err: any) {
     console.error("Signup API error:", err);
     return NextResponse.json(
