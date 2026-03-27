@@ -141,13 +141,25 @@ function JoinCourseModal({ onClose }: { onClose: () => void }) {
           ✕
         </button>
 
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
-            Join Course
-          </h2>
-          <p className="text-sm text-gray-500 dark:text-zinc-400 mt-1">
-            Enter the invite code provided by your professor
-          </p>
+        <div className="mb-6 space-y-4">
+          <div>
+            <h2 className="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
+              Join Course
+            </h2>
+            <p className="text-sm text-gray-500 dark:text-zinc-400 mt-1">
+              Enter the invite code provided by your professor
+            </p>
+          </div>
+
+          <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl p-4">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-amber-700 dark:text-amber-400 mb-1">
+              💡 Pro Tip: Personal Workspaces
+            </p>
+            <p className="text-xs text-amber-600 dark:text-amber-300 leading-relaxed">
+              To join your personal project areas manually, use codes:<br/>
+              <span className="font-mono font-bold">HACKATHON</span>, <span className="font-mono font-bold">SOLOPROJECT</span>, or <span className="font-mono font-bold">TEAMPROJECT</span>.
+            </p>
+          </div>
         </div>
 
         <form action={handleJoin} className="space-y-4">
