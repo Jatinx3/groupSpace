@@ -8,6 +8,7 @@ import ActivityFeed from "../../components/dashboard/ActivityFeed";
 import MiniCalendar from "../../components/dashboard/MiniCalendar";
 import TaskProgress from "../../components/dashboard/TaskProgress";
 import { Plus, UploadCloud, Users } from "lucide-react";
+import { enrollInDefaultCourses } from "../../lib/enroll-utils";
 
 export default async function StudentDashboard() {
   const supabase = await createServerSupabase();
@@ -46,8 +47,24 @@ export default async function StudentDashboard() {
     `)
     .eq("user_id", user.id);
 
-  const courses =
+  let courses =
     enrolledCourses?.flatMap((item) => item.courses ?? []) ?? [];
+
+  // ── SANITY CHECK: Auto-enroll if missing (Self-healing) ──────────────
+  if (courses.length === 0) {
+    const { ok } = await enrollInDefaultCourses(user.id);
+    if (ok) {
+      // Re-fetch to show them immediately
+      const { data: refetched } = await supabase
+        .from("course_members")
+        .select(`
+          course_id,
+          courses (id, name, professor_id)
+        `)
+        .eq("user_id", user.id);
+      courses = refetched?.flatMap((item) => item.courses ?? []) ?? [];
+    }
+  }
 
   /* =========================
      TEAMS

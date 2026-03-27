@@ -88,6 +88,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Failed to create profile." }, { status: 500 });
     }
 
+    // ── 6. Auto-enroll in default courses ────────────────────────────────
+    const { enrollInDefaultCourses } = await import("../../../../lib/enroll-utils");
+    await enrollInDefaultCourses(authData.user.id);
+
     return NextResponse.json({ ok: true, email: normalizedEmail, verified: true });
   } catch (err: any) {
     console.error("Signup API error:", err);
