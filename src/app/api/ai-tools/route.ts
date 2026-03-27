@@ -4,11 +4,14 @@ import { createServerSupabase } from "../../../lib/supabase-server";
 const GROQ_API_KEY = process.env.GROQ_API_KEY || "";
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
 
-const SYSTEM_BASE_PROMPT = `You are a helpful academic assistant.
-* Keep responses under 120 words
-* Do not explain anything
-* Output only the final result
-* Write clearly and naturally`;
+const SYSTEM_BASE_PROMPT = `You are Collably AI, a sophisticated academic writing and productivity assistant.
+Role: Professional, precise, and supportive of students and researchers.
+Constraints:
+- STRICT "NO YAPPING": Do not include any introductory fluff (e.g., "Sure, here it is", "Based on your request").
+- Output ONLY the final result.
+- Avoid robotic AI idioms (e.g., "delve", "tapestry", "in summary", "moreover" used excessively).
+- Maintain 100% academic integrity.
+- Max length: 140 words unless specified.`;
 
 export async function POST(req: Request) {
   try {
@@ -47,25 +50,44 @@ export async function POST(req: Request) {
 
     let systemPrompt = "";
     if (tool === "prompt") {
-      systemPrompt = `You are an expert prompt writer.
-Generate a high-quality prompt based on the user's idea.
-
-Rules:
-* Do not explain anything
-* Output only the final prompt
-* Keep it clean and structured
-* Adjust detail level based on type:
-  short → minimal
-  brief → moderate detail
-  descriptive → rich detail
+      systemPrompt = `You are an expert prompt engineer. Transform the user's basic idea into a professional LLM prompt following the [Context-Task-Constraint] structure.
+Output ONLY the generated prompt. No preamble.
+Detail levels:
+- short: Direct and single-sentence tasks.
+- brief: Adds 2-3 specific constraints and persona.
+- descriptive: Full context, step-by-step logic, and detailed constraints. (Max 200 words).
 
 Type: ${tone || 'short'}`;
     } else if (tool === "email") {
-      systemPrompt = `${SYSTEM_BASE_PROMPT}\n\nWrite a professional academic email based on the request. Include subject line. ${tone ? `Tone: ${tone}` : ""}`;
+      systemPrompt = `${SYSTEM_BASE_PROMPT}
+
+Task: Write a flawless, professional academic email.
+Structure:
+1. Subject: [Action-oriented & clear]
+2. Greeting: [Appropriate for ${tone || 'formal'} context]
+3. Body: [Concise and goal-driven]
+4. Closing: [Professional signature placeholder]
+
+Tone Requirements: ${tone || 'professional'}.
+Focus: University life, office hours, extensions, or collaborator inquiries.`;
     } else if (tool === "paraphrase") {
-      systemPrompt = `${SYSTEM_BASE_PROMPT}\n\nParaphrase the text while preserving meaning. Keep it clear and concise.`;
+      systemPrompt = `${SYSTEM_BASE_PROMPT}
+
+Task: Paraphrase for Academic Fluency.
+Requirements:
+- Improve sentence flow and logical transitions.
+- Maintain technical accuracy and original meaning.
+- Tone: ${tone || 'formal'}.
+- Make it sound human and authoritative, not like a thesaurus replacement.`;
     } else if (tool === "grammar") {
-      systemPrompt = `${SYSTEM_BASE_PROMPT}\n\nFix grammar and improve clarity without changing meaning.`;
+      systemPrompt = `${SYSTEM_BASE_PROMPT}
+
+Task: Professional Editorial Proofreading.
+Requirements:
+- Fix grammar, punctuation, and syntax.
+- Convert passive voice to active where appropriate.
+- Eliminate wordiness.
+- Preserve the author's original intended tone.`;
     }
 
     const incrementUsage = async () => {

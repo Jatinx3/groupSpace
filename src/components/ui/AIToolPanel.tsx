@@ -24,6 +24,13 @@ export default function AIToolPanel({
   const [output, setOutput] = useState("");
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
+  
+  const placeholders = {
+    email: "Request a thesis meeting with Dr. Smith...",
+    paraphrase: "The resulting data suggests a strong correlation between...",
+    grammar: "I has many ideas for the research project...",
+    prompt: "A specialized AI tutor for database normalization...",
+  };
 
   const handleGenerate = async () => {
     if (!input.trim()) {
@@ -128,7 +135,7 @@ export default function AIToolPanel({
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Type or paste your text here..."
+            placeholder={placeholders[toolType]}
             rows={4}
             className="w-full h-32 bg-gray-50 dark:bg-[#0A0A0A] border border-gray-200 dark:border-white/10 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-white/20 transition resize-none"
           />
@@ -154,9 +161,14 @@ export default function AIToolPanel({
         {output && (
           <div className="mt-4 pt-4 border-t border-gray-100 dark:border-white/10">
             <div className="flex justify-between items-center mb-2">
-              <label className="block text-xs font-semibold uppercase tracking-widest text-gray-500 dark:text-zinc-400">
-                Output
-              </label>
+              <div className="flex items-center gap-2">
+                <label className="block text-xs font-semibold uppercase tracking-widest text-gray-500 dark:text-zinc-400">
+                  Output
+                </label>
+                <span className="text-[10px] bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-zinc-500 px-1.5 py-0.5 rounded font-bold uppercase tracking-tighter">
+                  Collably AI
+                </span>
+              </div>
               <button
                 onClick={handleCopy}
                 className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white transition bg-gray-100 dark:bg-white/5 py-1 px-2.5 rounded-lg"
