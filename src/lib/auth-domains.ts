@@ -5,6 +5,7 @@
  */
 export const APPROVED_DOMAINS: string[] = [
   "mytudublin.ie",
+  "gmail.com",
   // Add more domains here as the platform expands
   // "ucd.ie",
   // "tcd.ie",
