@@ -21,21 +21,7 @@ export default function Hero() {
               transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
               className="relative z-10"
             >
-              {/* Live status badge */}
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-                className="inline-flex items-center gap-2 mb-6 px-4 py-1.5 border border-black/10 bg-white/60 backdrop-blur-sm"
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span
-                  className="text-[10px] font-black uppercase tracking-[0.2em] text-black/50"
-                  style={{ fontFamily: '"JetBrains Mono", monospace' }}
-                >
-                  Now Live — Spring 2026
-                </span>
-              </motion.div>
+
 
               {/* Main headline - editorial Gen-Z wordmark */}
               <h1 className="leading-none tracking-tight text-black">
@@ -89,9 +75,6 @@ export default function Hero() {
                     Start Now <ArrowRight className="w-4 h-4" />
                   </span>
                 </a>
-                <span className="text-xs uppercase tracking-widest text-neutral-400 font-bold">
-                  No credit card required
-                </span>
               </div>
             </motion.div>
           </div>
