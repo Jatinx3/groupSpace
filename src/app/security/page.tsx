@@ -24,7 +24,7 @@ const principles = [
     id: "03",
     title: "Privacy by Design",
     description:
-      "GroupSpace collects only what is necessary to operate the platform. We do not sell data, serve ads, or share your information with third parties. Your university data belongs to you.",
+      "Collably collects only what is necessary to operate the platform. We do not sell data, serve ads, or share your information with third parties. Your university data belongs to you.",
   },
   {
     icon: Key,
@@ -62,7 +62,7 @@ export default function SecurityPage() {
             Security
           </h1>
           <p className="mt-10 max-w-lg text-lg font-medium leading-snug tracking-tight text-neutral-600">
-            Academic data deserves serious protection. GroupSpace is built with security at every layer, not bolted on as an afterthought.
+            Academic data deserves serious protection. Collably is built with security at every layer, not bolted on as an afterthought.
           </p>
         </div>
       </section>

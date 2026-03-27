@@ -3,6 +3,9 @@
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClientSupabase } from "../../../lib/supabase-client";
+import Logo from "../../../components/ui/Logo";
+import { isApprovedEmail, getAllowedDomainsLabel } from "../../../lib/auth-domains";
+import { Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -26,11 +29,8 @@ export default function LoginPage() {
       return;
     }
 
-    if (
-      !normalizedEmail.endsWith("@mytudublin.ie") &&
-      !normalizedEmail.endsWith("@test.com")
-    ) {
-      setError("Only @mytudublin.ie and @test.com emails are allowed.");
+    if (!isApprovedEmail(normalizedEmail)) {
+      setError(`Only university emails are accepted (${getAllowedDomainsLabel()}).`);
       return;
     }
 
@@ -44,7 +44,15 @@ export default function LoginPage() {
 
    if (loginError) {
   console.log("Supabase login error:", loginError);
-  setError(loginError.message);
+  // Surface a clear message for unverified emails
+  if (
+    loginError.message?.toLowerCase().includes("email not confirmed") ||
+    loginError.message?.toLowerCase().includes("email_not_confirmed")
+  ) {
+    setError("Please verify your university email before signing in. Check your inbox for the confirmation link.");
+  } else {
+    setError(loginError.message);
+  }
   setLoading(false);
   return;
 }
@@ -56,6 +64,14 @@ export default function LoginPage() {
 
     if (!user) {
       setError("Authentication failed.");
+      setLoading(false);
+      return;
+    }
+
+    // Guard: check email is verified
+    if (!user.email_confirmed_at) {
+      await supabase.auth.signOut();
+      setError("Please verify your university email to continue. Check your inbox for the confirmation link.");
       setLoading(false);
       return;
     }
@@ -82,16 +98,14 @@ export default function LoginPage() {
     <div className="min-h-screen bg-[#F3F3F3] flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-white rounded-2xl border border-black/10 p-8 shadow-sm">
         <div className="flex justify-center mb-6">
-          <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center text-white text-xs font-bold tracking-[0.2em] uppercase">
-            GS
-          </div>
+          <Logo size="lg" showText={true} align="center" />
         </div>
 
         <h1 className="text-3xl font-black text-center tracking-tight uppercase text-black">
           Student Sign In
         </h1>
         <p className="text-xs text-neutral-500 text-center mt-3 mb-8 tracking-[0.18em] uppercase">
-          Access your GroupSpace workspace
+          Access your Collably workspace
         </p>
 
         <form onSubmit={handleLogin} className="space-y-5">
@@ -150,9 +164,13 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-black text-white p-3 rounded-lg text-xs font-bold uppercase tracking-[0.2em] hover:bg-neutral-800 transition-colors"
+            className="w-full bg-black text-white p-3.5 rounded-lg text-xs font-bold uppercase tracking-[0.2em] hover:bg-neutral-800 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
           >
-            {loading ? "Signing in..." : "Sign In"}
+            {loading ? (
+              <><Loader2 className="w-4 h-4 animate-spin" /> Signing in...</>
+            ) : (
+              "Sign In"
+            )}
           </button>
 
           <div className="space-y-1 text-xs text-center text-neutral-600 mt-4">

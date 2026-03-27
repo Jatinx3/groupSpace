@@ -359,16 +359,31 @@ export async function deleteFile(formData: FormData) {
 
   const { data: file } = await supabase
     .from("project_files")
-    .select("file_path, team_id")
+    .select("storage_path, team_id")
     .eq("id", fileId)
     .single();
 
   if (!file) return;
 
-  await supabase.storage
-    .from("team-files")
-    .remove([file.file_path]);
+  // Delete all version files from storage
+  const { data: versions } = await supabase
+    .from("file_versions")
+    .select("file_url")
+    .eq("file_id", fileId);
 
+  if (versions && versions.length > 0) {
+    const paths = versions.map((v) => v.file_url).filter(Boolean);
+    if (paths.length > 0) {
+      await supabase.storage.from("team-files").remove(paths);
+    }
+  }
+
+  // Also remove the original storage_path if it exists and isn't in versions
+  if (file.storage_path) {
+    await supabase.storage.from("team-files").remove([file.storage_path]);
+  }
+
+  // Cascade delete handles file_versions rows
   await supabase
     .from("project_files")
     .delete()
@@ -466,7 +481,7 @@ export async function deleteFolder(formData: FormData) {
 
 
 /* ============================= */
-/* UPLOAD FILE (UNIVERSAL) */
+/* UPLOAD FILE (VERSION-AWARE)  */
 /* ============================= */
 
 export async function uploadFile(formData: FormData) {
@@ -486,10 +501,30 @@ export async function uploadFile(formData: FormData) {
     throw new Error("Missing teamId or file");
   }
 
-  // If no folderId, upload to root
-  const folderSegment = folderId ?? "root";
+  // Check if a file with the same name already exists in this folder
+  const { data: existingFile } = await supabase
+    .from("project_files")
+    .select("id, current_version")
+    .eq("team_id", teamId)
+    .eq("file_name", file.name)
+    .eq("folder_id", folderId || "")
+    .maybeSingle();
 
-  const filePath = `${teamId}/${folderSegment}/${Date.now()}-${file.name}`;
+  if (existingFile) {
+    // Create new version for existing file
+    const pushForm = new FormData();
+    pushForm.append("teamId", teamId);
+    pushForm.append("file", file);
+    pushForm.append("existingFileId", existingFile.id);
+    pushForm.append("changeMessage", "Updated file");
+    if (folderId) pushForm.append("folderId", folderId);
+    await pushFileUpdate(pushForm);
+    return;
+  }
+
+  // New file — create project_files entry + v1
+  const fileId = randomUUID();
+  const filePath = `${teamId}/${fileId}/1_${file.name}`;
 
   // Upload to Storage
   const { error: uploadError } = await supabase.storage
@@ -501,26 +536,529 @@ export async function uploadFile(formData: FormData) {
     throw uploadError;
   }
 
-  // Insert DB record
-  const { error: dbError } = await supabase
+  // Insert project_files record
+  const { data: newFile, error: dbError } = await supabase
     .from("project_files")
     .insert({
+      id: fileId,
       team_id: teamId,
       file_name: file.name,
       file_size: file.size,
       uploaded_by: user.id,
       storage_path: filePath,
       folder_id: folderId || null,
+      current_version: 1,
+      is_versioned: true,
+    })
+    .select("id")
+    .single();
+
+  if (dbError || !newFile) {
+    console.error("DB insert error:", dbError);
+    throw dbError;
+  }
+
+  // Insert v1 into file_versions
+  const { data: version, error: versionError } = await supabase
+    .from("file_versions")
+    .insert({
+      file_id: newFile.id,
+      version_number: 1,
+      file_url: filePath,
+      file_size: file.size,
+      uploaded_by: user.id,
+      change_message: "Initial upload",
+    })
+    .select("id")
+    .single();
+
+  if (versionError) {
+    console.error("Version insert error:", versionError);
+    throw versionError;
+  }
+
+  // Update latest_version_id
+  if (version) {
+    await supabase
+      .from("project_files")
+      .update({ latest_version_id: version.id })
+      .eq("id", newFile.id);
+  }
+
+  revalidatePath(`/student/teams/${teamId}`);
+}
+
+/* ============================= */
+/* UPLOAD FILE SIMPLE (ASSET)    */
+/* ============================= */
+
+export async function uploadFileSimple(formData: FormData) {
+  const supabase = await createServerSupabase();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("Unauthorized");
+
+  const teamId = formData.get("teamId") as string;
+  const file = formData.get("file") as File;
+
+  if (!teamId || !file) {
+    throw new Error("Missing teamId or file");
+  }
+
+  const fileId = randomUUID();
+  const filePath = `${teamId}/assets/${fileId}_${file.name}`;
+
+  // Upload to Storage
+  const { error: uploadError } = await supabase.storage
+    .from("team-files")
+    .upload(filePath, file);
+
+  if (uploadError) {
+    console.error("Storage upload error:", uploadError);
+    throw uploadError;
+  }
+
+  // Insert project_files record (no file_versions entry)
+  const { error: dbError } = await supabase
+    .from("project_files")
+    .insert({
+      id: fileId,
+      team_id: teamId,
+      file_name: file.name,
+      file_size: file.size,
+      uploaded_by: user.id,
+      storage_path: filePath,
+      is_versioned: false,
+      current_version: 1,
     });
 
   if (dbError) {
     console.error("DB insert error:", dbError);
     throw dbError;
   }
+
+  revalidatePath(`/student/teams/${teamId}`);
+}
+
+/* ============================= */
+/* PUSH FILE UPDATE (NEW VERSION)*/
+/* ============================= */
+
+export async function pushFileUpdate(formData: FormData) {
+  const supabase = await createServerSupabase();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("Unauthorized");
+
+  const teamId = formData.get("teamId") as string;
+  const file = formData.get("file") as File;
+  const changeMessage = (formData.get("changeMessage") as string) || "Updated file";
+  const existingFileId = formData.get("existingFileId") as string | null;
+  const folderId = formData.get("folderId") as string | null;
+
+  if (!teamId || !file) {
+    throw new Error("Missing teamId or file");
+  }
+
+  let fileId = existingFileId;
+  let nextVersion = 1;
+
+  if (fileId) {
+    // Existing file — get current version
+    const { data: existing } = await supabase
+      .from("project_files")
+      .select("current_version")
+      .eq("id", fileId)
+      .single();
+
+    // Safety check: Get the absolute max version number from file_versions table
+    const { data: maxVersionData } = await supabase
+      .from("file_versions")
+      .select("version_number")
+      .eq("file_id", fileId)
+      .order("version_number", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const actualMax = maxVersionData?.version_number ?? 0;
+    const dbCurrent = existing?.current_version ?? 0;
+    
+    nextVersion = Math.max(actualMax, dbCurrent) + 1;
+  } else {
+    // Check if a file with same name exists in this folder
+    const folderFilter = folderId || null;
+    let query = supabase
+      .from("project_files")
+      .select("id, current_version")
+      .eq("team_id", teamId)
+      .eq("file_name", file.name);
+
+    if (folderFilter) {
+      query = query.eq("folder_id", folderFilter);
+    } else {
+      query = query.is("folder_id", null);
+    }
+
+    const { data: match } = await query.maybeSingle();
+
+    if (match) {
+      fileId = match.id;
+      
+      // Safety check: Get the absolute max version number from file_versions table
+      const { data: maxVersionData } = await supabase
+        .from("file_versions")
+        .select("version_number")
+        .eq("file_id", fileId)
+        .order("version_number", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const actualMax = maxVersionData?.version_number ?? 0;
+      const dbCurrent = match.current_version ?? 0;
+      
+      nextVersion = Math.max(actualMax, dbCurrent) + 1;
+    } else {
+      // Brand new file
+      fileId = randomUUID();
+      nextVersion = 1;
+
+      const filePath = `${teamId}/${fileId}/1_${file.name}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("team-files")
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { error: dbError } = await supabase
+        .from("project_files")
+        .insert({
+          id: fileId,
+          team_id: teamId,
+          file_name: file.name,
+          file_size: file.size,
+          uploaded_by: user.id,
+          storage_path: filePath,
+          folder_id: folderId || null,
+          current_version: 1,
+          is_versioned: true,
+        });
+
+      if (dbError) throw dbError;
+
+      const { data: v1, error: v1Error } = await supabase
+        .from("file_versions")
+        .insert({
+          file_id: fileId,
+          version_number: 1,
+          file_url: filePath,
+          file_size: file.size,
+          uploaded_by: user.id,
+          change_message: changeMessage,
+        })
+        .select("id")
+        .single();
+
+      if (v1Error) throw v1Error;
+
+      if (v1) {
+        await supabase
+          .from("project_files")
+          .update({ latest_version_id: v1.id })
+          .eq("id", fileId);
+      }
+
+      revalidatePath(`/student/teams/${teamId}`);
+      return;
+    }
+  }
+
+  // Upload new version file
+  const filePath = `${teamId}/${fileId}/${nextVersion}_${file.name}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from("team-files")
+    .upload(filePath, file);
+
+  if (uploadError) throw uploadError;
+
+  // Insert version record
+  const { data: newVersion, error: versionError } = await supabase
+    .from("file_versions")
+    .insert({
+      file_id: fileId,
+      version_number: nextVersion,
+      file_url: filePath,
+      file_size: file.size,
+      uploaded_by: user.id,
+      change_message: changeMessage,
+    })
+    .select("id")
+    .single();
+
+  if (versionError) throw versionError;
+
+  // Update project_files
+  await supabase
+    .from("project_files")
+    .update({
+      current_version: nextVersion,
+      file_size: file.size,
+      storage_path: filePath,
+      latest_version_id: newVersion?.id ?? null,
+      is_versioned: true,
+    })
+    .eq("id", fileId);
+
+  revalidatePath(`/student/teams/${teamId}`);
+}
+
+/* ============================= */
+/* GET FILE VERSIONS             */
+/* ============================= */
+
+export async function getFileVersions(fileId: string) {
+  const supabase = await createServerSupabase();
+
+  const { data: versions, error } = await supabase
+    .from("file_versions")
+    .select(`
+      id,
+      version_number,
+      file_url,
+      file_size,
+      change_message,
+      created_at,
+      uploaded_by
+    `)
+    .eq("file_id", fileId)
+    .order("version_number", { ascending: false })
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+
+  // Resolve uploader names
+  const uploaderIds = Array.from(
+    new Set((versions ?? []).map((v) => v.uploaded_by).filter(Boolean))
+  );
+
+  let uploaderMap: Record<string, string> = {};
+
+  if (uploaderIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, first_name, last_name")
+      .in("id", uploaderIds);
+
+    (profiles ?? []).forEach((p: any) => {
+      uploaderMap[p.id] = `${p.first_name} ${p.last_name}`.trim();
+    });
+  }
+
+  return (versions ?? []).map((v) => ({
+    id: v.id,
+    versionNumber: v.version_number,
+    fileUrl: v.file_url,
+    fileSize: v.file_size,
+    changeMessage: v.change_message,
+    createdAt: v.created_at,
+    uploadedBy: v.uploaded_by,
+    uploaderName: uploaderMap[v.uploaded_by] ?? "Unknown",
+  }));
+}
+
+/* ============================= */
+/* RESTORE VERSION               */
+/* ============================= */
+
+export async function restoreVersion(formData: FormData) {
+  const supabase = await createServerSupabase();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("Unauthorized");
+
+  const fileId = formData.get("fileId") as string;
+  const versionId = formData.get("versionId") as string;
+
+  if (!fileId || !versionId) throw new Error("Missing fileId or versionId");
+
+  // Get the version to restore
+  const { data: version } = await supabase
+    .from("file_versions")
+    .select("file_url, file_size, version_number")
+    .eq("id", versionId)
+    .single();
+
+  if (!version) throw new Error("Version not found");
+
+  // Get current file info
+  const { data: file } = await supabase
+    .from("project_files")
+    .select("current_version, team_id")
+    .eq("id", fileId)
+    .single();
+
+  if (!file) throw new Error("File not found");
+
+  // Safety check: Get the absolute max version number from file_versions table
+  const { data: maxVersionData } = await supabase
+    .from("file_versions")
+    .select("version_number")
+    .eq("file_id", fileId)
+    .order("version_number", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const actualMax = maxVersionData?.version_number ?? 0;
+  const dbCurrent = file.current_version ?? 0;
+
+  const nextVersion = Math.max(actualMax, dbCurrent) + 1;
+
+  // Create a new version entry pointing to the restored version's file
+  const { data: newVersion, error: insertError } = await supabase
+    .from("file_versions")
+    .insert({
+      file_id: fileId,
+      version_number: nextVersion,
+      file_url: version.file_url,
+      file_size: version.file_size,
+      uploaded_by: user.id,
+      change_message: `Restored from v${version.version_number}`,
+    })
+    .select("id")
+    .single();
+
+  if (insertError) throw insertError;
+
+  // Update project_files
+  await supabase
+    .from("project_files")
+    .update({
+      current_version: nextVersion,
+      storage_path: version.file_url,
+      file_size: version.file_size,
+      latest_version_id: newVersion?.id ?? null,
+      is_versioned: true,
+    })
+    .eq("id", fileId);
+
+  revalidatePath(`/student/teams/${file.team_id}`);
+}
+
+/* ============================= */
+/* GET FILE CONTENT (FOR EDITOR) */
+/* ============================= */
+
+export async function getFileContent(fileId: string) {
+  const supabase = await createServerSupabase();
+
+  const { data: file } = await supabase
+    .from("project_files")
+    .select("storage_path, file_name")
+    .eq("id", fileId)
+    .single();
+
+  if (!file || !file.storage_path) throw new Error("File not found");
+
+  const { data, error } = await supabase.storage
+    .from("team-files")
+    .download(file.storage_path);
+
+  if (error || !data) throw new Error("Could not download file");
+
+  const text = await data.text();
+  return { content: text, fileName: file.file_name };
+}
+
+/* ============================= */
+/* SAVE FILE CONTENT (EDITOR)    */
+/* ============================= */
+
+export async function saveFileContent(formData: FormData) {
+  const supabase = await createServerSupabase();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("Unauthorized");
+
+  const fileId = formData.get("fileId") as string;
+  const content = formData.get("content") as string;
+  const changeMessage = (formData.get("changeMessage") as string) || "Edited file";
+
+  if (!fileId) throw new Error("Missing fileId");
+
+  const { data: file } = await supabase
+    .from("project_files")
+    .select("file_name, team_id, current_version")
+    .eq("id", fileId)
+    .single();
+
+  if (!file) throw new Error("File not found");
+
+  // Safety check: Get the absolute max version number from file_versions table
+  const { data: maxVersionData } = await supabase
+    .from("file_versions")
+    .select("version_number")
+    .eq("file_id", fileId)
+    .order("version_number", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const actualMax = maxVersionData?.version_number ?? 0;
+  const dbCurrent = file.current_version ?? 0;
+
+  const nextVersion = Math.max(actualMax, dbCurrent) + 1;
+  const blob = new Blob([content ?? ""], { type: "text/plain" });
+  const filePath = `${file.team_id}/${fileId}/${nextVersion}_${file.file_name}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from("team-files")
+    .upload(filePath, blob);
+
+  if (uploadError) throw uploadError;
+
+  const { data: newVersion, error: versionError } = await supabase
+    .from("file_versions")
+    .insert({
+      file_id: fileId,
+      version_number: nextVersion,
+      file_url: filePath,
+      file_size: blob.size,
+      uploaded_by: user.id,
+      change_message: changeMessage,
+    })
+    .select("id")
+    .single();
+
+  if (versionError) throw versionError;
+
+  await supabase
+    .from("project_files")
+    .update({
+      current_version: nextVersion,
+      storage_path: filePath,
+      file_size: blob.size,
+      latest_version_id: newVersion?.id ?? null,
+      is_versioned: true,
+    })
+    .eq("id", fileId);
+
+  revalidatePath(`/student/teams/${file.team_id}`);
 }
 
 /* =============================
-   CREATE EMPTY FILE
+   CREATE EMPTY FILE (VERSIONED)
 ============================= */
 
 export async function createEmptyFile(formData: FormData) {
@@ -540,9 +1078,8 @@ export async function createEmptyFile(formData: FormData) {
     throw new Error("Missing teamId or fileName");
   }
 
-  const folderSegment = folderId ?? "root";
-
-  const filePath = `${teamId}/${folderSegment}/${Date.now()}-${fileName}`;
+  const fileId = randomUUID();
+  const filePath = `${teamId}/${fileId}/1_${fileName}`;
 
   // Create empty file blob
   const emptyFile = new File([""], fileName);
@@ -553,18 +1090,45 @@ export async function createEmptyFile(formData: FormData) {
 
   if (uploadError) throw uploadError;
 
-  const { error: dbError } = await supabase
+  const { data: newFile, error: dbError } = await supabase
     .from("project_files")
     .insert({
+      id: fileId,
       team_id: teamId,
       file_name: fileName,
       file_size: 0,
       uploaded_by: user.id,
       storage_path: filePath,
       folder_id: folderId || null,
-    });
+      current_version: 1,
+      is_versioned: true,
+    })
+    .select("id")
+    .single();
 
-  if (dbError) throw dbError;
+  if (dbError || !newFile) throw dbError;
+
+  const { data: v1, error: versionError } = await supabase
+    .from("file_versions")
+    .insert({
+      file_id: newFile.id,
+      version_number: 1,
+      file_url: filePath,
+      file_size: 0,
+      uploaded_by: user.id,
+      change_message: "Created empty file",
+    })
+    .select("id")
+    .single();
+
+  if (versionError) throw versionError;
+
+  if (v1) {
+    await supabase
+      .from("project_files")
+      .update({ latest_version_id: v1.id })
+      .eq("id", newFile.id);
+  }
 }
 
 

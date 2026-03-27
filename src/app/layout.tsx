@@ -3,8 +3,8 @@ import { ThemeProvider } from "../components/providers/ThemeProvider";
 import CookieBanner from "../components/layout/CookieBanner";
 
 export const metadata = {
-  title: "Groupspace",
-  description: "A collaborative platform for students to manage group projects, share resources, and communicate effectively.",
+  title: "Collably",
+  description: "A collaborative platform for students and supervisors to manage group projects, thesis workflows, and communicate effectively.",
 };
 import { Inter } from "next/font/google";
 

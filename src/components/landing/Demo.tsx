@@ -12,10 +12,10 @@ export default function Demo() {
             Product Demo
           </p>
           <h2 className="text-4xl md:text-5xl font-black tracking-tighter uppercase">
-            See GroupSpace in Action
+            See Collably in Action
           </h2>
           <p className="mt-4 text-sm md:text-base text-neutral-600 max-w-xl mx-auto">
-            A quick walkthrough of how teams use GroupSpace to coordinate work,
+            A quick walkthrough of how teams use Collably to coordinate work,
             track progress, and keep every project on rails.
           </p>
         </div>
@@ -25,7 +25,7 @@ export default function Demo() {
           <iframe
             className="w-full h-full"
             src="https://www.youtube.com/embed/dQw4w9WgXcQ"
-            title="GroupSpace demo"
+            title="Collably demo"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             referrerPolicy="strict-origin-when-cross-origin"
             allowFullScreen

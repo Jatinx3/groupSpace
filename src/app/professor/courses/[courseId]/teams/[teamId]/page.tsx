@@ -98,7 +98,7 @@ export default async function ProfessorTeamWorkspacePage({
 
   const { data: filesRaw } = await adminSupabase
     .from("project_files")
-    .select("id, file_name, file_size, created_at, uploaded_by")
+    .select("id, file_name, file_size, created_at, uploaded_by, current_version, is_versioned")
     .eq("team_id", teamId)
     .order("created_at", { ascending: false });
 
@@ -127,6 +127,9 @@ export default async function ProfessorTeamWorkspacePage({
     fileSize: f.file_size,
     createdAt: f.created_at,
     uploaderName: uploaderMap[f.uploaded_by] ?? "Unknown",
+    currentVersion: f.current_version ?? 1,
+    isVersioned: f.is_versioned ?? true,
+    folder_id: (f as any).folder_id ?? null,
   }));
 
   const folders = (foldersRaw ?? []).map((f: any) => ({

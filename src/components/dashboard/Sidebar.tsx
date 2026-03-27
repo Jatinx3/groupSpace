@@ -10,6 +10,7 @@ import {
   GraduationCap,
   Bot,
 } from "lucide-react";
+import Logo from "../ui/Logo";
 
 interface SidebarProps {
   isDesktopOpen: boolean;
@@ -48,22 +49,8 @@ export default function Sidebar({
       `}
     >
       {/* Logo */}
-      <div className="mb-8 px-3">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gray-900 dark:bg-white/10 dark:border dark:border-white/10 flex items-center justify-center text-white dark:text-zinc-100 font-bold text-sm shrink-0">
-            G
-          </div>
-          {isDesktopOpen && (
-            <div>
-              <h1 className="text-sm font-bold text-gray-900 dark:text-zinc-100 tracking-tight leading-none">
-                GroupSpace
-              </h1>
-              <p className="text-[10px] text-gray-500 dark:text-zinc-500 font-medium mt-0.5 uppercase tracking-widest">
-                Student
-              </p>
-            </div>
-          )}
-        </div>
+      <div className="mb-8 flex justify-center w-full">
+        <Logo size="lg" showText={isDesktopOpen} align="center" />
       </div>
 
       {/* Navigation */}

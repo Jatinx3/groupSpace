@@ -1,4 +1,4 @@
-# 🧹 GroupSpace: Repository Cleanup & Production-Ready Plan
+# 🧹 Collably: Repository Cleanup & Production-Ready Plan
 
 ## 📦 Part 1: Safe Repository Cleanup Plan
 
@@ -22,7 +22,7 @@ Based on the structure and recent development cycles, here is the safe plan to s
 
 ## 🚀 Part 2: Production-Ready Improvements
 
-To elevate GroupSpace to a polished, enterprise-grade SaaS, here are the architectural next steps.
+To elevate Collably to a polished, enterprise-grade SaaS, here are the architectural next steps.
 
 ### 🏗️ 1. Code Organization (Modular Pattern)
 Instead of grouping files by type (e.g., all tabs in `/components`), adopt a **Feature-Based Architecture**:

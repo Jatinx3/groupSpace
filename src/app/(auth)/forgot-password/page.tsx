@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from "react";
 import { createClientSupabase } from "../../../lib/supabase-client";
+import Logo from "../../../components/ui/Logo";
 
 export default function ForgotPasswordPage() {
   const supabase = createClientSupabase();
@@ -24,9 +25,10 @@ export default function ForgotPasswordPage() {
 
     if (
       !normalizedEmail.endsWith("@mytudublin.ie") &&
-      !normalizedEmail.endsWith("@test.com")
+      !normalizedEmail.endsWith("@test.com") &&
+      !normalizedEmail.endsWith("@ijatin.dev")
     ) {
-      setError("Only @mytudublin.ie and @test.com emails are allowed.");
+      setError("Only @mytudublin.ie, @test.com, and @ijatin.dev emails are allowed.");
       return;
     }
 
@@ -53,9 +55,7 @@ export default function ForgotPasswordPage() {
     <div className="min-h-screen bg-[#F3F3F3] flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-white rounded-2xl border border-black/10 p-8 shadow-sm">
         <div className="flex justify-center mb-6">
-          <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center text-white text-xs font-bold tracking-[0.2em] uppercase">
-            GS
-          </div>
+          <Logo size="lg" showText={true} align="center" />
         </div>
 
         <h1 className="text-3xl font-black text-center tracking-tight uppercase text-black">

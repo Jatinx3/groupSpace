@@ -3,6 +3,7 @@
 import { Github, Twitter, Linkedin, Mail } from "lucide-react";
 import Link from "next/link";
 import { BackgroundPattern } from "./BackgroundPattern";
+import Logo from "../ui/Logo";
 
 const platformLinks = [
   { label: "Features", href: "/features" },
@@ -78,14 +79,14 @@ export default function Footer() {
 
         <div className="border-t border-black/10 pt-12 flex flex-col md:flex-row justify-between items-end gap-12">
           <div className="text-sm font-medium text-neutral-400 uppercase tracking-wide">
-            © 2026 Group Space Inc.
+            © 2026 collably.space
             <br />
             All rights reserved.
           </div>
 
-          <h1 className="text-[12vw] leading-[0.7] font-black tracking-tighter uppercase text-neutral-200 select-none pointer-events-none">
-            GroupSpace
-          </h1>
+          <div className="select-none pointer-events-none opacity-[0.12]" style={{ transform: 'scale(1)' }}>
+            <Logo size="xl" showText={true} align="center" />
+          </div>
         </div>
       </div>
     </footer>

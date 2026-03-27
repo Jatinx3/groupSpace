@@ -3,9 +3,8 @@
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createClientSupabase } from "../../../lib/supabase-client";
-import Logo from "../../../components/ui/Logo";
 
-export default function ProfessorLoginPage() {
+export default function AdminLoginPage() {
   const router = useRouter();
 
   const [email, setEmail] = useState("");
@@ -38,14 +37,13 @@ export default function ProfessorLoginPage() {
 
     setLoading(true);
 
-    const { error: loginError } =
-      await supabase.auth.signInWithPassword({
-        email: normalizedEmail,
-        password,
-      });
+    const { error: loginError } = await supabase.auth.signInWithPassword({
+      email: normalizedEmail,
+      password,
+    });
 
     if (loginError) {
-      console.log("Supabase login error (professor):", loginError);
+      console.log("Supabase admin login error:", loginError);
       setError(loginError.message);
       setLoading(false);
       return;
@@ -67,14 +65,14 @@ export default function ProfessorLoginPage() {
       .eq("id", user.id)
       .single();
 
-    if (!profile || profile.role !== "professor") {
+    if (!profile || profile.role !== "admin") {
       await supabase.auth.signOut();
-      setError("Access denied. Professor account required.");
+      setError("Access denied. Authorized Administrative account required.");
       setLoading(false);
       return;
     }
 
-    router.push("/professor");
+    router.push("/admin");
     router.refresh();
   };
 
@@ -82,27 +80,29 @@ export default function ProfessorLoginPage() {
     <div className="min-h-screen bg-[#F3F3F3] flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-white rounded-2xl border border-black/10 p-8 shadow-sm">
         <div className="flex justify-center mb-6">
-          <Logo size="lg" showText={true} align="center" />
+          <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center text-white text-xs font-bold tracking-[0.2em] uppercase">
+            GS
+          </div>
         </div>
 
         <h1 className="text-3xl font-black text-center tracking-tight uppercase text-black">
-          Professor Sign In
+          Admin Sign In
         </h1>
         <p className="text-xs text-neutral-500 text-center mt-3 mb-8 tracking-[0.18em] uppercase">
-          Access your thesis and course dashboard
+          Access Control Panel
         </p>
 
         <form onSubmit={handleLogin} className="space-y-5">
           <div>
             <label className="text-xs font-bold uppercase tracking-[0.18em] text-neutral-600">
-              University Email
+              Admin Email
             </label>
             <input
               type="email"
               className="mt-2 w-full p-3 border border-black/10 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-black"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="jane.smith@mytudublin.ie"
+              placeholder="admin@ijatin.dev"
             />
           </div>
 
@@ -126,15 +126,10 @@ export default function ProfessorLoginPage() {
                 checked={remember}
                 onChange={(e) => setRemember(e.target.checked)}
               />
-              <span className="uppercase tracking-[0.16em]">Remember me</span>
+              <span className="uppercase tracking-[0.16em]">
+                Remember me
+              </span>
             </label>
-
-            <a
-              href="/forgot-password"
-              className="font-medium uppercase tracking-[0.16em] text-black hover:underline"
-            >
-              Forgot password?
-            </a>
           </div>
 
           {error && (
@@ -150,19 +145,8 @@ export default function ProfessorLoginPage() {
           >
             {loading ? "Signing in..." : "Sign In"}
           </button>
-
-          <p className="text-xs text-center text-neutral-600 mt-4">
-            Are you a student?{" "}
-            <a
-              href="/login"
-              className="font-semibold text-black hover:underline"
-            >
-              Log in here
-            </a>
-          </p>
         </form>
       </div>
     </div>
   );
 }
-

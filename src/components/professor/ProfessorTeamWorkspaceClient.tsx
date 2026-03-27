@@ -23,9 +23,12 @@ import {
   Video,
   Plus,
   Trash2,
+  Eye,
 } from "lucide-react";
 import { profAddMemberByEmail } from "../../app/professor/actions";
 import { useRouter } from "next/navigation";
+import { downloadFile } from "../../lib/download";
+import FilePreviewModal from "../shared/FilePreviewModal";
 
 interface Member {
   id: string;
@@ -41,6 +44,9 @@ interface ProjectFile {
   fileSize: number | null;
   createdAt: string;
   uploaderName: string;
+  currentVersion?: number;
+  isVersioned: boolean;
+  folder_id: string | null;
 }
 
 interface FolderItem {
@@ -71,7 +77,7 @@ interface Props {
   currentUserName: string;
 }
 
-type Tab = "info" | "docs" | "schedule";
+type Tab = "info" | "docs" | "Files" | "schedule";
 
 function formatSize(bytes: number | null) {
   if (!bytes) return "";
@@ -313,10 +319,12 @@ export default function ProfessorTeamWorkspaceClient({
 }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>("info");
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [previewFile, setPreviewFile] = useState<ProjectFile | null>(null);
 
   const tabs = [
     { key: "info" as Tab, label: "Team Info", icon: Users },
-    { key: "docs" as Tab, label: "Structure", icon: FileText, count: files.length },
+    { key: "docs" as Tab, label: "Structure", icon: FileText, count: files.filter(f => f.isVersioned).length },
+    { key: "Files" as Tab, label: "Files", icon: File, count: files.filter(f => !f.isVersioned).length },
     { key: "schedule" as Tab, label: "Schedule Call", icon: CalendarClock },
   ];
 
@@ -388,7 +396,7 @@ export default function ProfessorTeamWorkspaceClient({
             </button>
           ))}
         </div>
-
+ 
         {activeTab === "info" && (
           <div className="p-6">
             <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-zinc-500 mb-4">
@@ -431,14 +439,75 @@ export default function ProfessorTeamWorkspaceClient({
           </div>
         )}
 
+            {activeTab === "Files" && (
+              <div className="bg-white dark:bg-[#111111] rounded-2xl border border-gray-100 dark:border-white/10 shadow-sm overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-100 dark:border-white/10 flex justify-between items-center">
+                  <h3 className="text-sm font-semibold text-gray-800 dark:text-white">Uploaded Assets</h3>
+                  <p className="text-xs text-gray-500 dark:text-zinc-400">
+                    {files.filter(f => !f.isVersioned).length} file{files.filter(f => !f.isVersioned).length !== 1 ? "s" : ""}
+                  </p>
+                </div>
+                <div className="divide-y divide-gray-100 dark:divide-white/5">
+                  {files.filter(f => !f.isVersioned).length === 0 ? (
+                    <div className="p-12 text-center">
+                      <File className="w-8 h-8 text-gray-300 dark:text-zinc-700 mx-auto mb-3" />
+                      <p className="text-sm text-gray-400 dark:text-zinc-500">No assets uploaded yet.</p>
+                    </div>
+                  ) : (
+                    files.filter(f => !f.isVersioned).map((file) => (
+                      <div key={file.id} className="px-6 py-4 flex items-center justify-between hover:bg-gray-50/50 dark:hover:bg-white/[0.02] transition group">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-white/5 flex items-center justify-center">
+                            <File className="w-5 h-5 text-gray-400 dark:text-zinc-500" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900 dark:text-white truncate max-w-xs">{file.fileName}</p>
+                            <div className="flex items-center gap-2 mt-0.5 text-[11px] text-gray-500 dark:text-zinc-400">
+                              <span>{file.uploaderName}</span>
+                              <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-zinc-700" />
+                              <span>{formatSize(file.fileSize || 0)}</span>
+                              <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-zinc-700" />
+                              <span>{new Date(file.createdAt).toLocaleDateString()}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => setPreviewFile(file)}
+                          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-400 hover:text-gray-900 dark:hover:text-white transition"
+                        >
+                          <Eye size={15} />
+                        </button>
+                        <button
+                          onClick={async () => {
+                            await downloadFile(`/api/files/${file.id}`, file.fileName);
+                          }}
+                          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 text-gray-400 hover:text-gray-900 dark:hover:text-white transition"
+                        >
+                          <Download size={15} />
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+
         {activeTab === "docs" && (
-          <ReadOnlyStructureTab teamId={teamId} files={files} folders={folders} />
+          <ReadOnlyStructureTab teamId={teamId} files={files} folders={folders} setPreviewFile={setPreviewFile} />
         )}
 
         {activeTab === "schedule" && (
           <ScheduleTab teamName={teamName} members={members} />
         )}
       </div>
+
+      {previewFile && (
+        <FilePreviewModal
+          fileId={previewFile.id}
+          fileName={previewFile.fileName}
+          onClose={() => setPreviewFile(null)}
+        />
+      )}
     </div>
   );
 }
@@ -450,32 +519,38 @@ function ReadOnlyStructureTab({
   teamId,
   files,
   folders,
+  setPreviewFile,
 }: {
   teamId: string;
   files: ProjectFile[];
   folders: FolderItem[];
+  setPreviewFile: (file: ProjectFile | null) => void;
 }) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   const tree = useMemo(() => {
     const folderMap: Record<string, any> = {};
-    folders.forEach((f) => { folderMap[f.id] = { ...f, type: "folder", children: [] }; });
+    folders.forEach((f) => {
+      folderMap[f.id] = { ...f, type: "folder", children: [] };
+    });
     folders.forEach((f) => {
       if (f.parent_id) folderMap[f.parent_id]?.children.push(folderMap[f.id]);
     });
-    files.forEach((file: any) => {
+
+    files.filter(f => f.isVersioned !== false).forEach((file) => {
       if (!file.folder_id) return;
       const parent = folderMap[file.folder_id];
       if (parent) parent.children.push({ ...file, type: "file" });
     });
+
     return folders.filter((f) => !f.parent_id).map((f) => folderMap[f.id]);
   }, [folders, files]);
 
-  const rootFiles = files.filter((f: any) => !f.folder_id);
+  const rootFiles = files.filter((f: any) => !f.folder_id && f.isVersioned !== false);
 
   const fileTypes = useMemo(() => {
     const map: Record<string, number> = {};
-    files.forEach((f) => {
+    files.filter(f => f.isVersioned !== false).forEach((f) => {
       const ext = f.fileName.split(".").pop()?.toLowerCase() || "other";
       map[ext] = (map[ext] || 0) + 1;
     });
@@ -495,7 +570,7 @@ function ReadOnlyStructureTab({
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: "Total Files", value: files.length },
+          { label: "Total Files", value: files.filter(f => f.isVersioned !== false).length },
           { label: "Folders", value: folders.length },
           { label: "File Types", value: Object.keys(fileTypes).length },
         ].map(({ label, value }) => (
@@ -529,10 +604,10 @@ function ReadOnlyStructureTab({
             ) : (
               <>
                 {tree.map((node) => (
-                  <ReadOnlyTreeNode key={node.id} node={node} expanded={expanded} toggle={toggle} level={0} />
+                  <ReadOnlyTreeNode key={node.id} node={node} expanded={expanded} toggle={toggle} level={0} onPreview={setPreviewFile} />
                 ))}
                 {rootFiles.map((file) => (
-                  <ReadOnlyFileRow key={file.id} file={file} level={0} />
+                  <ReadOnlyFileRow key={file.id} file={file} level={0} onPreview={setPreviewFile} />
                 ))}
               </>
             )}
@@ -562,17 +637,20 @@ function ReadOnlyStructureTab({
 
           <div className="border border-gray-100 dark:border-white/10 rounded-2xl p-5">
             <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-500 mb-4">Recent Files</h3>
-            {files.length === 0 ? (
+            {files.filter(f => f.isVersioned !== false).length === 0 ? (
               <p className="text-xs text-gray-400 dark:text-zinc-500">No files yet</p>
             ) : (
               <div className="space-y-2.5">
-                {files.slice(0, 6).map((file) => (
-                  <div key={file.id} className="flex items-center gap-2">
+                {files.filter(f => f.isVersioned !== false).slice(0, 6).map((file) => (
+                  <div key={file.id} className="flex items-center gap-2 group">
                     <File className="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500 shrink-0" />
                     <p className="text-xs text-gray-600 dark:text-zinc-400 truncate flex-1">{file.fileName}</p>
-                    <a href={`/api/files/${file.id}`} target="_blank" rel="noopener noreferrer">
+                    <button onClick={() => setPreviewFile(file)} className="opacity-0 group-hover:opacity-100 transition">
+                      <Eye className="w-3 h-3 text-gray-400 dark:text-zinc-500 hover:text-gray-900 dark:hover:text-white transition" />
+                    </button>
+                    <button onClick={() => downloadFile(`/api/files/${file.id}`, file.fileName)}>
                       <Download className="w-3 h-3 text-gray-400 dark:text-zinc-500 hover:text-gray-900 dark:hover:text-white transition" />
-                    </a>
+                    </button>
                   </div>
                 ))}
               </div>
@@ -584,11 +662,11 @@ function ReadOnlyStructureTab({
   );
 }
 
-function ReadOnlyTreeNode({ node, expanded, toggle, level }: { node: any; expanded: Set<string>; toggle: (id: string) => void; level: number }) {
+function ReadOnlyTreeNode({ node, expanded, toggle, level, onPreview }: { node: any; expanded: Set<string>; toggle: (id: string) => void; level: number; onPreview: (f: any) => void }) {
   const isFolder = node.type === "folder";
   const isOpen = expanded.has(node.id);
 
-  if (!isFolder) return <ReadOnlyFileRow file={node} level={level} />;
+  if (!isFolder) return <ReadOnlyFileRow file={node} level={level} onPreview={onPreview} />;
 
   return (
     <div>
@@ -607,16 +685,16 @@ function ReadOnlyTreeNode({ node, expanded, toggle, level }: { node: any; expand
         </span>
       </div>
       {isOpen && node.children.map((child: any) => (
-        <ReadOnlyTreeNode key={child.id} node={child} expanded={expanded} toggle={toggle} level={level + 1} />
+        <ReadOnlyTreeNode key={child.id} node={child} expanded={expanded} toggle={toggle} level={level + 1} onPreview={onPreview} />
       ))}
     </div>
   );
 }
 
-function ReadOnlyFileRow({ file, level }: { file: any; level: number }) {
+function ReadOnlyFileRow({ file, level, onPreview }: { file: any; level: number; onPreview: (f: any) => void }) {
   return (
     <div
-      className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition group"
+      className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition group cursor-pointer"
       style={{ paddingLeft: `${28 + level * 20}px` }}
     >
       <File className="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500 shrink-0" />
@@ -624,15 +702,29 @@ function ReadOnlyFileRow({ file, level }: { file: any; level: number }) {
       {file.fileSize && (
         <span className="text-[10px] text-gray-400 dark:text-zinc-500 shrink-0">{formatSize(file.fileSize)}</span>
       )}
-      <a
-        href={`/api/files/${file.id}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="opacity-0 group-hover:opacity-100 transition"
-        onClick={(e) => e.stopPropagation()}
+      {(file.currentVersion ?? 0) > 0 && (
+        <span className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 bg-gray-100 dark:bg-white/5 px-1.5 py-0.5 rounded-full shrink-0">v{file.currentVersion}</span>
+      )}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onPreview(file);
+        }}
+        className="p-1 rounded-md opacity-0 group-hover:opacity-100 text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition"
+        title="View file"
       >
-        <Download className="w-3.5 h-3.5 text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white transition" />
-      </a>
+        <Eye className="w-3.5 h-3.5" />
+      </button>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          downloadFile(`/api/files/${file.id}`, file.fileName ?? file.file_name);
+        }}
+        className="p-1 rounded-md opacity-0 group-hover:opacity-100 text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition"
+        title="Download file"
+      >
+        <Download className="w-3.5 h-3.5" />
+      </button>
     </div>
   );
 }

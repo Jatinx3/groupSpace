@@ -8,7 +8,7 @@ export default function CookieBanner() {
 
   useEffect(() => {
     // Check if the user has already consented
-    const consent = localStorage.getItem("groupSpace_cookie_consent");
+    const consent = localStorage.getItem("collably_cookie_consent");
     if (!consent) {
       // Small delay to let the page load before sliding in
       const timer = setTimeout(() => {
@@ -19,7 +19,7 @@ export default function CookieBanner() {
   }, []);
 
   const handleAccept = () => {
-    localStorage.setItem("groupSpace_cookie_consent", "true");
+    localStorage.setItem("collably_cookie_consent", "true");
     setVisible(false);
   };
 

@@ -47,7 +47,7 @@ export default function Testimonials() {
               viewport={{ once: true }}
               className="text-4xl md:text-6xl font-medium leading-tight tracking-tight text-black"
             >
-              &ldquo;GroupSpace stripped away the administrative overhead of our research groups. We now spend 90% of
+              &ldquo;Collably stripped away the administrative overhead of our research groups. We now spend 90% of
               our time on actual research, not coordination.&rdquo;
             </motion.div>
 

@@ -9,10 +9,15 @@ import {
   ChevronDown,
   FolderPlus,
   FilePlus,
-  Upload,
+  GitCommitHorizontal,
   Trash2,
   Download,
+  Eye,
+  Clock,
+  X,
 } from "lucide-react";
+import { downloadFile } from "../../../../lib/download";
+import FilePreviewModal from "../../../shared/FilePreviewModal";
 
 import {
   createFolder,
@@ -20,6 +25,8 @@ import {
   uploadFile,
   createEmptyFile,
 } from "../../../../app/student/teams/actions";
+import PushUpdateModal from "./PushUpdateModal";
+import VersionHistoryPanel from "./VersionHistoryPanel";
 
 interface FolderItem {
   id: string;
@@ -31,6 +38,8 @@ interface FileItem {
   id: string;
   file_name: string;
   folder_id: string | null;
+  current_version?: number;
+  is_versioned: boolean;
 }
 
 interface Props {
@@ -55,6 +64,14 @@ export default function StructureTab({
   const [modalType, setModalType] = useState<"folder" | "file" | null>(null);
   const [modalParent, setModalParent] = useState<string | null>(null);
   const [inputValue, setInputValue] = useState("");
+
+  // Push update modal state
+  const [pushFolderId, setPushFolderId] = useState<string | null>(null);
+
+  // File action state
+  const [pushFileTarget, setPushFileTarget] = useState<FileItem | null>(null);
+  const [historyTarget, setHistoryTarget] = useState<FileItem | null>(null);
+  const [previewFile, setPreviewFile] = useState<FileItem | null>(null);
 
   /* =============================
      BUILD TREE
@@ -82,7 +99,7 @@ export default function StructureTab({
       }
     });
 
-    files.forEach((file) => {
+    files.filter(f => f.is_versioned !== false).forEach((file) => {
       if (!file.folder_id) return;
 
       const parent = folderMap[file.folder_id];
@@ -173,6 +190,10 @@ export default function StructureTab({
     router.refresh();
   }
 
+  function openPushUpdate(folderId: string) {
+    setPushFolderId(folderId);
+  }
+
   async function handleDeleteFolder(folder: FolderItem) {
     const hasChildren = folders.some(
       (f) => f.parent_id === folder.id
@@ -254,6 +275,13 @@ export default function StructureTab({
                 openCreateFile={openCreateFile}
                 onUpload={handleUpload}
                 onDeleteFolder={handleDeleteFolder}
+                onPushUpdate={openPushUpdate}
+                onFileDownload={(f: FileItem) => {
+                  downloadFile(`/api/files/${f.id}`, f.file_name);
+                }}
+                onFilePreview={(f: FileItem) => setPreviewFile(f)}
+                onFileHistory={(f: FileItem) => setHistoryTarget(f)}
+                onFilePushUpdate={(f: FileItem) => setPushFileTarget(f)}
               />
             ))}
           </div>
@@ -338,8 +366,68 @@ export default function StructureTab({
           </div>
         </div>
       )}
+
+      {/* PUSH UPDATE MODAL — folder */}
+      {pushFolderId && (
+        <PushUpdateModal
+          teamId={teamId}
+          folderId={pushFolderId}
+          onClose={() => {
+            setPushFolderId(null);
+            router.refresh();
+          }}
+        />
+      )}
+
+      {/* PUSH UPDATE MODAL — existing file */}
+      {pushFileTarget && (
+        <PushUpdateModal
+          teamId={teamId}
+          existingFileId={pushFileTarget.id}
+          existingFileName={pushFileTarget.file_name}
+          folderId={pushFileTarget.folder_id}
+          onClose={() => {
+            setPushFileTarget(null);
+            router.refresh();
+          }}
+        />
+      )}
+
+      {/* VERSION HISTORY PANEL */}
+      {historyTarget && (
+        <VersionHistoryPanel
+          fileId={historyTarget.id}
+          fileName={historyTarget.file_name}
+          onClose={() => setHistoryTarget(null)}
+        />
+      )}
+
+      {/* PREVIEW MODAL */}
+      {previewFile && (
+        <FilePreviewModal
+          fileId={previewFile.id}
+          fileName={previewFile.file_name}
+          onClose={() => setPreviewFile(null)}
+        />
+      )}
     </div>
   );
+}
+
+/* =============================
+   HELPERS
+============================= */
+
+function getExtension(filename: string) {
+  return filename.split(".").pop()?.toLowerCase() || "";
+}
+
+function isImage(filename: string) {
+  return ["png", "jpg", "jpeg", "gif", "webp"].includes(getExtension(filename));
+}
+
+function isPDF(filename: string) {
+  return getExtension(filename) === "pdf";
 }
 
 /* =============================
@@ -356,6 +444,11 @@ function TreeNode({
   openCreateFile,
   onUpload,
   onDeleteFolder,
+  onPushUpdate,
+  onFileDownload,
+  onFilePreview,
+  onFileHistory,
+  onFilePushUpdate,
 }: any) {
   const isFolder = node.type === "folder";
   const isOpen = expanded.has(node.id);
@@ -363,8 +456,11 @@ function TreeNode({
   return (
     <div>
       <div
-        className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition group"
+        className={`flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition group ${
+          !isFolder ? "cursor-pointer" : ""
+        }`}
         style={{ paddingLeft: `${level * 20}px` }}
+        onClick={!isFolder ? () => onFilePreview?.(node) : undefined}
       >
         {isFolder ? (
           <button
@@ -383,7 +479,7 @@ function TreeNode({
 
         {isFolder ? (
           <>
-            <Folder size={18} className="text-yellow-500" />
+            <Folder size={18} className="text-yellow-500 shrink-0" />
             <span className="flex-1 text-sm font-medium text-gray-700 dark:text-zinc-200">
               {node.name}
             </span>
@@ -399,17 +495,13 @@ function TreeNode({
                   className="text-gray-500 dark:text-zinc-500 hover:text-gray-800 dark:hover:text-white cursor-pointer transition"
                   onClick={() => openCreateFile(node.id)}
                 />
-                <label className="cursor-pointer text-gray-500 dark:text-zinc-500 hover:text-gray-800 dark:hover:text-white transition">
-                  <Upload size={15} />
-                  <input
-                    type="file"
-                    hidden
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) onUpload(file, node.id);
-                    }}
-                  />
-                </label>
+                <span
+                  className="text-gray-500 dark:text-zinc-500 hover:text-gray-800 dark:hover:text-white cursor-pointer transition"
+                  onClick={() => onPushUpdate(node.id)}
+                  title="Push Update"
+                >
+                  <GitCommitHorizontal size={15} />
+                </span>
                 <Trash2
                   size={15}
                   className="text-red-400 dark:text-red-500/80 hover:text-red-600 dark:hover:text-red-500 cursor-pointer transition"
@@ -419,10 +511,56 @@ function TreeNode({
           </>
         ) : (
           <>
-            <File size={18} className="text-gray-400 dark:text-zinc-500" />
-            <span className="text-sm text-gray-600 dark:text-zinc-400">
+            <File size={18} className="text-gray-400 dark:text-zinc-500 shrink-0" />
+            <span className="flex-1 text-sm text-gray-600 dark:text-zinc-400 truncate">
               {node.file_name}
             </span>
+
+            {/* Version badge */}
+            {node.current_version && node.current_version > 0 && (
+              <span className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 bg-gray-100 dark:bg-white/5 px-1.5 py-0.5 rounded-full shrink-0">
+                v{node.current_version}
+              </span>
+            )}
+
+            {/* File action icons — visible on hover */}
+            <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition shrink-0">
+              {/* Download */}
+              <span
+                className="p-1 rounded-md text-gray-500 dark:text-zinc-500 hover:text-gray-800 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 cursor-pointer transition"
+                title="Download file"
+                onClick={(e) => { e.stopPropagation(); onFileDownload?.(node); }}
+              >
+                <Download size={14} />
+              </span>
+
+              {/* View / Preview */}
+              <span
+                className="p-1 rounded-md text-gray-500 dark:text-zinc-500 hover:text-gray-800 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 cursor-pointer transition"
+                title="View file"
+                onClick={(e) => { e.stopPropagation(); onFilePreview?.(node); }}
+              >
+                <Eye size={14} />
+              </span>
+
+              {/* Version History */}
+              <span
+                className="p-1 rounded-md text-gray-500 dark:text-zinc-500 hover:text-gray-800 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 cursor-pointer transition"
+                title="Version history"
+                onClick={(e) => { e.stopPropagation(); onFileHistory?.(node); }}
+              >
+                <Clock size={14} />
+              </span>
+
+              {/* Push Update */}
+              <span
+                className="p-1 rounded-md text-gray-500 dark:text-zinc-500 hover:text-gray-800 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 cursor-pointer transition"
+                title="Push update"
+                onClick={(e) => { e.stopPropagation(); onFilePushUpdate?.(node); }}
+              >
+                <GitCommitHorizontal size={14} />
+              </span>
+            </div>
           </>
         )}
       </div>
@@ -441,6 +579,11 @@ function TreeNode({
             openCreateFile={openCreateFile}
             onUpload={onUpload}
             onDeleteFolder={onDeleteFolder}
+            onPushUpdate={onPushUpdate}
+            onFileDownload={onFileDownload}
+            onFilePreview={onFilePreview}
+            onFileHistory={onFileHistory}
+            onFilePushUpdate={onFilePushUpdate}
           />
         ))}
     </div>

@@ -1,8 +1,8 @@
-# GroupSpace 🎓
+# Collably 🎓
 
 A modern, real-time student collaboration and thesis management platform. 
 
-![GroupSpace Preview](docs/placeholder-preview.png) *(Placeholder for dashboard screenshot)*
+![Collably Preview](docs/placeholder-preview.png) *(Placeholder for dashboard screenshot)*
 
 ---
 
@@ -10,13 +10,13 @@ A modern, real-time student collaboration and thesis management platform.
 
 University projects and thesis research often require juggling multiple tools: WhatsApp for chat, Google Drive for files, Notion for tasks, and email for supervisor feedback. This fragmentation leads to lost files, missed deadlines, and poor team visibility. 
 
-**GroupSpace** solves this by unifying team collaboration, task tracking, file sharing, and professor workflows into a single, cohesive, data-dense platform. 
+**Collably** solves this by unifying team collaboration, task tracking, file sharing, and professor workflows into a single, cohesive, data-dense platform. 
 
 ---
 
 ## 🌟 Product Overview
 
-GroupSpace is an all-in-one SaaS platform built for universities and educational institutions. It provides dedicated workspaces for:
+Collably is an all-in-one SaaS platform built for universities and educational institutions. It provides dedicated workspaces for:
 - **Students**: Manage course teams, track project progress, upload files, chat in real-time, and manage thesis deadlines.
 - **Professors**: Oversee courses, monitor team progress, assign milestones, and review thesis submissions effortlessly.
 - **Supervisors**: Provide structured feedback on thesis drafts and schedule meetings.
@@ -33,7 +33,7 @@ GroupSpace is an all-in-one SaaS platform built for universities and educational
 
 ## 💻 Tech Stack
 
-GroupSpace is built with modern, scalable, and type-safe web technologies:
+Collably is built with modern, scalable, and type-safe web technologies:
 
 - **Framework**: [Next.js](https://nextjs.org/) (App Router, Server & Client Components)
 - **Database & Auth**: [Supabase](https://supabase.com/) (PostgreSQL, Row Level Security, Storage, Realtime)
@@ -66,8 +66,8 @@ The PostgreSQL database is fully relational to track complex academic structures
 
 ### 1. Clone & Install
 ```bash
-git clone https://github.com/Jatinx3/groupSpace.git
-cd groupSpace
+git clone https://github.com/Jatinx3/collably.git
+cd collably
 npm install
 ```
 

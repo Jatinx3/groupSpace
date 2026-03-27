@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { Menu } from "lucide-react";
 import Link from "next/link";
+import Logo from "../ui/Logo";
 
 export default function Navbar() {
   return (
@@ -15,10 +16,9 @@ export default function Navbar() {
             transition={{ duration: 0.5 }}
             className="flex items-center gap-2"
           >
-            <Link href="/" className="text-xl md:text-2xl font-black tracking-tighter uppercase text-black">
-              Group Space
+            <Link href="/" className="transition-opacity hover:opacity-80">
+              <Logo size="lg" showText={true} />
             </Link>
-            <span className="hidden md:inline-block w-2 h-2 bg-black rounded-full mt-1" />
           </motion.div>
 
           <motion.div

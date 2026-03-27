@@ -229,7 +229,7 @@ export default async function TeamDetailPage({
   const { data: filesRaw, error: filesError } = await supabase
     .from("project_files")
     .select(
-      "id, file_name, file_size, created_at, folder_id, uploaded_by"
+      "id, file_name, file_size, created_at, folder_id, uploaded_by, current_version, latest_version_id, is_versioned"
     )
     .eq("team_id", teamId)
     .order("created_at", { ascending: false });
@@ -268,10 +268,55 @@ export default async function TeamDetailPage({
       }
     }
 
+    // Fetch latest version info for each file
+    const versionIds = filesRaw
+      .map((f: any) => f.latest_version_id)
+      .filter(Boolean);
+
+    let versionMap: Record<string, any> = {};
+
+    if (versionIds.length > 0) {
+      const { data: versions } = await supabase
+        .from("file_versions")
+        .select("id, uploaded_by, change_message, created_at")
+        .in("id", versionIds);
+
+      if (versions) {
+        // Get version uploader names
+        const versionUploaderIds = Array.from(
+          new Set(versions.map((v: any) => v.uploaded_by).filter(Boolean))
+        );
+
+        let versionUploaderMap: Record<string, string> = {};
+        if (versionUploaderIds.length > 0) {
+          const { data: vProfiles } = await supabase
+            .from("profiles")
+            .select("id, first_name, last_name")
+            .in("id", versionUploaderIds);
+
+          (vProfiles ?? []).forEach((p: any) => {
+            versionUploaderMap[p.id] = `${p.first_name} ${p.last_name}`.trim();
+          });
+        }
+
+        versions.forEach((v: any) => {
+          versionMap[v.id] = {
+            uploaderName: versionUploaderMap[v.uploaded_by] ?? null,
+            changeMessage: v.change_message,
+            createdAt: v.created_at,
+          };
+        });
+      }
+    }
+
     files = filesRaw.map((file: any) => {
       const uploader =
         uploaders.find((p: any) => p.id === file.uploaded_by) ??
         null;
+
+      const versionInfo = file.latest_version_id
+        ? versionMap[file.latest_version_id]
+        : null;
 
       return {
         id: file.id,
@@ -279,12 +324,17 @@ export default async function TeamDetailPage({
         file_size: file.file_size,
         created_at: file.created_at,
         folder_id: file.folder_id,
+        current_version: file.current_version ?? 1,
         uploaded_by: uploader
           ? {
               first_name: uploader.first_name,
               last_name: uploader.last_name,
             }
           : null,
+        version_uploader: versionInfo?.uploaderName ?? null,
+        version_message: versionInfo?.changeMessage ?? null,
+        version_created_at: versionInfo?.createdAt ?? null,
+        is_versioned: file.is_versioned ?? true,
       };
     });
   }

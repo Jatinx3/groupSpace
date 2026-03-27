@@ -9,7 +9,7 @@ const contactInfo = [
   {
     icon: Mail,
     label: "Email",
-    value: "hello@groupspace.app",
+    value: "hello@collably.space",
     description: "We aim to respond within one business day.",
   },
   {
@@ -68,7 +68,7 @@ export default function ContactPage() {
                 <span className="text-neutral-400">message</span>
               </h2>
               <p className="text-neutral-600 text-sm font-medium max-w-sm">
-                Whether you're a student, professor, or administrator evaluating GroupSpace for your institution, we'd love to hear from you.
+                Whether you're a student, professor, or administrator evaluating Collably for your institution, we'd love to hear from you.
               </p>
             </div>
 

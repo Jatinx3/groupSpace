@@ -3,7 +3,7 @@ export default function Footer() {
     <footer className="mt-16 border-t border-gray-100 py-5">
       <div className="flex items-center justify-between">
         <p className="text-[11px] font-medium text-gray-400 uppercase tracking-widest">
-          © {new Date().getFullYear()} GroupSpace
+          © {new Date().getFullYear()} Collably
         </p>
         <p className="text-[11px] font-medium text-gray-400 uppercase tracking-widest">
           Built by Jatin with{" "}

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, GraduationCap } from "lucide-react";
+import Logo from "../ui/Logo";
 
 interface ProfessorSidebarProps {
   isDesktopOpen: boolean;
@@ -33,18 +34,8 @@ export default function ProfessorSidebar({
         px-4 py-8
       `}
     >
-      <div className="mb-12 px-3">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-600 to-indigo-500 flex items-center justify-center text-white font-semibold shadow-sm">
-            G
-          </div>
-
-          {isDesktopOpen && (
-            <h1 className="text-lg font-semibold text-slate-900 tracking-tight">
-              GroupSpace
-            </h1>
-          )}
-        </div>
+      <div className="mb-12 flex justify-center w-full">
+        <Logo size="lg" showText={isDesktopOpen} align="center" />
       </div>
 
       <nav className="space-y-2">

@@ -8,13 +8,13 @@ const values = [
     id: "01",
     title: "Simplicity First",
     description:
-      "We believe great tools get out of the way. GroupSpace is intentionally minimal — every feature earns its place by solving a real problem for students and educators.",
+      "We believe great tools get out of the way. Collably is intentionally minimal — every feature earns its place by solving a real problem for students and educators.",
   },
   {
     id: "02",
     title: "Built for Academia",
     description:
-      "GroupSpace isn't a generic project manager dressed up for universities. It was designed from the ground up around how courses, thesis work, and student teams actually operate.",
+      "Collably isn't a generic project manager dressed up for universities. It was designed from the ground up around how courses, thesis work, and student teams actually operate.",
   },
   {
     id: "03",
@@ -26,7 +26,7 @@ const values = [
     id: "04",
     title: "Continuous Improvement",
     description:
-      "GroupSpace is actively developed. We listen closely to users — students, professors, and supervisors — and iterate based on real classroom experience, not assumptions.",
+      "Collably is actively developed. We listen closely to users — students, professors, and supervisors — and iterate based on real classroom experience, not assumptions.",
   },
 ];
 
@@ -50,7 +50,7 @@ export default function AboutPage() {
             About
           </h1>
           <p className="mt-10 max-w-xl text-lg font-medium leading-snug tracking-tight text-neutral-600">
-            GroupSpace was born out of a simple frustration: academic collaboration tools were either too generic, too bloated, or too fragile. We built something better.
+            Collably was born out of a simple frustration: academic collaboration tools were either too generic, too bloated, or too fragile. We built something better.
           </p>
         </div>
       </section>
@@ -70,7 +70,7 @@ export default function AboutPage() {
                   Most university group work happens across a patchwork of tools — WhatsApp for messages, Google Drive for files, email for formal updates, and spreadsheets for tracking tasks. Nothing talks to anything else, and important context falls through the cracks.
                 </p>
                 <p>
-                  GroupSpace brings it all together. One place for your team, your tasks, your documents, and your conversations — organized around the courses and projects that matter.
+                  Collably brings it all together. One place for your team, your tasks, your documents, and your conversations — organized around the courses and projects that matter.
                 </p>
                 <p>
                   We designed specifically for three types of users: students who need to collaborate, professors who need to manage and monitor, and supervisors who need to guide thesis work. Each role has the right tools and the right level of visibility.

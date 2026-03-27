@@ -66,13 +66,28 @@ export async function GET(
   const stream = new PassThrough();
   archive.pipe(stream);
 
-  // 6️⃣ Append files with correct path
+  // 6️⃣ Append files with correct path (using latest version)
   for (const file of files) {
-    if (!file.storage_path) continue;
+    // Prefer the latest version's file_url, fallback to storage_path
+    let storagePath = file.storage_path;
+
+    if (file.latest_version_id) {
+      const { data: version } = await supabase
+        .from("file_versions")
+        .select("file_url")
+        .eq("id", file.latest_version_id)
+        .single();
+
+      if (version?.file_url) {
+        storagePath = version.file_url;
+      }
+    }
+
+    if (!storagePath) continue;
 
     const { data } = await supabase.storage
-      .from("team-files") // make sure bucket name matches
-      .download(file.storage_path);
+      .from("team-files")
+      .download(storagePath);
 
     if (!data) continue;
 

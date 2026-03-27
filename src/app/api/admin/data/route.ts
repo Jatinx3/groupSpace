@@ -55,6 +55,7 @@ export async function GET() {
     });
 
   } catch (err: any) {
+    console.error("❌ CRITICAL ADMIN DATA API ERROR:", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
