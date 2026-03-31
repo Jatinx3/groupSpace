@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { joinCourseByCode } from "../../app/student/courses/actions";
-import Link from "next/link";
+import { BookOpen, FolderDot } from "lucide-react";
 
 interface Props {
   courses: any[];
@@ -54,7 +54,7 @@ export default function CourseList({ courses }: Props) {
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {personalCourses.map((course) => (
-            <CourseCard key={course.id} course={course} />
+            <CourseCard key={course.id} course={course} isPersonal={true} />
           ))}
         </div>
       </section>
@@ -70,7 +70,7 @@ export default function CourseList({ courses }: Props) {
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {academicCourses.map((course) => (
-              <CourseCard key={course.id} course={course} />
+              <CourseCard key={course.id} course={course} isPersonal={false} />
             ))}
           </div>
         )}
@@ -83,25 +83,30 @@ export default function CourseList({ courses }: Props) {
 
 /* ================= COURSE CARD ================= */
 
-function CourseCard({ course }: any) {
+function CourseCard({ course, isPersonal = false }: any) {
   return (
-    <Link href={`/student/courses/${course.id}`}>
-      <div className="group bg-white dark:bg-[#111111] rounded-2xl border border-gray-200 dark:border-white/10 p-6 transition-all duration-200 hover:shadow-sm hover:border-gray-300 dark:hover:border-white/20 hover:-translate-y-1 cursor-pointer">
+    <div className="relative overflow-hidden bg-white dark:bg-[#111111] rounded-2xl border border-gray-100 dark:border-white/5 p-6 shadow-sm transition-all hover:border-gray-200 dark:hover:border-white/10 cursor-default">
+      
+      {/* Subtle Background Accent */}
+      <div className="absolute top-0 right-0 w-32 h-32 bg-gray-50/50 dark:bg-white/[0.02] rounded-bl-[100px] -z-0 transition-colors" />
 
-        <h3 className="text-base font-semibold text-gray-900 dark:text-white transition">
-          {course.name}
-        </h3>
-
-        <div className="mt-4 h-px bg-gray-100 dark:bg-white/10" />
-
-        <div className="mt-4 flex items-center justify-between text-xs text-gray-400 dark:text-zinc-500 font-medium">
-          <span className="group-hover:text-gray-900 dark:group-hover:text-white transition-colors">Open Course</span>
-          <span className="group-hover:translate-x-1 group-hover:text-gray-900 dark:group-hover:text-white transition-all">
-            →
-          </span>
+      <div className="relative z-10 flex items-start gap-4">
+        {/* Semantic Icon */}
+        <div className="p-3.5 bg-gray-50 dark:bg-white/5 rounded-xl border border-gray-100/50 dark:border-white/5 flex shrink-0 items-center justify-center text-gray-500 dark:text-zinc-400">
+          {isPersonal ? <FolderDot className="w-5 h-5" /> : <BookOpen className="w-5 h-5" />}
+        </div>
+        
+        {/* Card Copy */}
+        <div className="flex-1 min-w-0 pt-0.5">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-zinc-500 mb-1">
+            {isPersonal ? "Workspace" : "Academic"}
+          </p>
+          <h3 className="text-base font-semibold text-gray-900 dark:text-white truncate">
+            {course.name}
+          </h3>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }
 
