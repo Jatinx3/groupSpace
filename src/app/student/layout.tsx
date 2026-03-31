@@ -99,9 +99,7 @@ export default function StudentLayout({
           }
         )
         .subscribe((status) => {
-          if (status === "SUBSCRIBED") {
-            console.log("[notif] realtime subscribed for", user.id);
-          } else {
+          if (status !== "SUBSCRIBED") {
             console.warn("[notif] realtime status:", status);
           }
         });
