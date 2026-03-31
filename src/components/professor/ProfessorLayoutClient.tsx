@@ -23,6 +23,7 @@ import Footer from "../layout/Footer";
 import ThemeToggle from "../ui/ThemeToggle";
 import AnnouncementHandler from "../announcements/AnnouncementHandler";
 import Logo from "../ui/Logo";
+import { useProfile } from "../providers/ProfileProvider";
 
 interface ProfessorLayoutClientProps {
   children: React.ReactNode;
@@ -82,6 +83,10 @@ export default function ProfessorLayoutClient({
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClientSupabase();
+  const { profile } = useProfile();
+
+  const displayFirstName = profile?.first_name || firstName;
+  const displayAvatarUrl = profile?.avatar_url !== undefined ? profile.avatar_url : avatarUrl;
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -371,14 +376,14 @@ export default function ProfessorLayoutClient({
                 }}
                 className="focus:outline-none"
               >
-                <Avatar name={firstName} avatarUrl={avatarUrl} size={34} />
+                <Avatar name={displayFirstName} avatarUrl={displayAvatarUrl} size={34} />
               </button>
 
               {profileOpen && (
                 <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50">
                   <div className="px-4 py-3 border-b border-gray-100">
-                    <p className="text-sm font-semibold text-gray-900">{firstName}</p>
-                    <p className="text-xs text-gray-400 truncate">{email}</p>
+                    <p className="text-sm font-semibold text-gray-900">{displayFirstName} {profile?.last_name || ""}</p>
+                    <p className="text-xs text-gray-400 truncate">Professor</p>
                   </div>
                   <button
                     onClick={() => router.push("/professor/profile")}

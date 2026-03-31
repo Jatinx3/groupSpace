@@ -10,42 +10,23 @@ export default async function StudentTeamsPage() {
 
   if (!user) return <div>Not authenticated</div>;
 
-  /* =========================
-     Fetch Teams
-  ========================= */
-  const { data: memberships } = await supabase
-    .from("team_members")
-    .select(`
-      team:teams (
-        id,
-        name,
-        course_id,
-        courses (
-          id,
-          name
-        )
-      )
-    `)
-    .eq("user_id", user.id);
+  /* Teams + Courses fetched in parallel */
+  const [membershipsResult, courseMembershipsResult] = await Promise.all([
+    supabase
+      .from("team_members")
+      .select("team:teams(id, name, course_id, courses(id, name))")
+      .eq("user_id", user.id),
+    supabase
+      .from("course_members")
+      .select("courses(id, name)")
+      .eq("user_id", user.id),
+  ]);
 
   const teams =
-    memberships?.map((m) => m.team).filter(Boolean) ?? [];
-
-  /* =========================
-     Fetch Enrolled Courses
-  ========================= */
-  const { data: courseMemberships } = await supabase
-    .from("course_members")
-    .select(`
-      courses (
-        id,
-        name
-      )
-    `)
-    .eq("user_id", user.id);
+    membershipsResult.data?.map((m) => m.team).filter(Boolean) ?? [];
 
   const courses =
-    courseMemberships?.map((c) => c.courses).filter(Boolean) ?? [];
+    courseMembershipsResult.data?.map((c) => c.courses).filter(Boolean) ?? [];
 
   return (
     <TeamsDashboard

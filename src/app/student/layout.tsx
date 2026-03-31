@@ -10,6 +10,7 @@ import { playChime } from "../../lib/chime";
 import Avatar from "../../components/ui/Avatar";
 import ThemeToggle from "../../components/ui/ThemeToggle";
 import AnnouncementHandler from "../../components/announcements/AnnouncementHandler";
+import { useProfile } from "../../components/providers/ProfileProvider";
 
 export default function StudentLayout({
   children,
@@ -21,11 +22,7 @@ export default function StudentLayout({
   const [profileOpen, setProfileOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
 
-  const [userProfile, setUserProfile] = useState<{
-    first_name: string;
-    email: string;
-    avatar_url?: string | null;
-  } | null>(null);
+  const { profile: userProfile } = useProfile();
 
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -54,17 +51,9 @@ export default function StudentLayout({
 
       if (!user) return;
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("first_name, email, avatar_url")
-        .eq("id", user.id)
-        .single();
-
-      if (profile) setUserProfile(profile);
-
       const { data: initialNotifications } = await supabase
         .from("notifications")
-        .select("*")
+        .select("id, type, title, message, read, created_at")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
         .limit(20);
@@ -333,10 +322,10 @@ export default function StudentLayout({
                 <div className="absolute right-0 mt-2 w-52 bg-white dark:bg-zinc-900 rounded-2xl shadow-xl dark:shadow-2xl border border-gray-100 dark:border-white/10 overflow-hidden z-50">
                   <div className="px-4 py-3 border-b border-gray-100 dark:border-white/5">
                     <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
-                      {userProfile?.first_name}
+                      {userProfile?.first_name} {userProfile?.last_name}
                     </p>
                     <p className="text-xs text-gray-500 dark:text-zinc-400 truncate">
-                      {userProfile?.email}
+                      Student
                     </p>
                   </div>
 

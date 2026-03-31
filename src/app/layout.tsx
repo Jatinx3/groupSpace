@@ -1,6 +1,7 @@
 import "./globals.css";
 import { ThemeProvider } from "../components/providers/ThemeProvider";
 import { PHProvider } from "../components/providers/PostHogProvider";
+import { ProfileProvider } from "../components/providers/ProfileProvider";
 import CookieBanner from "../components/layout/CookieBanner";
 
 export const metadata = {
@@ -25,8 +26,10 @@ export default function RootLayout({
       <body className={inter.variable}>
         <PHProvider>
           <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
-            {children}
-            <CookieBanner />
+            <ProfileProvider>
+              {children}
+              <CookieBanner />
+            </ProfileProvider>
           </ThemeProvider>
         </PHProvider>
       </body>

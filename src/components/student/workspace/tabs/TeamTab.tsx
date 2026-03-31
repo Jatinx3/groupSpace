@@ -1,7 +1,7 @@
 "use client";
 
 import type { Member } from "../../../../types/member";
-
+import Avatar from "../../../ui/Avatar";
 
 type Task = {
   id: string;
@@ -60,18 +60,17 @@ export default function TeamTab({
       {/* Members */}
       <div className="grid md:grid-cols-2 gap-6">
         {members.map((member) => {
-          const initials =
-            member.first_name[0] + member.last_name[0];
-
           return (
             <div
               key={member.id}
               className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-xl p-6"
             >
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-full bg-black dark:bg-white text-white dark:text-gray-900 flex items-center justify-center font-semibold">
-                  {initials}
-                </div>
+                <Avatar 
+                  name={`${member.first_name} ${member.last_name}`} 
+                  avatarUrl={member.avatar_url} 
+                  size={48} 
+                />
 
                 <div className="flex-1">
                   <div className="flex items-center gap-3">

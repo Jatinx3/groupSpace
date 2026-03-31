@@ -22,7 +22,7 @@ export default async function CourseDetailPage({
   // Fetch course info
   const { data: course } = await supabase
     .from("courses")
-    .select("*")
+    .select("id, name, description, professor_id, invite_code")
     .eq("id", courseId)
     .single();
 

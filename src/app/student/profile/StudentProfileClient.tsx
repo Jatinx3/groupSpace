@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { Mail, ShieldCheck, Bell, Users, Moon, Globe, Lock, Smartphone, Camera } from "lucide-react";
 import { useTheme } from "next-themes";
 import { createClientSupabase } from "../../../lib/supabase-client";
+import { useProfile } from "../../../components/providers/ProfileProvider";
 
 interface Profile {
   first_name: string;
@@ -91,6 +92,7 @@ export default function StudentProfileClient({ profile }: { profile: Profile }) 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const { refreshProfile } = useProfile();
 
   const [activeTab, setActiveTab] = useState<Tab>("profile");
 
@@ -164,6 +166,7 @@ export default function StudentProfileClient({ profile }: { profile: Profile }) 
     const { data } = supabase.storage.from("avatars").getPublicUrl(filePath);
     setAvatarUrl(data.publicUrl);
     await supabase.from("profiles").update({ avatar_url: data.publicUrl }).eq("id", user.id);
+    await refreshProfile();
     setAvatarLoading(false);
   };
 
@@ -174,6 +177,7 @@ export default function StudentProfileClient({ profile }: { profile: Profile }) 
     if (!user) { setSaving(false); return; }
     const { error } = await supabase.from("profiles").update({ first_name: firstName, last_name: lastName, phone }).eq("id", user.id);
     savePrefs({ studentId, department, year });
+    await refreshProfile();
     setSaving(false);
     setSaveMsg(error ? { type: "error", text: error.message } : { type: "success", text: "Profile saved successfully." });
     setTimeout(() => setSaveMsg(null), 3000);

@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { Mail, ShieldCheck, Lock, Camera, BookOpen } from "lucide-react";
 import { createClientSupabase } from "../../../lib/supabase-client";
+import { useProfile } from "../../../components/providers/ProfileProvider";
 
 interface Profile {
   first_name: string;
@@ -64,6 +65,7 @@ function UnderlineInput({
 export default function ProfessorProfileClient({ profile }: { profile: Profile }) {
   const supabase = createClientSupabase();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { refreshProfile } = useProfile();
 
   const [activeTab, setActiveTab] = useState<Tab>("profile");
 
@@ -95,6 +97,7 @@ export default function ProfessorProfileClient({ profile }: { profile: Profile }
     const { data } = supabase.storage.from("avatars").getPublicUrl(filePath);
     setAvatarUrl(data.publicUrl);
     await supabase.from("profiles").update({ avatar_url: data.publicUrl }).eq("id", user.id);
+    await refreshProfile();
     setAvatarLoading(false);
   };
 
@@ -104,6 +107,7 @@ export default function ProfessorProfileClient({ profile }: { profile: Profile }
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setSaving(false); return; }
     const { error } = await supabase.from("profiles").update({ first_name: firstName, last_name: lastName, phone }).eq("id", user.id);
+    await refreshProfile();
     setSaving(false);
     setSaveMsg(error ? { type: "error", text: error.message } : { type: "success", text: "Profile saved successfully." });
     setTimeout(() => setSaveMsg(null), 3000);

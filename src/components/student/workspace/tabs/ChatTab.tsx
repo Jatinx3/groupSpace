@@ -9,47 +9,33 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import type { Member } from "../../../../types/member";
 import { sendChatNotifications } from "../../../../app/student/teams/actions";
+import Avatar from "../../../ui/Avatar";
+import { useProfile } from "../../../providers/ProfileProvider";
 
 type Message = {
   id: string;
   content: string;
   created_at: string;
   user_id: string;
-  profiles: { id: string; full_name: string } | null;
+  profiles: { id: string; full_name: string; avatar_url?: string | null } | null;
 };
 
 type Props = {
   teamId: string;
   initialMessages: Message[];
   currentUserId: string;
-  members: Member[];
+  members: (Member & { avatar_url?: string | null })[];
   isActive?: boolean;
   onNewMessage?: () => void;
 };
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
-const AVATAR_COLORS = [
-  "bg-violet-500","bg-blue-500","bg-emerald-500","bg-orange-500",
-  "bg-rose-500","bg-cyan-500","bg-amber-500","bg-fuchsia-500",
-];
-
 const EMOJIS = [
   "😀","😂","😍","🥰","😎","🤔","😅","🎉",
   "🔥","💯","👍","❤️","🚀","💡","✅","⚡",
   "😭","🙌","👏","💪","🤝","🎯","📌","🗂️",
 ];
-
-function getAvatarColor(userId: string) {
-  let h = 0;
-  for (let i = 0; i < userId.length; i++) h = userId.charCodeAt(i) + ((h << 5) - h);
-  return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length];
-}
-
-function getInitials(name?: string) {
-  if (!name) return "U";
-  return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
-}
 
 function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -87,6 +73,8 @@ export default function ChatTab({ teamId, initialMessages, currentUserId, member
   const [sending, setSending] = useState(false);
   const [showEmoji, setShowEmoji] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  
+  const { profile: currentUserProfile } = useProfile();
 
   /* ── UI state ── */
   const [searchOpen, setSearchOpen] = useState(false);
@@ -98,7 +86,7 @@ export default function ChatTab({ teamId, initialMessages, currentUserId, member
   const urlCache = useRef<Record<string, string>>({});
 
   /* ── Profile cache for realtime messages ── */
-  const profileCache = useRef<Record<string, string>>({});
+  const profileCache = useRef<Record<string, { fullName: string; avatarUrl: string | null }>>({});
 
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -116,7 +104,12 @@ export default function ChatTab({ teamId, initialMessages, currentUserId, member
   /* ── Pre-populate profile cache from initial messages ── */
   useEffect(() => {
     initialMessages.forEach((m) => {
-      if (m.profiles?.id) profileCache.current[m.profiles.id] = m.profiles.full_name;
+      if (m.profiles?.id) {
+        profileCache.current[m.profiles.id] = {
+          fullName: m.profiles.full_name,
+          avatarUrl: m.profiles.avatar_url ?? null,
+        };
+      }
     });
   }, []);
 
@@ -165,16 +158,19 @@ export default function ChatTab({ teamId, initialMessages, currentUserId, member
           const raw = payload.new as { id: string; content: string; created_at: string; user_id: string };
 
           /* resolve sender name — use cache first */
-          let fullName = profileCache.current[raw.user_id] ?? null;
-          if (!fullName) {
+          let cached = profileCache.current[raw.user_id];
+          if (!cached) {
             const { data: p } = await client
               .from("profiles")
-              .select("first_name, last_name")
+              .select("first_name, last_name, avatar_url")
               .eq("id", raw.user_id)
               .single();
             if (p) {
-              fullName = `${p.first_name} ${p.last_name}`;
-              profileCache.current[raw.user_id] = fullName;
+              cached = {
+                fullName: `${p.first_name} ${p.last_name}`,
+                avatarUrl: p.avatar_url,
+              };
+              profileCache.current[raw.user_id] = cached;
             }
           }
 
@@ -183,7 +179,7 @@ export default function ChatTab({ teamId, initialMessages, currentUserId, member
             content: raw.content,
             created_at: raw.created_at,
             user_id: raw.user_id,
-            profiles: fullName ? { id: raw.user_id, full_name: fullName } : null,
+            profiles: cached ? { id: raw.user_id, full_name: cached.fullName, avatar_url: cached.avatarUrl } : null,
           };
 
           setMessages((prev) => {
@@ -232,9 +228,10 @@ export default function ChatTab({ teamId, initialMessages, currentUserId, member
       const filePath = await uploadFile();
       if (filePath) content += `\n__FILE__${filePath}`;
     }
+    const senderName = currentUserProfile ? `${currentUserProfile.first_name} ${currentUserProfile.last_name}` : "You";
     const optimistic: Message = {
       id: crypto.randomUUID(), content, created_at: new Date().toISOString(),
-      user_id: currentUserId, profiles: { id: currentUserId, full_name: "You" },
+      user_id: currentUserId, profiles: { id: currentUserId, full_name: senderName, avatar_url: currentUserProfile?.avatar_url },
     };
     setMessages((prev) => [...prev, optimistic]);
     await supabaseRef.current.from("messages").insert({ team_id: teamId, user_id: currentUserId, content });
@@ -388,9 +385,7 @@ export default function ChatTab({ teamId, initialMessages, currentUserId, member
               <div className="flex flex-wrap gap-2">
                 {members.map((m) => (
                   <div key={m.id} className="flex items-center gap-1.5 bg-white dark:bg-[#2A2A2A] border border-gray-200 dark:border-white/10 rounded-lg px-2.5 py-1">
-                    <div className={`w-5 h-5 rounded-full flex items-center justify-center text-white text-[9px] font-bold ${getAvatarColor(m.id)}`}>
-                      {getInitials(`${m.first_name} ${m.last_name}`)}
-                    </div>
+                    <Avatar name={`${m.first_name} ${m.last_name}`} avatarUrl={m.avatar_url} size={20} />
                     <span className="text-xs text-gray-700 dark:text-zinc-300">{m.first_name} {m.last_name}</span>
                     {m.role === "LEADER" && (
                       <span className="text-[9px] bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded px-1 py-0.5 font-semibold">Lead</span>
@@ -432,6 +427,7 @@ export default function ChatTab({ teamId, initialMessages, currentUserId, member
               {dayMsgs.map((msg, idx) => {
                 const isOwn = msg.user_id === currentUserId;
                 const name = msg.profiles?.full_name || "Unknown";
+                const firstName = name.split(" ")[0];
                 const prevMsg = dayMsgs[idx - 1];
                 const isSameSender = prevMsg?.user_id === msg.user_id;
                 const showMeta = !isSameSender;
@@ -446,11 +442,9 @@ export default function ChatTab({ teamId, initialMessages, currentUserId, member
                     className={`flex gap-2.5 ${isOwn ? "flex-row-reverse" : "flex-row"} ${showMeta ? "mt-5" : "mt-0.5"}`}
                   >
                     {/* Avatar — always occupies space so bubbles stay aligned */}
-                    <div className="shrink-0 w-8">
+                    <div className="shrink-0 w-8 flex flex-col items-center">
                       {showMeta && (
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white dark:text-gray-900 text-xs font-bold ${isOwn ? "bg-gray-900 dark:bg-white" : getAvatarColor(msg.user_id).replace("text-white","text-white/90")}`}>
-                          {isOwn ? "YO" : getInitials(name)}
-                        </div>
+                        <Avatar name={name} avatarUrl={msg.profiles?.avatar_url} size={32} />
                       )}
                     </div>
 
@@ -458,7 +452,7 @@ export default function ChatTab({ teamId, initialMessages, currentUserId, member
                     <div className={`flex flex-col max-w-[70%] ${isOwn ? "items-end" : "items-start"}`}>
                       {showMeta && (
                         <div className={`flex items-baseline gap-2 mb-1 ${isOwn ? "flex-row-reverse" : "flex-row"}`}>
-                          <span className="text-xs font-semibold text-gray-700 dark:text-zinc-300">{isOwn ? "You" : name}</span>
+                          <span className="text-xs font-semibold text-gray-700 dark:text-zinc-300">{firstName}</span>
                           <span className="text-[10px] text-gray-400 dark:text-zinc-500">{formatTime(msg.created_at)}</span>
                         </div>
                       )}

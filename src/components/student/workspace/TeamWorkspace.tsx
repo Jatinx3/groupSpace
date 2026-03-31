@@ -16,15 +16,32 @@ import {
   X,
   Send,
 } from "lucide-react";
+import dynamic from "next/dynamic";
 
 import { addMemberByEmail } from "../../../app/student/teams/invite-actions";
 
+// Always-loaded — default visible tab, no cost to eager-load
 import TeamTab from "./tabs/TeamTab";
-import ProgressTab from "./tabs/ProgressTab";
-import StructureTab from "./tabs/StructureTab";
-import ChatTab from "./tabs/ChatTab";
-import TasksTab from "./tabs/TasksTab";
-import FilesTab from "./tabs/FilesTab";
+
+// Skeleton shown while each chunk downloads
+function TabSkeleton() {
+  return (
+    <div className="animate-pulse space-y-4 pt-4">
+      <div className="h-8 bg-gray-100 dark:bg-white/5 rounded-xl w-1/3" />
+      <div className="h-32 bg-gray-100 dark:bg-white/5 rounded-2xl" />
+      <div className="h-24 bg-gray-100 dark:bg-white/5 rounded-2xl" />
+    </div>
+  );
+}
+
+// Lazy-loaded tabs — JS chunks only downloaded when user first clicks them
+const TasksTab     = dynamic(() => import("./tabs/TasksTab"),     { loading: () => <TabSkeleton /> });
+const ProgressTab  = dynamic(() => import("./tabs/ProgressTab"),  { loading: () => <TabSkeleton /> });
+const StructureTab = dynamic(() => import("./tabs/StructureTab"), { loading: () => <TabSkeleton /> });
+const FilesTab     = dynamic(() => import("./tabs/FilesTab"),     { loading: () => <TabSkeleton /> });
+// ChatTab is always mounted (hidden div) to keep realtime subscription alive;
+// dynamic import only defers the initial bundle download
+const ChatTab      = dynamic(() => import("./tabs/ChatTab"),      { loading: () => <TabSkeleton />, ssr: false });
 
 import type { Task } from "../../../types/task";
 import type { Member } from "../../../types/member";
@@ -37,6 +54,7 @@ type Message = {
   profiles: {
     id: string;
     full_name: string;
+    avatar_url?: string | null;
   } | null;
 };
 
@@ -88,17 +106,17 @@ function InviteModal({
     setStatus("idle");
     setErrorMsg("");
     startTransition(async () => {
-      try {
-        await addMemberByEmail(teamId, email.trim());
+      const result = await addMemberByEmail(teamId, email.trim());
+      if ("error" in result) {
+        setErrorMsg(result.error);
+        setStatus("error");
+      } else {
         setEmail("");
         setStatus("success");
         setTimeout(() => {
           router.refresh();
           onClose();
         }, 1500);
-      } catch (e: any) {
-        setErrorMsg(e.message ?? "Something went wrong");
-        setStatus("error");
       }
     });
   };
@@ -229,13 +247,14 @@ function InviteModal({
               </button>
 
               {status === "success" && (
-                <div className="flex items-center gap-2 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-white/10 rounded-xl px-3 py-2.5">
-                  <Check className="w-4 h-4 text-gray-700 dark:text-zinc-300 shrink-0" />
-                  <p className="text-sm font-medium text-gray-700 dark:text-zinc-300">Member added successfully!</p>
+                <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-xl px-3 py-2.5">
+                  <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">Member added successfully!</p>
                 </div>
               )}
               {status === "error" && (
-                <div className="bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 rounded-xl px-3 py-2.5">
+                <div className="flex items-start gap-2 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl px-3 py-2.5">
+                  <span className="text-red-500 dark:text-red-400 text-sm leading-none mt-0.5">⚠</span>
                   <p className="text-sm text-red-600 dark:text-red-400">{errorMsg}</p>
                 </div>
               )}

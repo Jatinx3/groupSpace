@@ -33,74 +33,48 @@ export default async function StudentDashboard() {
   }
 
   /* =========================
-     COURSES
+     COURSES + TEAMS (parallel)
   ========================= */
-  const { data: enrolledCourses } = await supabase
-    .from("course_members")
-    .select(`
-      course_id,
-      courses (
-        id,
-        name,
-        professor_id
-      )
-    `)
-    .eq("user_id", user.id);
+  const [enrolledCoursesResult, enrolledTeamsResult] = await Promise.all([
+    supabase
+      .from("course_members")
+      .select("course_id, courses(id, name, professor_id)")
+      .eq("user_id", user.id),
+    supabase
+      .from("team_members")
+      .select("team_id, teams(id, name, course_id, courses(id, name))")
+      .eq("user_id", user.id),
+  ]);
 
   let courses =
-    enrolledCourses?.flatMap((item) => item.courses ?? []) ?? [];
+    enrolledCoursesResult.data?.flatMap((item) => item.courses ?? []) ?? [];
 
   // ── SANITY CHECK: Auto-enroll if missing (Self-healing) ──────────────
   if (courses.length === 0) {
     const { ok } = await enrollInDefaultCourses(user.id);
     if (ok) {
-      // Re-fetch to show them immediately
       const { data: refetched } = await supabase
         .from("course_members")
-        .select(`
-          course_id,
-          courses (id, name, professor_id)
-        `)
+        .select("course_id, courses(id, name, professor_id)")
         .eq("user_id", user.id);
       courses = refetched?.flatMap((item) => item.courses ?? []) ?? [];
     }
   }
 
-  /* =========================
-     TEAMS
-  ========================= */
-  const { data: enrolledTeams } = await supabase
-    .from("team_members")
-    .select(`
-      team_id,
-      teams (
-        id,
-        name,
-        course_id,
-        courses (
-          id,
-          name
-        )
-      )
-    `)
-    .eq("user_id", user.id);
-
   const teams =
-    enrolledTeams
+    enrolledTeamsResult.data
       ?.flatMap((item) => item.teams ?? [])
       .filter(Boolean) ?? [];
 
   const teamIds = teams.map((t) => t.id);
 
   /* =========================
-     TASKS (FIXED: include created_at)
+     TASKS
   ========================= */
   const { data: tasks } = teamIds.length
     ? await supabase
         .from("tasks")
-        .select(
-          "id, title, status, due_date, team_id, created_at"
-        )
+        .select("id, title, status, due_date, team_id, created_at")
         .in("team_id", teamIds)
     : { data: [] };
 
