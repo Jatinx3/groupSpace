@@ -6,8 +6,7 @@ export default function Footer() {
           © {new Date().getFullYear()} Collably
         </p>
         <p className="text-[11px] font-medium text-gray-400 uppercase tracking-widest">
-          Built by Jatin with{" "}
-          <span className="text-gray-900">♥</span>
+          Designed & built with care.
         </p>
       </div>
     </footer>
