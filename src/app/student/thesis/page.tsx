@@ -21,7 +21,7 @@ export default async function StudentThesisPage({
   // 👤 Profile check (must be student)
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role, first_name")
+    .select("role, first_name, last_name, avatar_url")
     .eq("id", user.id)
     .single();
 
@@ -44,7 +44,8 @@ export default async function StudentThesisPage({
       supervisor:profiles!thesis_projects_supervisor_id_fkey (
         id,
         first_name,
-        last_name
+        last_name,
+        avatar_url
       )
       `
     )
@@ -96,7 +97,8 @@ export default async function StudentThesisPage({
       author:profiles!thesis_comments_author_id_fkey (
         id,
         first_name,
-        last_name
+        last_name,
+        avatar_url
       )
       `
     )
@@ -133,6 +135,7 @@ export default async function StudentThesisPage({
   return (
     <StudentThesisPageClient
       studentName={profile.first_name}
+      studentAvatarUrl={profile?.avatar_url}
       thesis={normalizedThesis}
       milestones={milestones ?? []}
       submissions={submissions ?? []}

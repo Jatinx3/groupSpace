@@ -21,6 +21,7 @@ import {
   Send
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Avatar from "../../../components/ui/Avatar";
 
 interface Thesis {
   id: string;
@@ -68,6 +69,7 @@ interface Comment {
     id: string;
     first_name: string;
     last_name: string;
+    avatar_url?: string | null;
   } | null;
 }
 
@@ -115,6 +117,7 @@ function formatDateLabel(iso: string) {
 
 interface Props {
   studentName: string;
+  studentAvatarUrl?: string | null;
   thesis: Thesis | null;
   milestones: Milestone[];
   submissions: Submission[];
@@ -125,6 +128,7 @@ interface Props {
 
 export default function StudentThesisPageClient({
   studentName,
+  studentAvatarUrl,
   thesis,
   milestones,
   submissions,
@@ -625,10 +629,14 @@ export default function StudentThesisPageClient({
                         <div className="space-y-0.5">
                           {dayMsgs.map((msg, idx) => {
                             const isOwn = msg.author_role === "student";
-                            const authorName =
-                              msg.author?.first_name 
-                                ? `${msg.author.first_name} ${msg.author.last_name}`
-                                : msg.author_role === "student" ? studentName : "Supervisor";
+                            const supervisorName = thesis?.supervisor ? `${thesis.supervisor.first_name}` : "Supervisor";
+                            
+                            const authorName = msg.author?.first_name 
+                              ? msg.author.first_name 
+                              : isOwn ? studentName : supervisorName;
+                              
+                            const authorAvatar = isOwn ? studentAvatarUrl : msg.author?.avatar_url;
+
                             const prevMsg = dayMsgs[idx - 1];
                             const isSameSender = prevMsg?.author_id === msg.author_id;
                             const showMeta = !isSameSender;
@@ -640,18 +648,16 @@ export default function StudentThesisPageClient({
                                 key={msg.id}
                                 className={`flex gap-2.5 ${isOwn ? "flex-row-reverse" : "flex-row"} ${showMeta ? "mt-5" : "mt-0.5"}`}
                               >
-                                <div className="shrink-0 w-8">
+                                <div className="shrink-0 w-8 flex flex-col items-center">
                                   {showMeta && (
-                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold ${isOwn ? "bg-gray-900 dark:bg-white dark:text-gray-900" : getAvatarColor(msg.author_id)}`}>
-                                      {isOwn ? getInitials(studentName) : getInitials(authorName)}
-                                    </div>
+                                    <Avatar name={authorName} avatarUrl={authorAvatar} size={32} />
                                   )}
                                 </div>
 
                                 <div className={`flex flex-col max-w-[80%] ${isOwn ? "items-end" : "items-start"}`}>
                                   {showMeta && (
                                     <div className={`flex items-baseline gap-2 mb-1 ${isOwn ? "flex-row-reverse" : "flex-row"}`}>
-                                      <span className="text-xs font-semibold text-gray-800 dark:text-zinc-200">{isOwn ? "You" : authorName}</span>
+                                      <span className="text-xs font-semibold text-gray-800 dark:text-zinc-200">{authorName}{isOwn && " (You)"}</span>
                                       <span className="text-[10px] text-gray-400 dark:text-zinc-500">{formatTime(msg.created_at)}</span>
                                     </div>
                                   )}

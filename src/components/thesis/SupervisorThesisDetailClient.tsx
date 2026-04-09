@@ -21,6 +21,7 @@ import {
   StickyNote,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Avatar from "../../../components/ui/Avatar";
 
 interface Thesis {
   id: string;
@@ -70,7 +71,7 @@ interface Comment {
   author_role: "student" | "supervisor";
   content: string;
   created_at: string;
-  author?: { id: string; first_name: string; last_name: string; email?: string | null } | null;
+  author?: { id: string; first_name: string; last_name: string; email?: string | null; avatar_url?: string | null } | null;
 }
 
 interface Draft {
@@ -181,6 +182,7 @@ function resolveDisplayName(firstName?: string | null, lastName?: string | null,
 
 export default function SupervisorThesisDetailClient({
   supervisorName,
+  supervisorAvatarUrl,
   thesis,
   milestones,
   submissions,
@@ -189,6 +191,7 @@ export default function SupervisorThesisDetailClient({
   meetings,
 }: {
   supervisorName: string;
+  supervisorAvatarUrl?: string | null;
   thesis: Thesis;
   milestones: Milestone[];
   submissions: Submission[];
@@ -680,52 +683,50 @@ export default function SupervisorThesisDetailClient({
                     <div className="space-y-0.5">
                       {dayMsgs.map((msg, idx) => {
                         const isOwn = msg.author_role === "supervisor";
-                        const authorName = isOwn
-                          ? supervisorName
-                          : resolveDisplayName(msg.author?.first_name, msg.author?.last_name, msg.author?.email ?? thesis.student?.email, studentFullName);
+                        const authorName = msg.author?.first_name
+                          ? msg.author.first_name
+                          : (isOwn ? supervisorName : resolveDisplayName(msg.author?.first_name, msg.author?.last_name, msg.author?.email ?? thesis.student?.email, studentFullName));
+                        
+                        const authorAvatar = isOwn ? supervisorAvatarUrl : msg.author?.avatar_url;
+                        
                         const prevMsg = dayMsgs[idx - 1];
                         const isSameSender = prevMsg?.author_role === msg.author_role;
-                        const avatarInitials = isOwn
-                          ? supervisorName.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2)
-                          : getInitials(msg.author?.first_name, msg.author?.last_name, msg.author?.email ?? thesis.student?.email);
-                        const avatarClass = getAvatarColor(msg.author_id);
+                        const showMeta = !isSameSender;
+
+                        const textLines = msg.content.split("\n").filter(l => l.trim());
 
                         return (
-                          <div 
-                            key={msg.id} 
-                            className={`flex ${isOwn ? "justify-end" : "justify-start"} ${isSameSender ? "mt-0.5" : "mt-4"}`}
+                          <div
+                            key={msg.id}
+                            className={`flex gap-2.5 ${isOwn ? "flex-row-reverse" : "flex-row"} ${showMeta ? "mt-5" : "mt-0.5"}`}
                           >
-                            {!isOwn && (
-                              <div className="flex-shrink-0 mr-3 mt-auto flex flex-col justify-end w-7">
-                                {!isSameSender && (
-                                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-sm ${avatarClass}`}>
-                                    {avatarInitials}
-                                  </div>
-                                )}
-                              </div>
-                            )}
+                            <div className="shrink-0 w-8 flex flex-col items-center">
+                              {showMeta && (
+                                <Avatar name={authorName} avatarUrl={authorAvatar} size={32} />
+                              )}
+                            </div>
 
-                            <div className={`flex flex-col max-w-[70%] ${isOwn ? "items-end" : "items-start"}`}>
-                              {!isSameSender && !isOwn && (
-                                <span className="text-[11px] font-medium text-gray-500 dark:text-zinc-500 mb-1 ml-1">{authorName}</span>
+                            <div className={`flex flex-col max-w-[80%] ${isOwn ? "items-end" : "items-start"}`}>
+                              {showMeta && (
+                                <div className={`flex items-baseline gap-2 mb-1 ${isOwn ? "flex-row-reverse" : "flex-row"}`}>
+                                  <span className="text-xs font-semibold text-gray-800 dark:text-zinc-200">{authorName}{isOwn && " (You)"}</span>
+                                  <span className="text-[10px] text-gray-400 dark:text-zinc-500">{formatTime(msg.created_at)}</span>
+                                </div>
                               )}
 
-                              <div className="group relative flex items-end gap-2">
-                                <div
-                                  className={`px-4 py-2.5 text-sm shadow-sm ${
-                                    isOwn 
-                                      ? "bg-gray-900 text-white dark:bg-white/10 dark:text-zinc-100 rounded-2xl rounded-tr-sm" 
-                                      : "bg-white border border-gray-100 dark:border-white/5 dark:bg-white/5 text-gray-800 dark:text-zinc-200 rounded-2xl rounded-tl-sm"
-                                  }`}
-                                  style={{ wordBreak: "break-word" }}
-                                >
-                                  {msg.content}
+                              {textLines.length > 0 && (
+                                <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap break-words ${
+                                  isOwn
+                                    ? "bg-gray-900 text-white dark:bg-white/10 dark:text-zinc-100 rounded-tr-sm"
+                                    : "bg-white text-gray-800 border border-gray-100 dark:border-white/5 dark:bg-white/5 dark:text-zinc-200 rounded-tl-sm shadow-sm"
+                                }`}>
+                                  {textLines.map((line, i) => <p key={i}>{line}</p>)}
                                 </div>
-                              </div>
-                              
-                              <span className={`text-[9px] font-medium text-gray-400 dark:text-zinc-600 mt-1 opacity-0 group-hover:opacity-100 transition-opacity ${isOwn ? "mr-1" : "ml-1"}`}>
-                                {formatTime(msg.created_at)}
-                              </span>
+                              )}
+
+                              {!showMeta && (
+                                <span className="text-[10px] text-gray-400 dark:text-zinc-500 mt-0.5 px-1 opacity-0 hover:opacity-100 transition-opacity">{formatTime(msg.created_at)}</span>
+                              )}
                             </div>
                           </div>
                         );
