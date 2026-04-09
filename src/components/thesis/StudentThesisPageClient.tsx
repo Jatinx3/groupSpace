@@ -21,7 +21,7 @@ import {
   Send
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import Avatar from "../../../components/ui/Avatar";
+import Avatar from "../ui/Avatar";
 
 interface Thesis {
   id: string;
