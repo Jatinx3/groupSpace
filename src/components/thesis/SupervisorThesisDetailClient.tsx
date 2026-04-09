@@ -656,7 +656,7 @@ export default function SupervisorThesisDetailClient({
 
       {/* THREAD TAB */}
       {activeTab === "thread" && (
-        <div className="flex flex-col h-[600px] max-w-3xl pt-2">
+        <div className="flex flex-col h-[600px] max-w-4xl mx-auto w-full bg-gray-50/50 dark:bg-white/[0.02] border border-gray-100/50 dark:border-white/5 rounded-2xl p-4 lg:p-6 shadow-sm">
           
           {/* Message Feed */}
           <div className="flex-1 overflow-y-auto pr-2 flex flex-col-reverse">
@@ -739,7 +739,7 @@ export default function SupervisorThesisDetailClient({
           </div>
 
           {/* Chat Input */}
-          <div className="shrink-0 border-t border-gray-100 dark:border-white/10 pt-4 mt-2">
+          <div className="shrink-0 pt-4 mt-4 border-t border-gray-200 dark:border-white/10">
             <div className="flex items-center gap-2 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-white/10 rounded-2xl px-3 py-2 focus-within:border-gray-400 dark:focus-within:border-white/30 focus-within:bg-white dark:focus-within:bg-[#1A1A1A] transition">
               <textarea
                 id="supervisor-chat-input"
