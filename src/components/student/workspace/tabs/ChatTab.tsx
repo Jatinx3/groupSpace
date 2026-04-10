@@ -95,6 +95,7 @@ export default function ChatTab({ teamId, initialMessages, currentUserId, member
   const isInitialLoadRef = useRef(true);
   const emojiRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   /* stable ref so realtime callback always has latest value without re-subscribing */
   const isActiveRef = useRef(isActive);
@@ -150,9 +151,10 @@ export default function ChatTab({ teamId, initialMessages, currentUserId, member
   useEffect(() => {
     const client = supabaseRef.current;
     let retryTimer: ReturnType<typeof setTimeout> | null = null;
+    let activeChannel: ReturnType<typeof client.channel> | null = null;
 
-    function subscribe() {
-      const channel = client
+    function startSubscription() {
+      activeChannel = client
         .channel(`chat-room:${teamId}`)
         .on(
           "postgres_changes",
@@ -182,13 +184,15 @@ export default function ChatTab({ teamId, initialMessages, currentUserId, member
               content: raw.content,
               created_at: raw.created_at,
               user_id: raw.user_id,
-              profiles: cached ? { id: raw.user_id, full_name: cached.fullName, avatar_url: cached.avatarUrl } : null,
+              profiles: cached
+                ? { id: raw.user_id, full_name: cached.fullName, avatar_url: cached.avatarUrl }
+                : null,
             };
 
             setMessages((prev) => {
               /* drop if already present (optimistic update from sender) */
               if (prev.some((m) => m.id === raw.id)) return prev;
-              /* fire unread badge when tab is not visible and message is from someone else */
+              /* fire unread badge when tab not active and message is from someone else */
               if (!isActiveRef.current && raw.user_id !== currentUserId) {
                 onNewMessageRef.current?.();
               }
@@ -202,27 +206,25 @@ export default function ChatTab({ teamId, initialMessages, currentUserId, member
           } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
             setRealtimeStatus("error");
             /* auto-reconnect after 4 seconds */
-            client.removeChannel(channel);
+            if (activeChannel) client.removeChannel(activeChannel);
             retryTimer = setTimeout(() => {
               setRealtimeStatus("connecting");
-              channelRef.current = subscribe();
+              startSubscription();
             }, 4000);
           } else {
             setRealtimeStatus("connecting");
           }
         });
 
-      return channel;
+      channelRef.current = activeChannel;
     }
 
-    channelRef.current = subscribe();
+    startSubscription();
 
     return () => {
       if (retryTimer) clearTimeout(retryTimer);
-      if (channelRef.current) {
-        client.removeChannel(channelRef.current);
-        channelRef.current = null;
-      }
+      if (activeChannel) client.removeChannel(activeChannel);
+      channelRef.current = null;
     };
   }, [teamId]); /* teamId only — supabaseRef is a stable ref */
 
