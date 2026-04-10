@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { createClientSupabase } from "../../../../lib/supabase-client";
 import {
   Send, Smile, Paperclip, X, Search, MoreHorizontal,
-  Users, ArrowDown,
+  Users, ArrowDown, Wifi, WifiOff,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Member } from "../../../../types/member";
@@ -77,6 +77,7 @@ export default function ChatTab({ teamId, initialMessages, currentUserId, member
   const { profile: currentUserProfile } = useProfile();
 
   /* ── UI state ── */
+  const [realtimeStatus, setRealtimeStatus] = useState<"connecting" | "live" | "error">("connecting");
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
@@ -148,54 +149,81 @@ export default function ChatTab({ teamId, initialMessages, currentUserId, member
   /* ── Realtime: process INSERT payload directly, no full re-fetch ── */
   useEffect(() => {
     const client = supabaseRef.current;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
 
-    const channel = client
-      .channel(`chat-room:${teamId}`)
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "messages", filter: `team_id=eq.${teamId}` },
-        async (payload) => {
-          const raw = payload.new as { id: string; content: string; created_at: string; user_id: string };
+    function subscribe() {
+      const channel = client
+        .channel(`chat-room:${teamId}`)
+        .on(
+          "postgres_changes",
+          { event: "INSERT", schema: "public", table: "messages", filter: `team_id=eq.${teamId}` },
+          async (payload) => {
+            const raw = payload.new as { id: string; content: string; created_at: string; user_id: string };
 
-          /* resolve sender name — use cache first */
-          let cached = profileCache.current[raw.user_id];
-          if (!cached) {
-            const { data: p } = await client
-              .from("profiles")
-              .select("first_name, last_name, avatar_url")
-              .eq("id", raw.user_id)
-              .single();
-            if (p) {
-              cached = {
-                fullName: `${p.first_name} ${p.last_name}`,
-                avatarUrl: p.avatar_url,
-              };
-              profileCache.current[raw.user_id] = cached;
+            /* resolve sender name — use cache first */
+            let cached = profileCache.current[raw.user_id];
+            if (!cached) {
+              const { data: p } = await client
+                .from("profiles")
+                .select("first_name, last_name, avatar_url")
+                .eq("id", raw.user_id)
+                .single();
+              if (p) {
+                cached = {
+                  fullName: `${p.first_name} ${p.last_name}`,
+                  avatarUrl: p.avatar_url,
+                };
+                profileCache.current[raw.user_id] = cached;
+              }
             }
+
+            const incoming: Message = {
+              id: raw.id,
+              content: raw.content,
+              created_at: raw.created_at,
+              user_id: raw.user_id,
+              profiles: cached ? { id: raw.user_id, full_name: cached.fullName, avatar_url: cached.avatarUrl } : null,
+            };
+
+            setMessages((prev) => {
+              /* drop if already present (optimistic update from sender) */
+              if (prev.some((m) => m.id === raw.id)) return prev;
+              /* fire unread badge when tab is not visible and message is from someone else */
+              if (!isActiveRef.current && raw.user_id !== currentUserId) {
+                onNewMessageRef.current?.();
+              }
+              return [...prev, incoming];
+            });
           }
+        )
+        .subscribe((status) => {
+          if (status === "SUBSCRIBED") {
+            setRealtimeStatus("live");
+          } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+            setRealtimeStatus("error");
+            /* auto-reconnect after 4 seconds */
+            client.removeChannel(channel);
+            retryTimer = setTimeout(() => {
+              setRealtimeStatus("connecting");
+              channelRef.current = subscribe();
+            }, 4000);
+          } else {
+            setRealtimeStatus("connecting");
+          }
+        });
 
-          const incoming: Message = {
-            id: raw.id,
-            content: raw.content,
-            created_at: raw.created_at,
-            user_id: raw.user_id,
-            profiles: cached ? { id: raw.user_id, full_name: cached.fullName, avatar_url: cached.avatarUrl } : null,
-          };
+      return channel;
+    }
 
-          setMessages((prev) => {
-            /* drop if already present (optimistic update from sender) */
-            if (prev.some((m) => m.id === raw.id)) return prev;
-            /* fire unread badge when tab is not visible and message is from someone else */
-            if (!isActiveRef.current && raw.user_id !== currentUserId) {
-              onNewMessageRef.current?.();
-            }
-            return [...prev, incoming];
-          });
-        }
-      )
-      .subscribe();
+    channelRef.current = subscribe();
 
-    return () => { client.removeChannel(channel); };
+    return () => {
+      if (retryTimer) clearTimeout(retryTimer);
+      if (channelRef.current) {
+        client.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
+    };
   }, [teamId]); /* teamId only — supabaseRef is a stable ref */
 
   /* ── File ── */
@@ -287,6 +315,28 @@ export default function ChatTab({ teamId, initialMessages, currentUserId, member
             <p className="font-semibold text-gray-900 dark:text-white text-sm leading-tight">Team Chat</p>
             <p className="text-[11px] text-gray-400 dark:text-zinc-500">{members.length} member{members.length !== 1 ? "s" : ""}</p>
           </div>
+        </div>
+
+        {/* Realtime status dot */}
+        <div className="flex items-center gap-1.5 mr-auto ml-3">
+          {realtimeStatus === "live" && (
+            <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-500 dark:text-emerald-400">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
+              Live
+            </span>
+          )}
+          {realtimeStatus === "connecting" && (
+            <span className="flex items-center gap-1 text-[10px] font-semibold text-amber-500 dark:text-amber-400">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+              Connecting
+            </span>
+          )}
+          {realtimeStatus === "error" && (
+            <span className="flex items-center gap-1 text-[10px] font-semibold text-red-400 dark:text-red-400" title="Reconnecting...">
+              <WifiOff size={10} />
+              Reconnecting
+            </span>
+          )}
         </div>
 
         <div className="flex items-center gap-1">
