@@ -12,4 +12,10 @@ export interface Task {
   due_date: string | null;
   team_id: string;
   created_at: string;
+  last_updated_by?: string | null;
+  updater?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+  } | null;
 }

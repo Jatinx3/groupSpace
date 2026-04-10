@@ -223,6 +223,7 @@ export async function createTask(formData: FormData) {
       status: formData.get("status"),
       priority: formData.get("priority"),
       due_date: formData.get("due_date"),
+      last_updated_by: user.id,
     })
     .select()
     .single();
@@ -286,6 +287,12 @@ export async function updateTask(formData: FormData) {
     throw new Error("Missing task or team ID");
   }
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("Not authenticated");
+
   const assignees: string[] = assigneesRaw
     ? JSON.parse(assigneesRaw)
     : [];
@@ -299,6 +306,7 @@ export async function updateTask(formData: FormData) {
       status: formData.get("status"),
       priority: formData.get("priority"),
       due_date: formData.get("due_date"),
+      last_updated_by: user.id,
     })
     .eq("id", taskId);
 

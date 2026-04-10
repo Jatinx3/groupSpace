@@ -39,10 +39,11 @@ export default function TasksTab({
     const { data } = await supabaseRef.current
       .from("tasks")
       .select(`
-        id, team_id, title, description, status, priority, due_date, created_at,
+        id, team_id, title, description, status, priority, due_date, created_at, last_updated_by,
         task_assignees (
           user:profiles (id, first_name, last_name, email)
-        )
+        ),
+        updater:profiles!tasks_last_updated_by_fkey (id, first_name, last_name)
       `)
       .eq("team_id", teamId)
       .order("created_at", { ascending: false });
@@ -52,6 +53,7 @@ export default function TasksTab({
         data.map((t: any) => ({
           ...t,
           assignees: t.task_assignees?.map((a: any) => a.user).filter(Boolean) ?? [],
+          updater: t.updater || null,
         }))
       );
     }
@@ -209,20 +211,24 @@ export default function TasksTab({
                 )}
 
                 {task.due_date && (
-                  <p className="text-xs text-gray-400 dark:text-zinc-500">
+                  <p className="text-[11px] font-medium text-gray-400 dark:text-zinc-500">
                     Due {new Date(task.due_date).toLocaleDateString()}
+                  </p>
+                )}
+
+                {task.updater && (
+                  <p className="text-[10px] text-gray-400 dark:text-zinc-600 italic">
+                    Last updated by {task.updater.first_name} {task.updater.last_name}
                   </p>
                 )}
               </div>
 
-              {isLeader && (
-                <button
-                  onClick={() => setEditTask(task)}
-                  className="text-sm text-gray-400 dark:text-zinc-500 hover:text-black dark:hover:text-white"
-                >
-                  Edit
-                </button>
-              )}
+              <button
+                onClick={() => setEditTask(task)}
+                className="text-xs font-semibold text-gray-400 dark:text-zinc-500 hover:text-black dark:hover:text-white transition-colors"
+              >
+                Edit
+              </button>
             </div>
           </div>
         ))}
