@@ -2,6 +2,7 @@
 
 import type { Member } from "../../../../types/member";
 import Avatar from "../../../ui/Avatar";
+import { Crown, Sparkles, User, BadgeAlert } from "lucide-react";
 
 type Task = {
   id: string;
@@ -58,45 +59,55 @@ export default function TeamTab({
       </div>
 
       {/* Members */}
-      <div className="grid md:grid-cols-2 gap-6">
-        {members.map((member) => {
-          return (
-            <div
-              key={member.id}
-              className="bg-white dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-xl p-6"
-            >
-              <div className="flex items-start gap-4">
+      <div className="grid md:grid-cols-2 gap-4">
+        {[...members].sort((a, b) => {
+          if (a.role === "LEADER" && b.role !== "LEADER") return -1;
+          if (a.role !== "LEADER" && b.role === "LEADER") return 1;
+          return a.first_name.localeCompare(b.first_name);
+        }).map((member) => (
+          <div
+            key={member.id}
+            className="group relative bg-white dark:bg-[#0f0f0f] border border-gray-100 dark:border-white/5 rounded-2xl p-5 hover:border-gray-200 dark:hover:border-white/10 hover:shadow-md transition-all duration-300 overflow-hidden flex items-center justify-between"
+          >
+            {/* Subtle animated background gradient */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-50/50 to-transparent dark:via-white/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-700 translate-x-[-100%] group-hover:translate-x-[100%]" />
+            
+            <div className="flex items-center gap-4 relative z-10 w-full">
+              <div className="relative shrink-0">
                 <Avatar 
                   name={`${member.first_name} ${member.last_name}`} 
                   avatarUrl={member.avatar_url} 
-                  size={48} 
+                  size={52} 
                 />
-
-                <div className="flex-1">
-                  <div className="flex items-center gap-3">
-                    <h3 className="font-semibold text-gray-900 dark:text-white">
-                      {member.first_name} {member.last_name}
-                    </h3>
-
-                    <span
-                      className={`text-xs px-3 py-1 rounded-full ${
-                        member.role === "LEADER"
-                          ? "bg-black dark:bg-white text-white dark:text-gray-900"
-                          : "bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-zinc-300"
-                      }`}
-                    >
-                      {member.role}
-                    </span>
+                {member.role === "LEADER" && (
+                  <div className="absolute -bottom-1 -right-1 bg-amber-400 text-amber-900 border-[2.5px] border-white dark:border-[#0f0f0f] w-[22px] h-[22px] rounded-full flex items-center justify-center shadow-sm">
+                    <Crown className="w-3 h-3 fill-current" />
                   </div>
+                )}
+              </div>
 
-                  <p className="text-sm text-gray-500 dark:text-zinc-400 mt-2">
-                    {member.email}
-                  </p>
+              <div className="flex flex-col min-w-0">
+                <h3 className="text-base font-bold text-gray-900 dark:text-white group-hover:text-gray-600 dark:group-hover:text-zinc-200 transition-colors truncate">
+                  {member.first_name} {member.last_name}
+                </h3>
+                
+                <div className="flex items-center mt-1">
+                  {member.role === "LEADER" ? (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-500">
+                      <Sparkles className="w-3 h-3" />
+                      Team Leader
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-500">
+                      <User className="w-3 h-3" />
+                      Member
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
-          );
-        })}
+          </div>
+        ))}
       </div>
 
       {/* Stats Section */}
