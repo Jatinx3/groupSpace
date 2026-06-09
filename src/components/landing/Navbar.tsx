@@ -29,7 +29,6 @@ export default function Navbar() {
           >
             {[
               { label: "Features", href: "#features" },
-              { label: "Demo", href: "#demo" },
             ].map((item) => (
               <a
                 key={item.label}
